@@ -41,8 +41,8 @@ a.artist{color:#800080}
 #card .x{float:right;color:#800080;text-decoration:underline;cursor:pointer;background:none;border:0;font:inherit;padding:0;margin-left:8px}
 @media (max-width:600px){#card{left:4vw;right:4vw;bottom:8px;width:auto}}
 @media (prefers-reduced-motion:reduce){.sw .knob,.sw{transition:none}}
-@media (max-width:600px){td{display:block;width:auto !important}#sponsors td{display:inline-block;width:46% !important;vertical-align:top}}
-#camv{display:none;width:100%;max-width:640px;height:auto;border:1px solid #000080;background:#000}
+@media (max-width:600px){td{display:block;width:auto !important}#sponsors td{display:inline-block;width:46% !important;vertical-align:top;box-sizing:border-box;padding:8px 10px}}
+#camv{display:none;width:640px;max-width:100%;height:auto;aspect-ratio:auto 16/9;border:1px solid #000080;background:#000}
 #tv{display:none;width:100%;max-width:640px;aspect-ratio:16/9;height:auto;border:1px solid #000080;background:#000;vertical-align:top}
 #channels a{color:#800080}
 #listeners{position:absolute;top:10px;right:14px;border:1px solid #000080;padding:3px 8px;font-size:11px;line-height:1.3;background:#fff;white-space:nowrap}
@@ -52,7 +52,7 @@ a.artist{color:#800080}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 @media (max-width:600px){#listeners{position:static;display:inline-block;margin:6px 0 0}body{text-align:left}#listeners-wrap{text-align:right;padding:0 12px}}
 @media (prefers-reduced-motion:reduce){#listeners .dot{animation:none}}
-#sponsors{table-layout:fixed}#sponsors td{padding:6px 4px}#sponsors img{max-width:100%;height:auto}
+#sponsors{table-layout:fixed}#sponsors td{padding:6px 14px}#sponsors img{max-width:100%;height:auto}
 #camv.halftone{filter:grayscale(1) contrast(1.7) brightness(1.05)}
 #camwrap{position:relative;display:inline-block;max-width:100%}
 #camwrap .dots{display:none;position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,#fff 0.9px,transparent 1.1px);background-size:3px 3px;mix-blend-mode:screen;opacity:.9}
@@ -137,18 +137,37 @@ a.artist{color:#800080}
   }
   // ---- live video, when a viewer's browser can reach it; stills otherwise ----
   var camv=document.getElementById("camv"),wrap=document.getElementById("camwrap"),hls=null,videoOn=false,frameTimer=null,videoCam=null,watchdog=null;
-  function stopVideo(){videoOn=false;clearInterval(frameTimer);clearTimeout(watchdog);if(hls){try{hls.destroy();}catch(e){}hls=null;}try{camv.pause();camv.removeAttribute("src");camv.load();}catch(e){}camv.style.display="none";canvas.style.display="";wrap.classList.remove("halftone");}
+  function stopVideo(fallback){videoOn=false;clearInterval(frameTimer);clearTimeout(watchdog);camv.onplaying=camv.ontimeupdate=camv.onresize=camv.onloadeddata=camv.onerror=camv.onended=null;if(hls){try{hls.destroy();}catch(e){}hls=null;}try{camv.pause();camv.removeAttribute("src");camv.load();}catch(e){}camv.style.display="none";canvas.style.display="";wrap.classList.remove("halftone");
+    if(fallback&&channel===2){tries=0;loadCam();}}   // a stream that failed or froze: back to the still, fresh; video is tried again within a minute
   function videoFrames(cam){ // real footage: the picture itself, no dither
-    canvas.style.display="none";camv.style.display="";wrap.classList.remove("halftone");cap.textContent=cam.name+", live video";
+    canvas.style.display="none";camv.style.display="inline-block";wrap.classList.remove("halftone");cap.textContent=cam.name+", live video";   // "" would leave the stylesheet's display:none in charge: a blank box (2026-10-16)
   }
   function startVideo(cam){
     stopVideo();if(!cam.hls)return;videoCam=cam;
     var src="https://wzmedia.dot.ca.gov/D7/"+cam.hls+".stream/playlist.m3u8",started=false;
-    watchdog=setTimeout(function(){if(!started)stopVideo();},9000);
-    camv.onplaying=function(){if(started)return;started=true;clearTimeout(watchdog);videoOn=true;videoFrames(cam);};
-    camv.onerror=function(){if(!started)stopVideo();};
-    if(camv.canPlayType("application/vnd.apple.mpegurl")){camv.src=src;camv.play().catch(function(){});}
-    else if(window.Hls&&Hls.isSupported()){hls=new Hls({enableWorker:true,lowLatencyMode:false,backBufferLength:10});hls.on(Hls.Events.ERROR,function(ev,data){if(data&&data.fatal)stopVideo();});hls.loadSource(src);hls.attachMedia(camv);camv.play().catch(function(){});}
+    watchdog=setTimeout(function(){if(!started)stopVideo(true);},12000);
+    // "playing" alone is not a picture: some streams start with no frames (the box collapsed, 2026-10-16). The video takes
+    // over only once it has a real size and its clock has moved; after that, a picture frozen for 12 s goes back to the still.
+    var t0=-1;
+    function check(){
+      if(started)return;
+      if(!(camv.videoWidth>0&&camv.videoHeight>0&&camv.readyState>=2))return;
+      if(t0<0){t0=camv.currentTime;return;}
+      if(camv.currentTime-t0<0.4)return;
+      started=true;clearTimeout(watchdog);videoOn=true;videoFrames(cam);
+      var last=camv.currentTime,still=0;
+      frameTimer=setInterval(function(){
+        if(camv.currentTime>last+0.1||camv.paused&&document.hidden){last=camv.currentTime;still=0;return;}
+        if(++still>=3||!(camv.videoWidth>0))stopVideo(true);
+      },4000);
+    }
+    camv.onplaying=check;camv.ontimeupdate=check;camv.onresize=check;camv.onloadeddata=check;
+    camv.onerror=function(){stopVideo(true);};camv.onended=function(){if(videoOn)stopVideo(true);};
+    // hls.js first wherever there is full Media Source (desktops, Android): Chrome's own new HLS player plays these streams
+    // for under a second and then fails (error 4, seen 2026-10-16), while hls.js plays them steadily. iPhones, with no
+    // MediaSource, keep Apple's player, which is the one that works there.
+    if(window.Hls&&window.MediaSource&&Hls.isSupported()){hls=new Hls({enableWorker:true,lowLatencyMode:false,backBufferLength:10});hls.on(Hls.Events.ERROR,function(ev,data){if(data&&data.fatal)stopVideo(true);});hls.loadSource(src);hls.attachMedia(camv);camv.play().catch(function(){});}
+    else if(camv.canPlayType("application/vnd.apple.mpegurl")){camv.src=src;camv.play().catch(function(){});}
     else stopVideo();
   }
   // ---- the television: channel 2 is the freeways, 4 is Huell Howser, 7 is the aquarium ----
