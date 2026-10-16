@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /booth.html
+
+Sitemap: https://sfv.fm/sitemap.xml

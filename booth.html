@@ -1,0 +1,271 @@
+<html>
+<head>
+<title>The Booth</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="images/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<meta name="robots" content="noindex">
+<style>
+body{max-width:520px;margin:0 auto;padding:0 14px}
+.big{display:block;width:100%;font:inherit;font-size:22px;font-weight:bold;letter-spacing:.04em;padding:26px 10px;margin:10px 0;border:2px solid #000080;border-radius:14px;background:#fff;color:#000080;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+.big.on{background:#ff0000;border-color:#ff0000;color:#fff}
+.big:active{transform:scale(.985)}
+.big:disabled{opacity:.45}
+#level{height:8px;border:1px solid #000080;margin:0 0 12px}
+#level i{display:block;height:100%;width:0;background:#000080;transition:width .08s linear}
+.big.on+#level i{background:#ff0000}
+textarea{width:100%;box-sizing:border-box;font:inherit;font-size:16px;border:1px solid #000080;padding:8px;min-height:72px}
+button.say{font:inherit;font-size:16px;font-weight:bold;border:1px solid #000080;background:#fff;color:#000080;padding:10px 16px;border-radius:8px;cursor:pointer}
+button.say:disabled{opacity:.45}
+#log{font-size:12px;line-height:1.4;max-height:160px;overflow:auto;border-top:1px solid #000080;padding-top:6px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#999;margin-right:5px;vertical-align:0}
+.dot.ok{background:#ff0000}
+button.rec{padding:10px 11px;margin:4px 3px 4px 0}
+button.rec[aria-pressed=true]{background:#000080;color:#fff}
+#rec-art{display:block;width:72px;height:72px;border:1px solid #000080;visibility:hidden;object-fit:cover}
+#rec-link{font:inherit;font-size:16px;border:1px solid #000080;padding:7px;width:64%;box-sizing:border-box}
+.owner{display:none}
+body.is-owner td.owner{display:table-cell}
+body.is-owner p.owner{display:block}
+body.is-owner label.owner{display:inline}
+</style>
+</head>
+<body link="#800080" bgcolor="#ffffff" text="#000080" vlink="#ff0000">
+<p align="center"><b><font size="5">S</font><font size="3">AN </font><font size="5">F</font><font size="3">ERNANDO </font><font size="5">V</font><font size="3">ALLEY </font><font size="5">R</font><font size="3">ADIO</font><font size="2"><br>The Booth</font></b></p>
+<hr>
+<div id="signin" style="display:none;border:1px solid #000080;padding:10px 12px;margin:6px 0 12px"><font size="2"><b>Sign in to the booth.</b> Your password is the one Sam gave you.</font><br>
+<form id="signin-form" style="margin:8px 0 0"><input type="password" id="pw" placeholder="password" autocomplete="current-password" style="font:inherit;font-size:16px;border:1px solid #000080;padding:7px;width:60%"> <button type="submit" class="say">Sign in</button></form>
+<font size="1" id="signin-msg"></font></div>
+<p><font size="2"><span class="dot" id="dot"></span><span id="conn">Connecting to the transmitter&hellip;</span></font></p>
+<table border="0" cellspacing="0" cellpadding="6" width="100%" style="border:1px solid #000080;margin:6px 0 10px"><tr>
+<td valign="top"><font size="2"><b><span id="st-onair">&mdash;</span></b><br>Spotify: <span id="st-spotify">&mdash;</span><br><b>On the air:</b> <span id="now">&mdash;</span><br><font size="1"><span id="st-pieces"></span><br><span id="st-level"></span></font><br><span id="st-people"></span></font></td>
+<td valign="top" align="right" nowrap class="owner"><button type="button" class="say" id="st-on" disabled>On Air</button><br><button type="button" class="say" id="st-off" disabled style="margin-top:6px">Off Air</button><br><button type="button" class="say" id="st-room" disabled style="margin-top:6px">Room</button></td>
+</tr></table>
+<p style="margin:14px 0 4px"><font size="2"><b>Records</b> <span id="rec-state"></span></font></p>
+<table border="0" cellspacing="0" cellpadding="6" width="100%" style="border:1px solid #000080;margin:0 0 8px"><tr>
+<td valign="top" width="74"><img id="rec-art" alt=""></td>
+<td valign="top"><font size="2"><b id="rec-title">&mdash;</b><br><span id="rec-artist"></span><br><font size="1"><span id="rec-album"></span><br><span id="rec-time"></span></font></font></td>
+</tr><tr><td colspan="2"><button type="button" class="say rec" id="rec-prev" aria-label="Back" disabled>&laquo; Back</button><button type="button" class="say rec" id="rec-pp" disabled>Play</button><button type="button" class="say rec" id="rec-next" aria-label="Next" disabled>Next &raquo;</button><button type="button" class="say rec" id="rec-shuf" aria-pressed="false" disabled>Shuffle: off</button></td></tr></table>
+<form id="rec-form" novalidate style="margin:0 0 6px"><font size="2"><b>Put on a record.</b> Paste a Spotify link to a song, an album, a playlist or an artist (in the Spotify app: Share, then Copy Link). It plays right away, and goes out whenever the station is on the air.</font><br>
+<input type="url" id="rec-link" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://open.spotify.com/&hellip;" style="margin-top:6px"> <button type="submit" class="say" id="rec-play" disabled>Play it</button><br><font size="2" color="#ff0000" id="rec-msg" aria-live="polite"></font></form>
+<p style="margin:12px 0 4px" class="owner"><font size="2"><b>Announcer</b> <span id="ann-note"></span></font></p>
+<p style="margin:0 0 10px" class="owner"><font size="2">
+<label><input type="radio" name="ann" value="mix" id="ann-mix"> Buddy and Bob (Buddy most breaks, Bob about one in four)</label><br>
+<label><input type="radio" name="ann" value="bob" id="ann-bob"> Bob Sherman, every break</label><br>
+<label><input type="radio" name="ann" value="buddy" id="ann-buddy"> Buddy Sepulveda only (free)</label><br>
+Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>onyx</option></select> <button type="button" class="say" id="hear-bob" style="padding:6px 12px">Hear Bob</button> <font size="1">(on this phone only, not on the air)</font></font></p>
+<hr>
+<p class="owner"><font size="2"><b>Input:</b> <select id="input" style="font:inherit;font-size:15px;max-width:100%"><option value="phone">This device's microphone</option></select></font></p>
+<button type="button" class="big" id="mic" disabled>ON MIC</button>
+<div id="level"><i></i></div>
+<p style="margin:0 0 14px"><font size="2"><b>While I'm on the mic:</b><br>
+<label><input type="radio" name="duck" value="under" id="duck-under"> Fade the music under me</label><br>
+<label><input type="radio" name="duck" value="mix" id="duck-mix"> Keep the music up, just a small dip under my voice</label></font></p>
+<p><font size="2"><b>Take over from this device</b> <span id="to-who"></span></font></p>
+<p><font size="2" id="to-help">Play your music in a browser tab (Spotify web player, YouTube, anything). Press the button, pick that tab, tick &ldquo;Share tab audio&rdquo;. The station crossfades to you over four seconds; press again to hand it back.</font></p>
+<p class="owner"><font size="2">Your name, so the station can say who has it: <input type="text" id="to-name" placeholder="optional" autocomplete="nickname" style="font:inherit;font-size:15px;border:1px solid #000080;padding:5px;width:45%"></font></p>
+<button type="button" class="say" id="to-btn" disabled>Take over</button>
+<p>&nbsp;</p>
+<p><font size="2"><b>Have Buddy say:</b></font></p>
+<textarea id="text" placeholder="Type a line for Buddy. He reads it on the air, Spotify ducks while he talks."></textarea>
+<p><button type="button" class="say" id="say" disabled>Say it</button> &nbsp; <font size="2"><label class="owner"><input type="checkbox" id="plain"> read it plain, no &ldquo;a word from Sam&rdquo;</label><span id="say-from"></span></font></p>
+<div id="log"></div>
+<hr>
+<p><font size="1">Listener places are approximate, from IP Geolocation by <a href="https://db-ip.com">DB-IP</a>, looked up on the Mac; addresses are never kept. Private. Your password stays in this browser until you <a href="#" id="signout">sign out</a>. Pick an input: a microphone on the Mac (AirPods when they are paired to the Mac) or this phone's. ON MIC stays open until you tap again. <a href="./">Back to the station</a>.</font></p>
+<script>
+(function(){
+  var key=null;try{var q=new URLSearchParams(location.search).get("k");if(q){var had=localStorage.getItem("sfv-booth-key");if(!had||had===q||confirm("Sign in with the password in this link? It replaces the one saved in this browser."))localStorage.setItem("sfv-booth-key",q);history.replaceState(null,"",location.pathname);}key=localStorage.getItem("sfv-booth-key");}catch(e){}
+  var signin=document.getElementById("signin"),signinMsg=document.getElementById("signin-msg");
+  document.getElementById("signin-form").addEventListener("submit",function(e){e.preventDefault();var v=document.getElementById("pw").value.trim();if(!v)return;key=v;try{localStorage.setItem("sfv-booth-key",v);}catch(x){}signin.style.display="none";signinMsg.textContent="";connect();});
+  var toBtn=document.getElementById("to-btn"),toWho=document.getElementById("to-who"),toHelp=document.getElementById("to-help"),you="",takeover=null,toRec=null,toStream=null,toPump=null,toMine=false,stOn=document.getElementById("st-on"),stOff=document.getElementById("st-off"),stRoom=document.getElementById("st-room"),stAir=document.getElementById("st-onair"),stSpot=document.getElementById("st-spotify"),stPieces=document.getElementById("st-pieces"),roomOn=false,inputSel=document.getElementById("input"),macOn=false,inputsKnown="",dot=document.getElementById("dot"),conn=document.getElementById("conn"),now=document.getElementById("now"),micBtn=document.getElementById("mic"),sayBtn=document.getElementById("say"),text=document.getElementById("text"),plain=document.getElementById("plain"),level=document.querySelector("#level i"),logEl=document.getElementById("log");
+  var ws=null,micOn=false,ac=null,stream=null,node=null,src=null,url=null,retry=null,role="",otherMic="",otherMac="",micBlocked=false,toBlocked=false,micPending=false,toPending=false,micOpening=false,micOpenTimer=null;
+  var recBtns=["rec-prev","rec-pp","rec-next","rec-shuf","rec-play"].map(function(id){return document.getElementById(id);}),recBusy=false,recTimer=null;
+  // one command at a time; during a takeover only Shuffle stays live (the server refuses the rest)
+  function applyRec(){var up=!!(ws&&ws.readyState===1);recBtns.forEach(function(b){b.disabled=!up||recBusy||(!!takeover&&b.id!=="rec-shuf");});}
+  function log(s){var d=document.createElement("div");d.textContent=new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",second:"2-digit"})+"  "+s;logEl.insertBefore(d,logEl.firstChild);try{if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"log",text:s}));}catch(e){}}
+  function setConn(ok,msg){dot.className="dot"+(ok?" ok":"");conn.textContent=msg;micBtn.disabled=!ok;sayBtn.disabled=!ok;stOn.disabled=!ok;stOff.disabled=!ok;stRoom.disabled=!ok;applyRec();toBtn.disabled=!ok||!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);}
+  function showNow(n){now.textContent=n&&n.title?n.artist+" – "+n.title:(n&&n.live===false?"off the air":"—");}
+  function connect(){
+    if(!key){setConn(false,"Not signed in.");signin.style.display="block";return;}
+    if(!url){setConn(false,"No transmitter address.");return;}
+    try{ws=new WebSocket(url+"?k="+encodeURIComponent(key));}catch(e){setConn(false,"Could not open the socket.");return;}
+    ws.binaryType="arraybuffer";
+    ws.onopen=function(){setConn(true,"Connected to the transmitter.");log("connected");};
+    ws.onmessage=function(ev){var m;try{m=JSON.parse(ev.data);}catch(e){return;}
+      if(m.you){you=m.you;}
+      if(m.role&&m.role!==role){role=m.role;document.body.classList.toggle("is-owner",role==="owner");text.maxLength=role==="owner"?600:200;
+        document.getElementById("say-from").textContent=role==="owner"?"":"It goes out as \u201ca word from "+you+"\u201d, 200 characters at most.";}
+      if(m.type==="refused"){log(m.msg);
+        if(m.what==="mic"){micOpening=false;if(micOn){micOn=false;stopAudio();micBtn.className="big";micBtn.textContent="ON MIC";}}
+        if(m.what==="macmic"&&macOn){macOn=false;micBtn.className="big";micBtn.textContent="ON MIC";}
+        if(m.what==="takeover"){toPending=false;if(toMine)stopTakeover(false);}
+        if(m.what==="say")sayBtn.disabled=false;}
+      if(m.type==="took"){toPending=false;if(!m.ok){log("someone else has the station; end theirs first");stopTakeover(false);}}
+      if(m.type==="records"){clearTimeout(recTimer);recBusy=false;applyRec();
+        if(!m.ok){recMsg.textContent=m.msg;log("records: "+m.msg);}
+        else{recMsg.textContent="";if(m.do==="play")recLink.value="";if(/^(play|next|previous|resume)$/.test(m.do))setTimeout(function(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"status"}));},1500);}}
+      if(m.type==="bobsample"){hearBob.disabled=false;hearBob.textContent="Hear Bob";if(m.ok){bobAudio.muted=false;bobAudio.src="data:audio/mpeg;base64,"+m.mp3;var pp=bobAudio.play();if(pp&&pp.catch)pp.catch(function(){log("tap Hear Bob again to play the sample");});log("Bob, in "+(m.voice||"his current voice"));}else log("Bob: "+m.msg);}
+      if(m.type==="status"&&!m.role&&role!=="owner"){role="owner";document.body.classList.add("is-owner");}
+      if(m.type==="status"){showAnn(m.announcer);showPeople(m.listeners,m.booth);showLevel(m.meter);takeover=m.takeover||null;showRec(m.rec);applyRec();if(takeover)recState.textContent="("+takeover.who+" has the station)";if(takeover){toWho.textContent="\u2014 "+takeover.who+" is on the air from their device, "+Math.floor(takeover.since/60)+" min";toBtn.textContent=(toMine||takeover.mine)?"Hand it back":(role==="owner"?"End "+takeover.who+"\u2019s takeover":takeover.who+" has the station");}else{toWho.textContent="";toBtn.textContent="Take over";if(toMine&&!toPending)stopTakeover(false);}
+        var tblock=!!(takeover&&!toMine&&!takeover.mine&&role!=="owner");if(tblock){toBtn.disabled=true;toBlocked=true;}else if(toBlocked){toBlocked=false;toBtn.disabled=!(ws&&ws.readyState===1&&navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);}showNow(m.now);if(m.mic||!micOpening)micOn=!!m.mic;if(m.mic){micOpening=false;clearTimeout(micOpenTimer);}macOn=!!m.macmic;
+        if(m.mic&&!micOpening&&!stream){ws.send(JSON.stringify({type:"mic",on:false}));micOn=false;log("closed a mic this page had lost");}var liveDuck=(micOn||macOn)&&!m.takeover;document.getElementById("duck-"+(liveDuck?(m.music_under?"under":"mix"):duckPref)).checked=true;
+        if(m.station){var st=m.station,lc=m.listeners?(" &middot; "+m.listeners.count+" listening"):"";stAir.innerHTML=st.onair?'<font color="#ff0000">&#9679; ON THE AIR'+lc+'</font>':(st.hold?'OFF THE AIR \u2014 held off until On Air':'OFF THE AIR');stSpot.textContent=st.spotify||"?";roomOn=!!st.room;stRoom.textContent=roomOn?"Room: Spotify on this Mac":"Room: Spotify silent here";stOn.disabled=!st.hold&&st.onair;stOff.disabled=!!st.hold;var ps=[];for(var k in st.pieces)ps.push(k+(st.pieces[k]?" \u2713":" \u2717"));stPieces.textContent=ps.join("  ");}
+        if(m.inputs){lastInputs=m;var key=m.inputs.join("|")+"|"+m.input;if(key!==inputsKnown){var chosen=inputsKnown?(inputSel.value||""):savedInput();inputsKnown=key;fillInputs(m,chosen);}}
+        var on=micOn||macOn;otherMic=(!on&&m.mic_who)?m.mic_who:"";otherMac=(!on&&!otherMic&&m.macmic_who&&role==="owner")?m.macmic_who:"";
+        micBtn.textContent=on?"OFF MIC \u2014 you are on the air":(otherMic?(role==="owner"?"END "+otherMic.toUpperCase()+"\u2019S MIC":otherMic.toUpperCase()+" HAS THE MIC"):(otherMac?"END THE STUDIO MIC ("+otherMac.toUpperCase()+")":"ON MIC"));micBtn.className="big"+(on?" on":"");if(!micOn)stopAudio();
+        var mblock=!!otherMic&&role!=="owner";if(mblock){micBtn.disabled=true;micBlocked=true;}else if(micBlocked&&!micPending){micBlocked=false;micBtn.disabled=!(ws&&ws.readyState===1);}sayBtn.disabled=!!m.saying;if(m.dry)log("transmitter is in dry mode");}
+      if(m.type==="said"){log(m.ok?"Buddy said: "+m.text:"Buddy could not say that");sayBtn.disabled=false;if(!m.ok&&m.text&&!text.value)text.value=m.text;}};
+    ws.onclose=function(ev){clearTimeout(recTimer);recBusy=false;setConn(false,ev.code===4001?"Wrong password.":ev.code===4003?"Too many wrong passwords from this address. Try again in 10 minutes.":"Not connected. Trying again…");if(ev.code===4001){key=null;try{localStorage.removeItem("sfv-booth-key");}catch(x){}signin.style.display="block";signinMsg.textContent="That password was not accepted.";}stopAudio();micOn=false;micBtn.className="big";micBtn.textContent="ON MIC";if(ev.code!==4001){clearTimeout(retry);retry=setTimeout(connect,ev.code===4003?120000:3000);}};
+    ws.onerror=function(){};
+  }
+  // the mic: 24 kHz 16-bit mono over the socket; the Mac puts it on the air
+  // which microphone: this device's own, unless the page is open on the transmitter Mac itself (then the Mac's selected input);
+  // the Mac's inputs are the microphones in the studio, and picking one from a phone puts the studio room on the air
+  var lastInputs=null,studio=false;
+  function hereLabel(){return /iPhone|iPad|Android/.test(navigator.userAgent)?"This phone\u2019s microphone":"This computer\u2019s microphone";}
+  function savedInput(){try{return localStorage.getItem("sfv-booth-input")||"";}catch(e){return "";}}
+  function fillInputs(m,chosen){inputSel.innerHTML="";var ph=document.createElement("option");ph.value="phone";ph.textContent=hereLabel();inputSel.appendChild(ph);m.inputs.forEach(function(n){var o=document.createElement("option");o.value=n;o.textContent=n+" (in the studio"+(n===m.input?", selected on the Mac":"")+")";inputSel.appendChild(o);});
+    if(chosen&&(chosen==="phone"||m.inputs.indexOf(chosen)>=0))inputSel.value=chosen;else inputSel.value=studio&&m.input&&m.inputs.indexOf(m.input)>=0?m.input:"phone";}
+  fetch("http://127.0.0.1:8000/status-json.xsl",{mode:"cors",cache:"no-store"}).then(function(r){studio=!!r.ok;}).catch(function(){studio=false;}).then(function(){if(studio&&lastInputs&&!savedInput()&&!macOn&&!micOn)fillInputs(lastInputs,"");});
+  var rec=null,codec="pcm",meterNode=null,pump=null;
+  // the recorder, made so it can be made again: a phone that sends nothing in the first seconds gets one fresh recorder
+  var recMime="",sentBytes=0,micWatch=null;
+  function makeRec(st){
+    try{rec=recMime?new MediaRecorder(st,{mimeType:recMime,audioBitsPerSecond:64000}):new MediaRecorder(st);}catch(e){rec=new MediaRecorder(st);}
+    rec.ondataavailable=function(e){if(e.data&&e.data.size>0&&ws&&ws.readyState===1&&micOn){sentBytes+=e.data.size;ws.send(e.data);}};
+    rec.onerror=function(e){log("recorder error: "+(e.error&&e.error.name||e.name||"?"));};
+    rec.start(250);
+    clearInterval(pump);pump=setInterval(function(){try{if(rec&&rec.state==="recording")rec.requestData();}catch(e){}},250); // Safari ignores the timeslice; ask every quarter second
+  }
+  function watchMic(){
+    sentBytes=0;clearTimeout(micWatch);
+    micWatch=setTimeout(function(){
+      if(!micOn||sentBytes>0||!stream)return;
+      log("no sound from this phone yet; starting the recorder again");
+      try{if(rec&&rec.state!=="inactive")rec.stop();}catch(e){}
+      makeRec(stream);
+      micWatch=setTimeout(function(){if(micOn&&sentBytes===0){log("this phone's microphone is not sending any sound. Tap OFF MIC and ON MIC again, or reload the booth.");micBtn.textContent="OFF MIC (no sound is reaching the Mac)";}},4000);
+    },3500);
+  }
+  function startAudio(){
+    return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false}).then(function(st){
+      stream=st;
+      if(window.MediaRecorder){ // the browser's own recorder: iPhones make AAC in mp4, others Opus in webm; the Mac decodes either
+        var types=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"],mime="";
+        for(var i=0;i<types.length;i++){if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(types[i])){mime=types[i];break;}}
+        recMime=mime;makeRec(st);
+        codec=rec.mimeType||mime||"audio/unknown";
+        log("recording as "+codec);
+        meter(st);
+        return;
+      }
+      // no recorder: raw PCM through a script processor (old browsers)
+      var AC=window.AudioContext||window.webkitAudioContext;if(!AC)throw new Error("no recorder and no audio engine");
+      try{if(ac)ac.close();}catch(e){}ac=new AC();if(ac.state==="suspended")ac.resume();
+      codec="pcm";src=ac.createMediaStreamSource(st);node=ac.createScriptProcessor(4096,1,1);
+      var ratio=ac.sampleRate/24000,gain=2.2;log("mic at "+ac.sampleRate+" Hz, raw");
+      node.onaudioprocess=function(e){var inp=e.inputBuffer.getChannelData(0),n=Math.floor(inp.length/ratio),out=new Int16Array(n),peak=0;
+        for(var i=0;i<n;i++){var pos=i*ratio,k=Math.floor(pos),f=pos-k,v=(inp[k]*(1-f)+(inp[k+1<inp.length?k+1:k])*f)*gain;v=v>1?1:(v<-1?-1:v);if(v>0.8)v=0.8+(v-0.8)*0.5;else if(v<-0.8)v=-0.8+(v+0.8)*0.5;out[i]=v<0?v*32768:v*32767;var a=v<0?-v:v;if(a>peak)peak=a;}
+        level.style.width=Math.min(100,Math.round(peak*120))+"%";if(ws&&ws.readyState===1&&micOn)ws.send(out.buffer);};
+      var sink=ac.createGain();sink.gain.value=0;src.connect(node);node.connect(sink);sink.connect(ac.destination);
+    });
+  }
+  // the level bar: an analyser on the side, harmless if the phone keeps it asleep
+  function meter(st){try{var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=ac||new AC();if(ac.state==="suspended")ac.resume();var s2=ac.createMediaStreamSource(st),an=ac.createAnalyser();an.fftSize=512;s2.connect(an);meterNode=s2;var buf=new Uint8Array(an.fftSize);(function tick(){if(!micOn)return;an.getByteTimeDomainData(buf);var p=0;for(var i=0;i<buf.length;i++){var v=Math.abs(buf[i]-128)/128;if(v>p)p=v;}level.style.width=Math.min(100,Math.round(p*140))+"%";requestAnimationFrame(tick);})();}catch(e){}}
+  function stopAudio(){clearInterval(pump);pump=null;clearTimeout(micWatch);try{if(rec&&rec.state!=="inactive")rec.stop();}catch(e){}rec=null;try{if(node){node.disconnect();node.onaudioprocess=null;}if(src)src.disconnect();if(meterNode)meterNode.disconnect();if(stream)stream.getTracks().forEach(function(t){t.stop();});}catch(e){}node=src=stream=meterNode=null;level.style.width="0";}
+  // fade the music under the mic, or keep it up with the voice on top; remembered here, switchable while the mic is open
+  var duckPref="under";try{duckPref=localStorage.getItem("sfv-booth-duck")==="mix"?"mix":"under";}catch(e){}
+  function micDuck(){return duckPref;}
+  function duckWords(){return duckPref==="mix"?"the music stays up":"the music fades under you";}
+  document.getElementById("duck-"+duckPref).checked=true;
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="duck"]'),function(r){r.addEventListener("change",function(){if(!r.checked)return;duckPref=r.value==="mix"?"mix":"under";try{localStorage.setItem("sfv-booth-duck",duckPref);}catch(e){}
+    if((micOn||macOn)&&ws&&ws.readyState===1){ws.send(JSON.stringify({type:"micmode",duck:duckPref}));log(duckPref==="mix"?"music back up under the mic":"music fades under the mic");}});});
+  micBtn.addEventListener("click",function(){
+    if(!ws||ws.readyState!==1)return;
+    if(otherMic&&!micOn&&!macOn){if(role==="owner"){ws.send(JSON.stringify({type:"mic",on:false,force:true}));log("ended "+otherMic+"\u2019s mic");}return;}
+    if(otherMac&&!micOn&&!macOn){ws.send(JSON.stringify({type:"macmic",on:false}));log("ended the studio mic");return;}
+    if(macOn){ws.send(JSON.stringify({type:"macmic",on:false}));macOn=false;micBtn.className="big";micBtn.textContent="ON MIC";log("Mac mic closed");return;}
+    if(inputSel.value!=="phone"&&!micOn){ws.send(JSON.stringify({type:"macmic",on:true,duck:micDuck()}));macOn=true;micBtn.className="big on";micBtn.textContent="OFF MIC \u2014 you are on the air";log("Mac mic open ("+inputSel.value+"), "+duckWords());return;}
+    if(micOn){ws.send(JSON.stringify({type:"mic",on:false}));micOn=false;stopAudio();micBtn.className="big";micBtn.textContent="ON MIC";log("mic closed");return;}
+    micBtn.disabled=true;micPending=true;
+    startAudio().then(function(){ws.send(JSON.stringify({type:"mic",on:true,codec:codec,duck:micDuck()}));micOn=true;micOpening=true;clearTimeout(micOpenTimer);micOpenTimer=setTimeout(function(){micOpening=false;},6000);if(rec)watchMic();micBtn.className="big on";micBtn.textContent="OFF MIC — you are on the air";log("mic open, "+duckWords());}).catch(function(e){log("mic refused: "+(e&&(e.name+" "+e.message)||e));}).then(function(){micPending=false;micBtn.disabled=false;});
+  });
+  inputSel.addEventListener("change",function(){var v=inputSel.value;try{localStorage.setItem("sfv-booth-input",v);}catch(e){}if(v==="phone"){log(hereLabel().toLowerCase()+" will be used");if(macOn){ws.send(JSON.stringify({type:"macmic",on:false}));macOn=false;micBtn.className="big";micBtn.textContent="ON MIC";}return;}if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"input",name:v}));log("Mac input: "+v);}});
+  var toName=document.getElementById("to-name");try{toName.value=localStorage.getItem("sfv-booth-name")||"";}catch(e){}
+  toName.addEventListener("change",function(){try{localStorage.setItem("sfv-booth-name",toName.value.trim());}catch(e){}});
+  function deviceLabel(){var ua=navigator.userAgent,os=/iPhone/.test(ua)?"iPhone":/iPad/.test(ua)?"iPad":/Mac/.test(ua)?"Mac":/Windows/.test(ua)?"Windows PC":/Android/.test(ua)?"Android":"a device";var br=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/Brave/.test(ua)||(navigator.brave)?"Brave":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"a browser";return os+", "+br;}
+  function stopTakeover(tell){clearInterval(toPump);toPump=null;try{if(toRec&&toRec.state!=="inactive")toRec.stop();}catch(e){}toRec=null;try{if(toStream)toStream.getTracks().forEach(function(t){t.stop();});}catch(e){}toStream=null;toMine=false;if(tell&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:"takeover",on:false}));}
+  toBtn.addEventListener("click",function(){
+    if(!ws||ws.readyState!==1)return;
+    if(takeover){if(toMine)stopTakeover(true);else ws.send(JSON.stringify({type:"takeover",on:false}));log("takeover ended");return;}
+    toBtn.disabled=true;
+    navigator.mediaDevices.getDisplayMedia({video:true,audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}}).then(function(st){
+      var at=st.getAudioTracks();st.getVideoTracks().forEach(function(t){t.stop();});
+      if(!at.length){log("no audio was shared: pick a tab and tick Share tab audio");toBtn.disabled=false;return;}
+      toStream=new MediaStream(at);var mime="";["audio/webm;codecs=opus","audio/webm","audio/mp4"].forEach(function(t){if(!mime&&MediaRecorder.isTypeSupported(t))mime=t;});
+      toRec=new MediaRecorder(toStream,mime?{mimeType:mime,audioBitsPerSecond:128000}:{audioBitsPerSecond:128000});
+      toRec.ondataavailable=function(e){if(e.data&&e.data.size>0&&ws&&ws.readyState===1&&toMine)ws.send(e.data);};
+      at[0].onended=function(){log("the shared tab stopped; handing back");stopTakeover(true);};
+      toMine=true;toPending=true;ws.send(JSON.stringify({type:"takeover",on:true,codec:toRec.mimeType||mime,name:toName.value.trim(),device:deviceLabel(),tab:(at[0].label||"")}));
+      toRec.start(250);toPump=setInterval(function(){try{if(toRec&&toRec.state==="recording")toRec.requestData();}catch(e){}},250);
+      log("taking over: crossfading to this device");toBtn.disabled=false;
+    }).catch(function(e){log("takeover refused: "+(e&&(e.name+" "+e.message)||e));toBtn.disabled=false;});
+  });
+  // records: Spotify on the Mac, from here
+  var recEl=function(id){return document.getElementById(id);},recArt=recEl("rec-art"),recTitle=recEl("rec-title"),recArtist=recEl("rec-artist"),recAlbum=recEl("rec-album"),recTime=recEl("rec-time"),recState=recEl("rec-state"),recPP=recEl("rec-pp"),recShuf=recEl("rec-shuf"),recLink=recEl("rec-link"),recMsg=recEl("rec-msg"),recPlaying=false,recShuffle=false,recArtUrl="";
+  // the watcher's reading: music loudness, Buddy against the music, the last thing it noticed
+  var stLevel=document.getElementById("st-level");
+  function showLevel(x){if(!x){stLevel.textContent="Level watcher: no reading";return;}var p=["Level: "+x.state];if(x.music!=null)p.push("music "+x.music+" LUFS");if(x.buddy_gap!=null)p.push("Buddy "+(x.buddy_gap>0?"+":"")+x.buddy_gap+" dB");if(x.volume!=null&&x.volume<100)p.push("Spotify at "+x.volume);stLevel.textContent=p.join(", ")+(x.notes&&x.notes.length?". Last: "+x.notes[0]:"");}
+  // who is really listening (the public page's crowd is partly fiction; this is not), and who is in the booth
+  var stPeople=document.getElementById("st-people");
+  function ago(n){return n<1?"just now":n+" min";}
+  function esc(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+  function showPeople(l,b){var out=[];
+    if(l){var who=(l.who||[]).map(function(p){return [p.device,p.place||"",ago(p.minutes)].concat(p.extra||[]).filter(Boolean).join(", ");});out.push("<b>Listening: "+l.count+"</b>"+(who.length?"<br>"+who.map(function(w){return "&middot; "+esc(w);}).join("<br>"):"")+(l.quiet?" &middot; "+l.quiet+" with the sound off":""));}
+    if(b&&b.length)out.push("<b>In the booth:</b> "+b.map(function(x){return esc(x.who)+" on "+esc(x.device);}).join(", "));
+    stPeople.innerHTML="";out.forEach(function(t,i){var d=document.createElement("span");d.innerHTML=t;if(i)stPeople.appendChild(document.createElement("br"));stPeople.appendChild(d);});}
+  // the announcer: Buddy (local, free) and Bob Sherman (OpenAI, within a monthly budget)
+  var annNote=document.getElementById("ann-note");
+  var bobSel=document.getElementById("bob-voice"),hearBob=document.getElementById("hear-bob"),bobAudio=new Audio(),bobVoices="";
+  function showAnn(a){if(!a)return;var r=document.getElementById("ann-"+a.choice);if(r)r.checked=true;
+    if(a.voices&&a.voices.join()!==bobVoices){bobVoices=a.voices.join();bobSel.innerHTML="";a.voices.forEach(function(v){var o=document.createElement("option");o.value=v;o.textContent=v;bobSel.appendChild(o);});}
+    if(a.voice&&document.activeElement!==bobSel)bobSel.value=a.voice;
+    annNote.textContent=!a.bob_key?"(Bob is waiting for his OpenAI key; Buddy has every break)":"(Bob this month: $"+a.spent.toFixed(2)+" of $"+a.budget.toFixed(2)+", estimated on the high side"+(a.spent>=a.budget?"; used up, Buddy covers":"")+")";}
+  bobSel.addEventListener("change",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"bobvoice",voice:bobSel.value}));log("Bob's voice: "+bobSel.value);}});
+  hearBob.addEventListener("click",function(){if(!ws||ws.readyState!==1)return;
+    try{bobAudio.muted=true;bobAudio.src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";var p=bobAudio.play();if(p&&p.catch)p.catch(function(){});}catch(e){}   // unlock playback during the tap (iPhone)
+    hearBob.disabled=true;hearBob.textContent="One moment\u2026";ws.send(JSON.stringify({type:"hearbob",voice:bobSel.value}));
+    setTimeout(function(){hearBob.disabled=false;hearBob.textContent="Hear Bob";},20000);});
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="ann"]'),function(r){r.addEventListener("change",function(){if(r.checked&&ws&&ws.readyState===1){ws.send(JSON.stringify({type:"announcer",who:r.value}));log("announcer: "+r.parentNode.textContent.trim());}});});
+  function mmss(t){t=Math.max(0,t|0);return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
+  function showRec(r){if(!r)return;var st=r.state||"?";
+    if(st==="busy"||st==="?"){recState.textContent="(Spotify is slow to answer)";return;}   // keep the last record, label and art
+    recPlaying=st==="playing";recShuffle=!!r.shuffle;
+    recState.textContent=st==="not running"?"(Spotify is closed on the Mac)":st==="playing"?"":"("+st+")";
+    recTitle.textContent=r.title||"\u2014";recArtist.textContent=r.artist||"";recAlbum.textContent=r.album||"";recTime.textContent=r.dur?mmss(r.pos)+" of "+mmss(r.dur):"";
+    if(r.art&&r.art!==recArtUrl&&/^https:\/\//.test(r.art)){recArtUrl=r.art;recArt.src=r.art;}recArt.style.visibility=r.art?"visible":"hidden";
+    recPP.textContent=recPlaying?"Pause":"Play";recShuf.setAttribute("aria-pressed",recShuffle?"true":"false");recShuf.textContent=recShuffle?"Shuffle: on":"Shuffle: off";}
+  function recSend(o){if(!ws||ws.readyState!==1||recBusy)return false;o.type="records";ws.send(JSON.stringify(o));recBusy=true;applyRec();recMsg.textContent="";
+    clearTimeout(recTimer);recTimer=setTimeout(function(){recBusy=false;applyRec();recMsg.textContent="No answer from the Mac. Try again.";},12000);return true;}
+  recPP.addEventListener("click",function(){var d=recPlaying?"pause":"resume";if(recSend({do:d}))log("records: "+(recPlaying?"pause":"play"));});
+  recEl("rec-next").addEventListener("click",function(){if(recSend({do:"next"}))log("records: next");});
+  recEl("rec-prev").addEventListener("click",function(){if(recSend({do:"previous"}))log("records: back");});
+  recShuf.addEventListener("click",function(){if(recSend({do:"shuffle",on:!recShuffle}))log("records: shuffle "+(recShuffle?"off":"on"));});
+  recEl("rec-form").addEventListener("submit",function(e){e.preventDefault();var v=recLink.value.trim();if(!v)return;if(recSend({do:"play",link:v})){log("records: putting on "+v.slice(0,80));recLink.blur();}});
+  stOn.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"station",on:true}));log("On Air: the station comes up within a few seconds");}});
+  stOff.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"station",on:false}));log("Off Air: held off until On Air");}});
+  stRoom.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"room",on:!roomOn}));log(roomOn?"room: Spotify silent on the Mac":"room: Spotify plays on the Mac too");}});
+  sayBtn.addEventListener("click",function(){var t=text.value.trim();if(!t||!ws||ws.readyState!==1)return;sayBtn.disabled=true;ws.send(JSON.stringify({type:"say",text:t,plain:plain.checked}));log("sent to Buddy: "+t);text.value="";});
+  document.getElementById("signout").addEventListener("click",function(e){e.preventDefault();try{localStorage.removeItem("sfv-booth-key");}catch(x){}key=null;if(ws){ws.onclose=null;ws.close();}setConn(false,"Signed out.");signin.style.display="block";});
+  fetch("live.json?t="+Math.floor(Date.now()/300000)).then(function(r){return r.json();}).then(function(c){url=c.booth;connect();}).catch(function(){setConn(false,"Could not read live.json.");});
+  setInterval(function(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"status"}));},5000);
+  // a booth left open picks up a new version of itself: when the page on the server changes, reload once nobody is on a mic or a takeover
+  var pageStamp=null;
+  setInterval(function(){fetch(location.pathname+"?v="+Date.now(),{method:"HEAD",cache:"no-store"}).then(function(r){var lm=r.headers.get("Last-Modified")||r.headers.get("ETag");if(!lm)return;if(pageStamp===null){pageStamp=lm;return;}
+    if(lm!==pageStamp&&!micOn&&!macOn&&!toMine&&!recBusy){log("a newer booth is out; reloading");setTimeout(function(){location.reload();},800);}}).catch(function(){});},180000);
+})();
+</script>
+</body>
+</html>

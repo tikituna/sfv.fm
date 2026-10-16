@@ -1,0 +1,422 @@
+<html>
+<head>
+<title>SAN FERNANDO VALLEY RADIO</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="images/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="images/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="images/apple-touch-icon.png">
+<meta name="description" content="San Fernando Valley Radio, live from the Valley: records from the garage, Buddy Sepulveda on the breaks, Valley weather and traffic, Huell Howser and the freeway on the TV.">
+<link rel="canonical" href="https://sfv.fm/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="San Fernando Valley Radio">
+<meta property="og:title" content="San Fernando Valley Radio">
+<meta property="og:description" content="Live from Berry Drive, Studio City. Records from the garage, Huell Howser, the freeway.">
+<meta property="og:url" content="https://sfv.fm/">
+<meta property="og:image" content="https://sfv.fm/images/card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+.sw{-webkit-appearance:none;appearance:none;position:relative;width:44px;height:24px;border:1px solid #000080;border-radius:12px;background:#fff;padding:0;margin:0 7px 0 0;cursor:pointer;vertical-align:middle;transition:background .25s ease,box-shadow .25s ease;-webkit-tap-highlight-color:transparent}
+.sw .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#000080;transition:transform .36s cubic-bezier(.34,1.6,.64,1),background .25s ease}
+.sw[aria-pressed=true]{background:#000080;box-shadow:0 0 0 3px rgba(0,0,128,.12)}
+.sw[aria-pressed=true] .knob{transform:translateX(20px);background:#fff}
+.sw:active .knob{transform:scale(.86)}
+.sw[aria-pressed=true]:active .knob{transform:translateX(20px) scale(.86)}
+.sw:focus-visible{outline:2px solid #800080;outline-offset:2px}
+#radiolabel{vertical-align:middle}
+#radiolabel.on{color:#ff0000}
+.meter{display:inline-block;vertical-align:middle;margin-left:9px;cursor:pointer;line-height:0}
+.meter canvas{display:inline-block;vertical-align:middle;image-rendering:pixelated;image-rendering:crisp-edges}
+#signal{display:none;margin:3px 0 1px;font-size:11px;color:#000080;letter-spacing:.01em}
+#signal.show{display:block}
+#cam{width:100%;max-width:640px;height:auto;border:1px solid #000080;image-rendering:pixelated;background:#fff}
+#pop{position:fixed;left:50%;top:18%;transform:translateX(-50%);width:min(380px,92vw);background:#fff;border:1px solid #000080;padding:10px 12px;box-shadow:4px 4px 0 #000080;font-size:13px;line-height:1.35;z-index:9}
+#pop img{float:left;margin:2px 10px 4px 0;border:1px solid #000080}
+#pop .x{float:right;color:#800080;text-decoration:underline;cursor:pointer;background:none;border:0;font:inherit;padding:0}
+a.artist{color:#800080}
+#card{position:fixed;right:14px;bottom:14px;width:min(330px,92vw);background:#fff;border:1px solid #000080;padding:10px 12px;box-shadow:4px 4px 0 #000080;font-size:13px;line-height:1.35;z-index:8}
+#card img{float:left;margin:2px 10px 4px 0;border:1px solid #000080}
+#card .x{float:right;color:#800080;text-decoration:underline;cursor:pointer;background:none;border:0;font:inherit;padding:0;margin-left:8px}
+@media (max-width:600px){#card{left:4vw;right:4vw;bottom:8px;width:auto}}
+@media (prefers-reduced-motion:reduce){.sw .knob,.sw{transition:none}}
+@media (max-width:600px){td{display:block;width:auto !important}#sponsors td{display:inline-block;width:46% !important;vertical-align:top}}
+#camv{display:none;width:100%;max-width:640px;height:auto;border:1px solid #000080;background:#000}
+#tv{display:none;width:100%;max-width:640px;aspect-ratio:16/9;height:auto;border:1px solid #000080;background:#000;vertical-align:top}
+#channels a{color:#800080}
+#listeners{position:absolute;top:10px;right:14px;border:1px solid #000080;padding:3px 8px;font-size:11px;line-height:1.3;background:#fff;white-space:nowrap}
+#listeners b{font-size:14px}
+#listeners .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff0000;vertical-align:1px;margin-right:4px;animation:blink 2s ease-in-out infinite}
+#listeners.off .dot{background:#999;animation:none}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+@media (max-width:600px){#listeners{position:static;display:inline-block;margin:6px 0 0}body{text-align:left}#listeners-wrap{text-align:right;padding:0 12px}}
+@media (prefers-reduced-motion:reduce){#listeners .dot{animation:none}}
+#sponsors{table-layout:fixed}#sponsors td{padding:6px 4px}#sponsors img{max-width:100%;height:auto}
+#camv.halftone{filter:grayscale(1) contrast(1.7) brightness(1.05)}
+#camwrap{position:relative;display:inline-block;max-width:100%}
+#camwrap .dots{display:none;position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,#fff 0.9px,transparent 1.1px);background-size:3px 3px;mix-blend-mode:screen;opacity:.9}
+#camwrap.halftone .dots{display:block}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.16/hls.min.js" defer></script>
+<base target="_blank">
+</head>
+<body link="#800080" bgcolor="#ffffff" text="#000080" vlink="#ff0000">
+<div id="listeners-wrap"><div id="listeners" class="off" aria-live="polite"><span class="dot"></span>OFF AIR</div></div>
+<p align="center"><b><font size="6">S</font><font size="4">AN </font><font size="6">F</font><font size="4">ERNANDO </font><font size="6">V</font><font size="4">ALLEY </font><font size="6">R</font><font size="4">ADIO</font><font size="2"><br>sfv.fm<br>Berry Drive, Studio City, California</font><br>On the Air</b><font size="1">&nbsp;</font></p>
+<hr>
+<p align="center"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><span class="dots"></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
+<table border="0" cellspacing="0" cellpadding="4" align="center" width="90%">
+  <tr><td valign="top" width="50%"><font size="2"><button type="button" class="sw" id="radio" aria-pressed="false" aria-label="Sound"><span class="knob"></span></button><span id="radiolabel">Sound off</span><span class="meter" id="meter" title="Signal"><canvas id="vu" width="40" height="11"></canvas></span><span id="signal"></span><br><span id="now">The station is on the air. Turn the sound on to join the program in progress.</span></font></td>
+      <td valign="top" width="50%"><font size="2"><b>Host:</b> <span id="host">Buddy Sepulveda</span><br><b>Next break:</b> <span id="next-break">&mdash;</span><br><b>Conditions:</b> <span id="wx">&mdash;</span></font></td></tr>
+</table>
+<audio id="music" preload="none" loop><source src="music/2007-compilation.m4a" type="audio/mp4"></audio>
+<audio id="voice" preload="none"></audio>
+<audio id="live" preload="none"></audio>
+<hr>
+<p align="center"><font size="2"><b>This broadcast is brought to you by</b></font></p>
+<table border="0" cellspacing="0" cellpadding="6" align="center" width="90%" id="sponsors">
+  <tr>
+    <td align="center" valign="bottom" width="14%"><a href="https://brentsdeli.com/"><img src="sponsors/brents.png" height="44" alt="Brent's Deli" border="0"></a><br><font size="1">Northridge, since 1967. The black pastrami Reuben.</font></td>
+    <td align="center" valign="bottom" width="14%"><a href="https://tagdeli.com/"><img src="sponsors/tarzana-armenian-deli.png" height="48" alt="Tarzana Armenian Deli" border="0"></a><br><font size="1">Ventura Boulevard, since 1972. The original pita wrap.</font></td>
+    <td align="center" valign="bottom" width="14%"><a href="https://www.big5sportinggoods.com/"><img src="sponsors/big5.png" height="30" alt="Big 5 Sporting Goods" border="0"></a><br><font size="1">Since 1955. Everything for the game, on the Boulevard.</font></td>
+    <td align="center" valign="bottom" width="14%"><a href="https://maps.google.com/?q=Bill's+Burgers+14742+Oxnard+St+Van+Nuys"><img src="sponsors/bills-burgers.png" height="38" alt="Bill's Burgers" border="0"></a><br><font size="1">Oxnard Street, Van Nuys, since 1965. Burgers off the grill.</font></td>
+    <td align="center" valign="bottom" width="14%"><a href="https://www.tongahut.com/"><img src="sponsors/tongahut.png" height="34" alt="Tonga Hut" border="0"></a><br><font size="1">North Hollywood, since 1958. The Valley's oldest tiki bar.</font></td>
+    <td align="center" valign="bottom" width="14%"><a href="https://valsurf.com/"><img src="sponsors/valsurf.png" height="30" alt="Val Surf" border="0"></a><br><font size="1">North Hollywood, since 1962. The Valley's surf shop.</font></td>
+    <td align="center" valign="bottom" width="14%"><a href="https://www.shermanoaksll.com/"><img src="sponsors/sherman-oaks-little-league.png" height="60" alt="Sherman Oaks Little League" border="0"></a><br><font size="1">Sherman Oaks, since 1952. Play ball.</font></td>
+  </tr>
+</table>
+<hr>
+<p align="center"><b>Today's Programs</b><br><font size="1"><span id="today">&nbsp;</span></font></p>
+<table border="0" cellspacing="0" cellpadding="4" align="center" id="schedule">
+  <tr><td valign="top" nowrap><font size="2">When Sam is on</font></td><td valign="top"><font size="2"><b>Live from Berry Drive</b>. Records from the garage, whenever the transmitter is on. The recorded program is off the air for now.</font></td></tr>
+</table>
+<hr>
+<p><font size="2">San Fernando Valley Radio is live from Berry Drive whenever Sam is on the air. The television has three channels. Channel 2 is a California Department of Transportation camera on a Valley freeway: live video where your browser can reach it, a still refreshed every minute where it cannot. Channel 4 is Huell Howser, by way of the Huell Howser Archives at Chapman University, which keeps his programs and the player they play in. Channel 7 is the Monterey Bay Aquarium, live. Press 2, 4 or 7.</font></p>
+<hr>
+<p><font size="2"><a href="https://samsugarman.com/">Sugarman Ltd.</a></font></p>
+<p><font size="2">Copyright &copy; 2026<b> Sugarman Ltd.</b></font></p>
+<script>
+(function(){
+  // ---- the picture: Caltrans District 7 cameras, dithered to two colours ----
+  var cams=[
+    {id:"us101631balboablvd",hls:"CCTV-631",name:"US-101 at Balboa Boulevard, Encino"},
+    {id:"us101621laurelcanyonblvd",name:"US-101 at Laurel Canyon Boulevard, Studio City"},
+    {id:"i405677northofburbankblvd",hls:"CCTV-677",name:"I-405 north of Burbank Boulevard, Van Nuys"},
+    {id:"us101619sr170tujunga",hls:"CCTV-619",name:"US-101 at the 170, North Hollywood"},
+    {id:"sr170646shermanway",hls:"CCTV-646",name:"SR-170 at Sherman Way, North Hollywood"},
+    {id:"sr17098northofroscoeblvd",hls:"CCTV-98",name:"SR-170 north of Roscoe Boulevard, Sun Valley"}
+  ];
+  var canvas=document.getElementById("cam"),ctx=canvas.getContext("2d"),cap=document.getElementById("cam-caption");
+  var bayer=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+  var camIndex=Math.floor(Date.now()/120000)%cams.length, tries=0;
+  function draw(img,cam,isVideo){
+    var w=320,h=260,off=document.createElement("canvas");off.width=w;off.height=h;
+    var o=off.getContext("2d");o.drawImage(img,0,0,w,h);
+    var d=o.getImageData(0,0,w,h),p=d.data,sum=0;
+    for(var i=0;i<p.length;i+=4){sum+=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];}
+    if(sum/(p.length/4)>235) return false; // Caltrans "Temporarily Unavailable" card is nearly white
+    var out=ctx.createImageData(640,520),q=out.data;
+    for(var y=0;y<h;y++){for(var x=0;x<w;x++){
+      var i4=(y*w+x)*4,g=(0.299*p[i4]+0.587*p[i4+1]+0.114*p[i4+2])/255;
+      g=Math.min(1,Math.max(0,(g-0.08)*1.25));
+      var on=g>(bayer[y%4][x%4]+0.5)/16;
+      var r=on?255:0,gg=on?255:0,b=on?255:128;
+      for(var dy=0;dy<2;dy++)for(var dx=0;dx<2;dx++){var j=((y*2+dy)*640+(x*2+dx))*4;q[j]=r;q[j+1]=gg;q[j+2]=b;q[j+3]=255;}
+    }}
+    ctx.putImageData(out,0,0);
+    if(!isVideo)cap.textContent=cam.name+", "+new Date().toLocaleTimeString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit"})+" PT";
+    return true;
+  }
+  function loadCam(){
+    if(videoOn)return;
+    var cam=cams[camIndex%cams.length],img=new Image();img.crossOrigin="anonymous";
+    img.onload=function(){ if(channel!==2)return; if(!draw(img,cam)){ if(++tries<cams.length){camIndex++;loadCam();} else cap.textContent="The cameras are dark for the moment."; } else tries=0; };
+    img.onerror=function(){ if(++tries<cams.length){camIndex++;loadCam();} else cap.textContent="The cameras are dark for the moment."; };
+    img.src="https://cwwp2.dot.ca.gov/data/d7/cctv/image/"+cam.id+"/"+cam.id+".jpg?t="+Math.floor(Date.now()/60000);
+  }
+  // ---- live video, when a viewer's browser can reach it; stills otherwise ----
+  var camv=document.getElementById("camv"),wrap=document.getElementById("camwrap"),hls=null,videoOn=false,frameTimer=null,videoCam=null,watchdog=null;
+  function stopVideo(){videoOn=false;clearInterval(frameTimer);clearTimeout(watchdog);if(hls){try{hls.destroy();}catch(e){}hls=null;}try{camv.pause();camv.removeAttribute("src");camv.load();}catch(e){}camv.style.display="none";canvas.style.display="";wrap.classList.remove("halftone");}
+  function videoFrames(cam){ // real footage: the picture itself, no dither
+    canvas.style.display="none";camv.style.display="";wrap.classList.remove("halftone");cap.textContent=cam.name+", live video";
+  }
+  function startVideo(cam){
+    stopVideo();if(!cam.hls)return;videoCam=cam;
+    var src="https://wzmedia.dot.ca.gov/D7/"+cam.hls+".stream/playlist.m3u8",started=false;
+    watchdog=setTimeout(function(){if(!started)stopVideo();},9000);
+    camv.onplaying=function(){if(started)return;started=true;clearTimeout(watchdog);videoOn=true;videoFrames(cam);};
+    camv.onerror=function(){if(!started)stopVideo();};
+    if(camv.canPlayType("application/vnd.apple.mpegurl")){camv.src=src;camv.play().catch(function(){});}
+    else if(window.Hls&&Hls.isSupported()){hls=new Hls({enableWorker:true,lowLatencyMode:false,backBufferLength:10});hls.on(Hls.Events.ERROR,function(ev,data){if(data&&data.fatal)stopVideo();});hls.loadSource(src);hls.attachMedia(camv);camv.play().catch(function(){});}
+    else stopVideo();
+  }
+  // ---- the television: channel 2 is the freeways, 4 is Huell Howser, 7 is the aquarium ----
+  var tv=document.getElementById("tv"),chanBox=document.getElementById("channels"),channel=2,pageLoaded=false;
+  // Episodes with a foot in the Valley, from the Huell Howser Archives at Chapman University (their player, their hosting).
+  var huell=[
+    {t:"Leonis Adobe",s:"Visiting (1702)",v:"10026823",n:"43776312",a:"213269000",p:"2010/01/11/leonis-adobe-visiting-1702"},
+    {t:"Sunland-Tujunga",s:"Our Neighborhoods (06)",v:"10147896",n:"44129770",a:"125294018",p:"2002/09/04/sunland-and-tujunga-our-neighborhoods-06"},
+    {t:"Mulholland Fountain",s:"Visiting (505)",v:"10477830",n:"45854883",a:"34066505",p:"1996/11/23/mulholland-fountain-visiting-505"},
+    {t:"Tallyrand",s:"Visiting (1718)",v:"10028499",n:"43781019",a:"210349535",p:"2010/07/12/tallyrand-visiting-1718"},
+    {t:"Earthquake Special",s:"Visiting (205)",v:"9907241",n:"43400682",a:"165236271",p:"1994/02/08/visiting-205-earthquake-special"},
+    {t:"Earthquake Volunteers",s:"Visiting (207)",v:"9907413",n:"43401119",a:"18014150",p:"1994/01/24/visiting-207-volunteers"},
+    {t:"San Gabriel, San Fernando Rey and San Buenaventura",s:"California Missions (102)",v:"10091695",n:"43971309",a:"193090119",p:"1997/09/27/california-missions-california-missions-102"},
+    {t:"Lutefisk",s:"Visiting (803)",v:"10004551",n:"43703751",a:"163904289",p:"1999/11/21/lutefisk-visiting-803"},
+    {t:"Gardens",s:"California's Gold (131)",v:"9821715",n:"43147638",a:"159311563",p:"2008/01/09/gardens-californias-gold-131"}
+  ];
+  var aquarium=[{t:"Kelp Forest Cam",id:"w3LjpFhySTg"},{t:"Jelly Cam",id:"eQ_foBERmzA"},{t:"Moon Jelly Cam",id:"zL68biE6wAs"},{t:"Open Sea Cam",id:"n_GpVsz4nHU"},{t:"Sea Otter Cam",id:"abbR-Ttd-cA"},{t:"Shark Cam",id:"tEtg5Kg3voQ"},{t:"Monterey Bay Cam",id:"fVa6-zCBR7A"},{t:"Spider Crab Cam",id:"dzmJXWmA2EM"},{t:"Aviary Cam",id:"AWJi0LgyA28"}];
+  function pick(list,period){return list[Math.floor(Date.now()/period)%list.length];}
+  function renderChannels(){var names={2:"Freeways",4:"Huell Howser",7:"Aquarium"};chanBox.innerHTML="Channel: "+[2,4,7].map(function(c){return c===channel?"<b>"+c+" "+names[c]+"</b>":'<a href="#" target="_self" data-ch="'+c+'">'+c+" "+names[c]+"</a>";}).join(" &middot; ");}
+  function setChannel(ch,remember){
+    channel=ch;renderChannels();if(remember){try{localStorage.setItem("sfv-channel",String(ch));}catch(e){}}
+    if(ch===2){tv.style.display="none";tv.removeAttribute("src");wrap.style.display="";cap.textContent="Tuning the picture\u2026";loadCam();if(pageLoaded)startVideo(cams[camIndex%cams.length]);return;}
+    stopVideo();wrap.style.display="none";tv.style.display="inline-block";
+    if(ch===4){var e=pick(huell,3600000);tv.src="https://video.chapman.edu/V/Video?v="+e.v+"&node="+e.n+"&a="+e.a+"&preload=false";cap.innerHTML="Huell Howser, <i>"+esc(e.t)+"</i>, "+esc(e.s)+". From the <a href=\"https://blogs.chapman.edu/huell-howser-archives/"+e.p+"/\">Huell Howser Archives</a> at Chapman University. Press play; the sound is his.";}
+    else{var c=pick(aquarium,1800000);tv.src="https://www.youtube-nocookie.com/embed/"+c.id+"?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1";cap.innerHTML="<a href=\"https://www.youtube.com/watch?v="+c.id+"\">Monterey Bay Aquarium, "+esc(c.t)+"</a>, live. The television is muted; the radio is the sound.";}
+  }
+  chanBox.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[data-ch]");if(!a)return;e.preventDefault();setChannel(+a.getAttribute("data-ch"),true);});
+  document.addEventListener("keydown",function(e){if(e.metaKey||e.ctrlKey||e.altKey)return;if(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key==="2"||e.key==="4"||e.key==="7")setChannel(+e.key,true);});
+  var savedCh=2;try{var sc=+localStorage.getItem("sfv-channel");if(sc===4||sc===7)savedCh=sc;}catch(e){}
+  setChannel(savedCh,false);
+  window.addEventListener("load",function(){pageLoaded=true;if(channel===2)startVideo(cams[camIndex%cams.length]);});
+  setInterval(function(){if(channel!==2)return;var next=Math.floor(Date.now()/300000)%cams.length;if(videoOn&&videoCam===cams[next])return;camIndex=next;tries=0;loadCam();if(!videoOn||videoCam!==cams[next])startVideo(cams[next]);},60000);
+
+  // ---- the sound: one program all day, joined in progress by the clock; breaks on top ----
+  var music=document.getElementById("music"),voice=document.getElementById("voice"),btn=document.getElementById("radio"),now=document.getElementById("now");
+  var program={title:"2007 (Compilation)",artist:"Sam Sugarman",duration:7066};
+  var breaks=[]; // filled from breaks.json: [{at:"HH:MM", file:"breaks/....mp3", host:"...", text:"..."}]
+  fetch("breaks.json?t="+Math.floor(Date.now()/600000)).then(function(r){return r.json();}).then(function(b){breaks=b||[];showNext();}).catch(function(){});
+  // The station keeps Valley time wherever the listener is.
+  function valleyNow(){var p=new Intl.DateTimeFormat("en-US",{timeZone:"America/Los_Angeles",hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit",weekday:"long",month:"long",day:"numeric",year:"numeric"}).formatToParts(new Date()),o={};p.forEach(function(x){o[x.type]=x.value;});return {h:+o.hour%24,m:+o.minute,s:+o.second,weekday:o.weekday,month:o.month,day:o.day,year:o.year};}
+  function secondsToday(){var v=valleyNow();return v.h*3600+v.m*60+v.s;}
+  function fmt(s){var h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=Math.floor(s%60);return (h?h+":":"")+(h?String(m).padStart(2,"0"):m)+":"+String(x).padStart(2,"0");}
+  function label(on){btn.setAttribute("aria-pressed",on?"true":"false");var l=document.getElementById("radiolabel");l.textContent=on?"Sound on":"Sound off";l.className=on?"on":"";meterOn();}
+  function showNow(){var pos=secondsToday()%program.duration;now.innerHTML="Now playing: <a href=\"https://samsugarman.com/credits.html\" style=\"color:#800080\">"+program.artist+"</a>"+" – "+program.title+", "+fmt(pos)+" in";}
+  function showNext(){var v=valleyNow(),hm=v.h*60+v.m,nb=null;for(var i=0;i<breaks.length;i++){var p=breaks[i].at.split(":"),m=+p[0]*60+ +p[1];if(m>hm&&(nb===null||m<nb.m))nb={m:m,b:breaks[i]};}
+    document.getElementById("next-break").textContent=nb?(Math.floor(nb.m/60)%12||12)+":"+String(nb.m%60).padStart(2,"0")+(nb.m>=720?" PM":" AM"):"tomorrow";}
+  var playing=false,ticker=null,lastBreak=null;
+  function sync(){var pos=secondsToday()%program.duration;if(Math.abs(music.currentTime-pos)>3)music.currentTime=pos;}
+  function tick(){showNow();var v=valleyNow(),key=String(v.h).padStart(2,"0")+":"+String(v.m).padStart(2,"0");
+    for(var i=0;i<breaks.length;i++){if(breaks[i].at===key&&lastBreak!==key&&v.s<5){lastBreak=key;playBreak(breaks[i]);}}
+    if(v.s%30===0)sync();}
+  function playBreak(b){voice.src=b.file;music.volume=0.25;voice.play().catch(function(){music.volume=1;});voice.onended=function(){music.volume=1;showNext();};now.innerHTML="On the air: "+b.host+"";}
+  var SCHEDULE=false; // the recorded program is parked for now (Sam, Oct 14 2026): Sound only joins the live feed
+  var soundPref="on";try{soundPref=localStorage.getItem("sfv-sound")||"on";}catch(e){}
+  function remember(v){soundPref=v;try{localStorage.setItem("sfv-sound",v);}catch(e){}}
+  function on(){if(isLive){var q=tune();if(q&&q.then){q.then(function(){playing=true;label(true);pendingLine="";showLiveTrack();}).catch(function(){label(false);now.textContent="Tap anywhere on the page for the sound.";});}return;}if(!SCHEDULE){now.textContent="Checking the transmitter\u2026";checkLive(function(){if(isLive)on();else now.textContent="The station is off the air right now. Come back when Sam is on.";});return;}music.currentTime=secondsToday()%program.duration;var p=music.play();if(p&&p.then){p.then(function(){playing=true;label(true);showNow();ticker=setInterval(tick,1000);}).catch(function(){label(false);now.textContent="The browser would not start the sound. Try the link again.";});}}
+  function off(){music.pause();voice.pause();liveEl.pause();music.volume=1;playing=false;label(false);clearInterval(ticker);pendingLine="";now.textContent="The station is on the air. Turn the sound on to join the program in progress.";}
+  // iOS lets a page start sound only from a tap; unlock the host and live elements during that tap so the
+  // timer can start them later.
+  var SILENCE="data:audio/wav;base64,UklGRuQDAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YcADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",unlocked=false;
+  function unlock(el){try{el.muted=true;el.src=SILENCE;var p=el.play();if(p&&p.then)p.then(function(){el.pause();el.muted=false;el.removeAttribute("src");}).catch(function(){el.muted=false;});}catch(e){}}
+  btn.addEventListener("click",function(){wireMeter();if(!unlocked){unlocked=true;unlock(voice);if(!isLive)unlock(liveEl);}tickSound(!playing);if(navigator.vibrate){try{navigator.vibrate(8);}catch(e){}}remember(playing?"off":"on");if(studio&&!playing)now.textContent="Studio monitor: this is the transmitter. Playing here feeds the broadcast back into itself.";playing?off():on();});
+  // Sound is on by default. The browser may refuse to start it without a gesture; then the first tap or key anywhere starts it.
+  // The transmitter's own Mac: a browser there must not play the stream, or it feeds straight back into the broadcast.
+  var studio=false,studioKnown=false;
+  fetch("http://127.0.0.1:8000/status-json.xsl",{mode:"cors",cache:"no-store"}).then(function(r){studio=!!r.ok;}).catch(function(){studio=false;}).then(function(){studioKnown=true;if(studio)now.textContent="Studio monitor. The sound stays off here: it would feed back into the broadcast.";autoSound();});
+  var autoTried=false;
+  function autoSound(){if(!studioKnown||studio||autoTried||playing||soundPref==="off"||!isLive)return;autoTried=true;on();}
+  function firstGesture(e){if(studio||playing||soundPref==="off")return;if(e.target&&e.target.closest&&e.target.closest("#radio"))return;if(e.type==="keydown"&&(e.metaKey||e.ctrlKey||e.altKey||/INPUT|TEXTAREA|SELECT/.test(e.target&&e.target.tagName)))return;document.removeEventListener("click",firstGesture,true);document.removeEventListener("keydown",firstGesture,true);wireMeter();if(!unlocked){unlocked=true;unlock(voice);if(!isLive)unlock(liveEl);}on();}
+  document.addEventListener("click",firstGesture,true);document.addEventListener("keydown",firstGesture,true);
+  music.addEventListener("loadedmetadata",function(){if(music.duration&&isFinite(music.duration))program.duration=Math.round(music.duration);});
+  // ---- live from Sherman Oaks: when the Mac is on the air, the schedule steps aside ----
+  var liveEl=document.getElementById("live"),liveCfg=null,isLive=false,liveTimer=null;
+  var npTimer=null,pendingLine="";
+  // ---- about the artist: a small box with Wikipedia's summary ----
+  var pop=null,aboutCache={};
+  function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function closePop(){if(pop){pop.remove();pop=null;}}
+  function openPop(html){closePop();pop=document.createElement("div");pop.id="pop";pop.innerHTML='<button type="button" class="x" aria-label="Close">close</button>'+html;document.body.appendChild(pop);pop.querySelector(".x").addEventListener("click",closePop);}
+  function wikiSummary(title){return fetch("https://en.wikipedia.org/api/rest_v1/page/summary/"+encodeURIComponent(title.replace(/ /g,"_")),{headers:{"Accept":"application/json"}}).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){if(j.type==="disambiguation")throw 0;return j;});}
+  // A search hit counts only if the article is plainly about this name: every word of the name appears in its title or first lines.
+  function fits(artist,j){var hay=((j.title||"")+" "+(j.extract||"")).toLowerCase();return artist.toLowerCase().split(/\s+/).every(function(w){return w.length<3||hay.indexOf(w)>=0;});}
+  function wikiSearch(q,artist){return fetch("https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=3&srsearch="+encodeURIComponent(q)).then(function(r){return r.json();}).then(function(j){var hits=(j.query&&j.query.search)||[];if(!hits.length)throw 0;return wikiSummary(hits[0].title).then(function(s){if(!fits(artist,s))throw 0;return s;});});}
+  // MusicBrainz (open, free) for the facts and the links: AllMusic, Discogs, Bandcamp, the official site.
+  function mbLookup(artist){
+    var h={"Accept":"application/json"};
+    var want=artist.toLowerCase();
+    function named(x){if((x.name||"").toLowerCase()===want)return true;return (x.aliases||[]).some(function(al){return (al.name||"").toLowerCase()===want;});}
+    var url="https://musicbrainz.org/ws/2/artist/?fmt=json&limit=8&query="+encodeURIComponent('artist:"'+artist.replace(/"/g,"")+'" OR alias:"'+artist.replace(/"/g,"")+'"');
+    function get(u){return fetch(u,{headers:h}).then(function(r){if(r.status===503||r.status===429)return new Promise(function(res){setTimeout(res,1500);}).then(function(){return fetch(u,{headers:h});});return r;}).then(function(r){if(!r.ok)throw 0;return r.json();});}
+    return get(url).then(function(j){
+      var list=(j.artists||[]).slice().sort(function(x,y){return y.score-x.score;});
+      var a=list.filter(function(x){return x.score>=85&&named(x);})[0]||list.filter(function(x){return x.score>=98;})[0];
+      if(!a)throw 0;
+      return get("https://musicbrainz.org/ws/2/artist/"+a.id+"?fmt=json&inc=url-rels+tags");
+    });
+  }
+  function mbRender(a,artist){
+    var facts=[];if(a.type)facts.push(a.type);if(a.area&&a.area.name)facts.push(a.area.name);
+    var ls=a["life-span"]||{};if(ls.begin)facts.push(ls.begin.slice(0,4)+"\u2013"+(ls.ended?(ls.end||"").slice(0,4):"present"));
+    var tags=(a.tags||[]).sort(function(x,y){return y.count-x.count;}).slice(0,4).map(function(t){return t.name;});
+    var want={"allmusic":"AllMusic","discogs":"Discogs","bandcamp":"Bandcamp","official homepage":"Official site","wikipedia":"Wikipedia","wikidata":"Wikidata"},links={};
+    (a.relations||[]).forEach(function(r){var k=want[r.type];if(k&&r.url&&r.url.resource&&!links[k])links[k]=r.url.resource;});
+    if(!links.AllMusic)links.AllMusic="https://www.allmusic.com/search/artists/"+encodeURIComponent(artist);
+    if(!links.Discogs)links.Discogs="https://www.discogs.com/search/?type=artist&q="+encodeURIComponent(artist);
+    var order=["AllMusic","Discogs","Bandcamp","Official site"],row=order.filter(function(k){return links[k];}).map(function(k){return '<a href="'+esc(links[k])+'">'+k+"</a>";}).join(" &middot; ");
+    return {facts:facts.join(" &middot; ")+(tags.length?" &middot; "+esc(tags.join(", ")):""),row:row,wiki:links.Wikipedia,wikidata:links.Wikidata,name:a.name};
+  }
+  var MUSICAL=/musician|band|singer|composer|rapper|duo|trio|group|producer|\bdj\b|songwriter|artist|guitarist|pianist|vocalist|orchestra|ensemble|record label/i;
+  function musical(j){return MUSICAL.test((j.description||"")+" "+(j.extract||"").slice(0,300));}
+  function wikiFromPointer(m){
+    if(m&&m.wiki){var t=decodeURIComponent(m.wiki.split("/wiki/")[1]||"");if(t)return wikiSummary(t);}
+    if(m&&m.wikidata){var q=(m.wikidata.match(/Q\d+/)||[])[0];if(q)return fetch("https://www.wikidata.org/wiki/Special:EntityData/"+q+".json").then(function(r){return r.json();}).then(function(d){var e=d.entities[q],t=e&&e.sitelinks&&e.sitelinks.enwiki&&e.sitelinks.enwiki.title;if(!t)throw 0;return wikiSummary(t);});}
+    return Promise.reject(0);
+  }
+  function about(artist,extra){
+    if(aboutCache[artist]){openPop(aboutCache[artist]);return;}
+    openPop("<b>"+esc(artist)+"</b><br>Looking that up&hellip;");
+    var mb=mbLookup(artist).then(function(a){return mbRender(a,artist);}).catch(function(){return null;});
+    var wiki=mb.then(function(m){return wikiFromPointer(m);}).catch(function(){
+      var tries=[artist+" (band)",artist+" (musician)",artist];
+      return tries.reduce(function(pr,t){return pr.catch(function(){return wikiSummary(t).then(function(j){if(!fits(artist,j)||!musical(j))throw 0;return j;});});},Promise.reject(0))
+        .catch(function(){return wikiSearch(artist+" musician",artist).then(function(j){if(!musical(j)||j.title.toLowerCase().indexOf(artist.toLowerCase())!==0)throw 0;return j;});});
+    }).catch(function(){return null;});
+    Promise.all([wiki,mb]).then(function(res){var j=res[0],m=res[1],html="";
+      if(j){html+="<b>"+esc(j.title)+"</b>"+(j.description?' <font size="1">'+esc(j.description)+"</font>":"")+"<br>"+(j.thumbnail?'<img src="'+j.thumbnail.source+'" width="72" alt="">':"")+esc(j.extract||"")+'<br clear="all">';}
+      else{html+="<b>"+esc(artist)+"</b><br>"+(m?"":"Wikipedia and MusicBrainz have nothing on them, which is sometimes the best thing you can say about a musician.<br>");}
+      if(m&&m.facts)html+='<font size="1">'+m.facts+"</font><br>";
+      var row=[];if(j)row.push('<a href="'+j.content_urls.desktop.page+'">Wikipedia</a>');else if(m&&m.wiki)row.push('<a href="'+esc(m.wiki)+'">Wikipedia</a>');
+      if(m&&m.row)row.push(m.row);else row.push('<a href="https://www.allmusic.com/search/artists/'+encodeURIComponent(artist)+'">AllMusic</a> &middot; <a href="https://www.discogs.com/search/?type=artist&q='+encodeURIComponent(artist)+'">Discogs</a>');
+      html+='<font size="1">'+row.join(" &middot; ")+(extra||"")+"</font>";
+      aboutCache[artist]=html;openPop(html);
+    });
+  }
+  document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a.artist");if(a){e.preventDefault();about(a.getAttribute("data-artist"),a.getAttribute("data-extra")||"");}});
+  window.sfvAbout=about;window.sfvRecord=function(n){recordCard(n);};
+  // ---- the record: a card about the song itself. It opens to the side when a new one starts; close it and it stays closed until you ask for it.
+  var card=null,cardKey="",cardClosed=/[?&]card\b/.test(location.search),cardCache={},lastTrack=null; // ?card: a capture for the link preview, no record popup
+  function closeCard(){if(card){card.remove();card=null;}}
+  function openCard(html){closeCard();card=document.createElement("div");card.id="card";card.innerHTML='<button type="button" class="x" aria-label="Close">close</button>'+html;document.body.appendChild(card);card.querySelector(".x").addEventListener("click",function(){cardClosed=true;closeCard();});}
+  function mbGet(u){var h={"Accept":"application/json"};return fetch(u,{headers:h}).then(function(r){if(r.status===503||r.status===429)return new Promise(function(res){setTimeout(res,1500);}).then(function(){return fetch(u,{headers:h});});return r;}).then(function(r){if(!r.ok)throw 0;return r.json();});}
+  function cleanAlbum(a){return String(a||"").replace(/\s*[\(\[][^\)\]]*(edition|remaster|version|deluxe|expanded|anniversary|bonus|reissue)[^\)\]]*[\)\]]/ig,"").replace(/\s*-\s*(remaster|deluxe|expanded).*$/i,"").trim();}
+  function mmss(ms){var t=Math.round(ms/1000);return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
+  // MusicBrainz: when the record came out, which album, how long it runs, and a pointer to Wikipedia for the album
+  function mbRecording(n){
+    var want=n.artist.toLowerCase();
+    function credited(r){return (r["artist-credit"]||[]).some(function(ac){var nm=(ac.name||"").toLowerCase();return nm===want||want.indexOf(nm)>=0||nm.indexOf(want)>=0;});}
+    // the record is the earliest official studio album, single or EP the song appeared on; a compilation or a live set only if nothing else exists
+    function best(j,studioOnly){var pick=null;(j.recordings||[]).filter(function(r){return r.score>=80&&credited(r);}).forEach(function(r){(r.releases||[]).forEach(function(x){
+      var g=x["release-group"]||{},sec=g["secondary-types"]||[],pt=g["primary-type"]||"";
+      var studio=(pt==="Album"||pt==="Single"||pt==="EP")&&!sec.length&&(!x.status||x.status==="Official");if(studioOnly&&!studio)return;
+      var d=x.date||g["first-release-date"]||r["first-release-date"]||"",y=parseInt(d.slice(0,4),10)||9999,rank=(studio?0:1)*10000+y+(pt==="Album"?0:.5);
+      if(!pick||rank<pick.rank)pick={rank:rank,title:x.title,year:y<9999?String(y):null,rg:g.id,rec:r};});});return pick;}
+    var base='recording:"'+n.title.replace(/"/g,"")+'" AND artist:"'+n.artist.replace(/"/g,"")+'"';
+    function url(q){return "https://musicbrainz.org/ws/2/recording/?fmt=json&limit=15&query="+encodeURIComponent(q);}
+    return mbGet(url(base+' AND primarytype:(album OR single OR ep) AND status:official')).then(function(j){return best(j,true)||mbGet(url(base)).then(function(j2){return best(j2,false);});}).then(function(pick){
+      if(!pick)throw 0;
+      var out={year:pick.year||((pick.rec["first-release-date"]||"").slice(0,4)||null),len:pick.rec.length||null,album:pick.title,mbid:pick.rec.id,wiki:null,wikidata:null};
+      if(!pick.rg)return out;
+      return mbGet("https://musicbrainz.org/ws/2/release-group/"+pick.rg+"?fmt=json&inc=url-rels").then(function(g){(g.relations||[]).forEach(function(r){var u=r.url&&r.url.resource||"";if(r.type==="wikipedia")out.wiki=u;if(r.type==="wikidata")out.wikidata=u;});if(!out.year&&g["first-release-date"])out.year=g["first-release-date"].slice(0,4);return out;}).catch(function(){return out;});
+    });
+  }
+  function songWiki(n){var tries=[n.title+" ("+n.artist+" song)",n.title+" (song)",n.title];
+    return tries.reduce(function(pr,t){return pr.catch(function(){return wikiSummary(t).then(function(j){if(!/song|single|track|composition|instrumental/i.test(j.description||"")||!fits(n.artist,j))throw 0;return j;});});},Promise.reject(0));}
+  function albumWiki(n,f){var a=cleanAlbum(f&&f.album||n.album);if(!a)return Promise.reject(0);
+    return wikiFromPointer(f||{}).then(function(j){if(!fits(n.artist,j))throw 0;return j;}).catch(function(){var tries=[a+" ("+n.artist+" album)",a+" (album)",a];
+      return tries.reduce(function(pr,t){return pr.catch(function(){return wikiSummary(t).then(function(j){if(!/album|EP|soundtrack|compilation/i.test(j.description||"")||!fits(n.artist,j))throw 0;return j;});});},Promise.reject(0));});}
+  function recordCard(n){
+    var key=n.artist+"|"+n.title;cardClosed=false;cardKey=key;lastTrack=n;
+    if(cardCache[key]){openCard(cardCache[key]);return;}
+    openCard("<b>"+esc(n.title)+"</b><br>"+esc(n.artist)+"<br>Looking that up&hellip;");
+    var facts=mbRecording(n).catch(function(){return null;});
+    var wiki=songWiki(n).then(function(j){j.kind="song";return j;}).catch(function(){return facts.then(function(f){return albumWiki(n,f).then(function(j){j.kind="album";return j;});});}).catch(function(){return null;});
+    Promise.all([facts,wiki]).then(function(res){var f=res[0],j=res[1],html="";
+      if(n.art)html+='<img src="'+esc(n.art)+'" width="56" height="56" alt="">';
+      html+="<b>"+esc(n.title)+"</b><br>"+esc(n.artist);
+      var line=[];if(f&&f.album)line.push("<i>"+esc(f.album)+"</i>");else if(n.album)line.push("<i>"+esc(cleanAlbum(n.album))+"</i>");if(f&&f.year)line.push(f.year);if(f&&f.len)line.push(mmss(f.len));if(line.length)html+="<br>"+line.join(", ");
+      if(j){var ex=(j.extract||"").replace(/\s+/g," ");if(ex.length>460)ex=ex.slice(0,460).replace(/\s\S*$/,"")+"\u2026";html+='<p style="margin:6px 0 4px">'+(j.kind==="album"?"<i>On the album.</i> ":"")+esc(ex)+"</p>";}
+      else html+='<p style="margin:6px 0 4px">Nothing on file about this one. It is playing anyway.</p>';
+      var links=[];if(j&&j.content_urls)links.push('<a href="'+esc(j.content_urls.desktop.page)+'">Wikipedia</a>');if(f&&f.mbid)links.push('<a href="https://musicbrainz.org/recording/'+f.mbid+'">MusicBrainz</a>');if(n.url)links.push('<a href="'+esc(n.url)+'">Open in Spotify</a>');
+      if(links.length)html+='<font size="1">'+links.join(" &middot; ")+"</font>";
+      html+='<div style="clear:both"></div>';cardCache[key]=html;if(!cardClosed&&cardKey===key)openCard(html);
+    });
+  }
+  document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a.record");if(a){e.preventDefault();if(lastTrack)recordCard(lastTrack);}});
+  window.sfvLive={el:liveEl,lag:lag,retune:retune,toggle:function(){btn.click();},hush:function(){off();},tuneTo:function(c){liveCfg=c;checkLive();},state:function(){return {isLive:isLive,playing:playing,studio:studio,lag:lag(),paused:liveEl.paused,t:liveEl.currentTime,label:document.getElementById("radiolabel").textContent};}};
+  function showLiveTrack(){if(!liveCfg||!liveCfg.nowplaying)return;fetch(liveCfg.nowplaying+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(n){if(!isLive)return;var line="LIVE from Berry Drive, Studio City. ";if(n&&n.title){var extra=n.url?' &middot; <a href="'+esc(n.url)+'">Open in Spotify</a>':"";line+=(n.art?'<img src="'+esc(n.art)+'" width="18" height="18" alt="" style="vertical-align:-3px;border:1px solid #000080"> ':"")+'<a href="#" target="_self" class="artist" data-artist="'+esc(n.artist)+'" data-extra="'+esc(extra)+'">'+esc(n.artist)+"</a> \u2013 "+esc(n.title)+' &middot; <a href="#" target="_self" class="record">The record</a>';}else if(n&&n.host){line+=esc(n.host)+" has the station, from their own device.";}else{line+="Sam is on the air.";}var html=line+'';if(html===pendingLine)return;pendingLine=html;var wait=playing&&!liveEl.paused?Math.min(30,Math.round(lag())+3)*1000:0;var key=n&&n.title?(n.artist+"|"+n.title):"";setTimeout(function(){if(isLive&&pendingLine===html){now.innerHTML=html;if(key&&key!==cardKey){cardKey=key;lastTrack=n;if(!cardClosed)recordCard(n);}}},wait);}).catch(function(){});}
+  function goLive(){if(isLive)return;isLive=true;pendingLine="";setTimeout(autoSound,0);showLiveTrack();clearInterval(npTimer);npTimer=setInterval(showLiveTrack,10000);if(playing){music.pause();voice.pause();tune().catch(function(){});}now.innerHTML="LIVE from Berry Drive, Studio City. Sam is on the air.";document.getElementById("host").textContent="Sam Sugarman, live from Berry Drive";}
+  function endLive(){if(!isLive)return;isLive=false;clearInterval(npTimer);closeCard();cardKey="";liveEl.pause();liveEl.removeAttribute("src");liveEl.load();document.getElementById("host").textContent="Buddy Sepulveda";if(playing){if(SCHEDULE){music.currentTime=secondsToday()%program.duration;music.play().catch(function(){});showNow();}else{playing=false;label(false);now.textContent="Sam has left the air. The recorded program is parked for now.";}}}
+  // Live sound must stay at the live edge. A pause from the lock screen, a phone call or a slow link leaves the
+  // browser replaying audio that can be minutes old (the backlog sits in the network pipe, where the media buffer
+  // cannot see it), so compare the clock with how much has actually played and tune in again when they drift apart.
+  // iPhones take their time to start a live stream, so the drift is measured from the moment sound actually began.
+  var tunedAt=0,playedAt=0,t0=0;
+  function logEv(e){try{if(!liveCfg||!liveCfg.status)return;fetch(liveCfg.status.replace(/status-json\.xsl.*$/,"")+"sfvlog/"+encodeURIComponent(e).replace(/%20/g,"_")+"/"+Date.now(),{mode:"no-cors",cache:"no-store"}).catch(function(){});}catch(x){}}
+  ["play","playing","pause","stalled","waiting","ended","emptied","suspend","abort"].forEach(function(ev){liveEl.addEventListener(ev,function(){logEv(ev+" t="+Math.round(liveEl.currentTime)+" rs="+liveEl.readyState+" ns="+liveEl.networkState);});});
+  liveEl.addEventListener("error",function(){logEv("error code="+(liveEl.error&&liveEl.error.code)+" msg="+(liveEl.error&&liveEl.error.message||""));});
+  document.addEventListener("visibilitychange",function(){logEv("vis "+(document.hidden?"hidden":"visible"));});
+  // a random id for this tab, so the booth can count each listener once (a phone opens two connections to the stream)
+  var sid="";try{sid=sessionStorage.getItem("sfv-sid")||"";if(!sid){sid=Math.random().toString(36).slice(2,8);sessionStorage.setItem("sfv-sid",sid);}}catch(e){sid=Math.random().toString(36).slice(2,8);}
+  // the same heartbeat to the booth's own address, which (unlike the stream's) can tell roughly where a listener is
+  var stalls=0;liveEl.addEventListener("stalled",function(){stalls++;});
+  function boothBeat(){try{var u=(liveCfg&&liveCfg.booth||"").replace(/^wss:/,"https:").replace(/\/booth$/,"/hb");if(!u)return;
+    fetch(u+"?id="+sid+"&t="+(liveEl.currentTime||0).toFixed(0)+"&playing="+playing+"&muted="+liveEl.muted+"&vis="+(document.visibilityState||"")+"&ch="+channel+"&src="+encodeURIComponent(liveEl.currentSrc?liveEl.currentSrc.split("/").pop().split("?")[0]:"-")+"&stalls="+stalls,{mode:"no-cors",cache:"no-store"}).catch(function(){});}catch(e){}}
+  setInterval(function(){if(isLive||playing)boothBeat();},10000);
+  setInterval(function(){if(!isLive&&!playing)return;var v=document.getElementById("camv");logEv("hb id="+sid+" t="+(liveEl.currentTime||0).toFixed(1)+" paused="+liveEl.paused+" muted="+liveEl.muted+" vol="+liveEl.volume+" rs="+liveEl.readyState+" ns="+liveEl.networkState+" err="+(liveEl.error?liveEl.error.code:0)+" drift="+Math.round(drift())+" playing="+playing+" src="+(liveEl.currentSrc?liveEl.currentSrc.split("/").pop().split("?")[0]:"-")+" cam="+(v&&!v.paused?"video":"still")+" ch="+channel);},10000);
+  function tune(why){tunedAt=Date.now();playedAt=0;logEv("tune "+(why||"")+" ua="+(apple?"apple":"other"));liveEl.src=liveCfg.stream+"?t="+Date.now();return liveEl.play();}
+  liveEl.addEventListener("playing",function(){if(!playedAt){playedAt=Date.now();t0=liveEl.currentTime||0;}});
+  function lag(){try{var b=liveEl.buffered;return b.length?b.end(b.length-1)-liveEl.currentTime:0;}catch(e){return 0;}}
+  function drift(){return playedAt?(Date.now()-playedAt)/1000-((liveEl.currentTime||0)-t0):-1;}
+  function behind(){if(!playedAt)return Date.now()-tunedAt>30000;return Date.now()-playedAt>8000&&drift()>12;}
+  // If the live connection dies while the mount is still up (an encoder restart), re-tune after a moment.
+  function retune(why){if(isLive&&playing)tune((why||"retune")+" drift="+Math.round(drift())).catch(function(){});}
+  setInterval(function(){if(isLive&&playing&&!liveEl.paused&&behind())retune("watchdog");},5000);
+  liveEl.addEventListener("play",function(){if(!isLive)return;playing=true;label(true);pendingLine="";showLiveTrack();if(behind())retune("resume");});
+  document.addEventListener("visibilitychange",function(){if(!document.hidden&&isLive&&playing&&!liveEl.paused&&behind())retune("visible");});
+  liveEl.addEventListener("pause",function(){if(isLive&&playing&&!liveEl.ended&&!liveEl.error&&Date.now()-tunedAt>1500){playing=false;label(false);pendingLine="";now.textContent="The station is on the air. Turn the sound on to join the program in progress.";}});
+  ["error","ended","stalled"].forEach(function(ev){liveEl.addEventListener(ev,function(){setTimeout(function(){retune("after "+ev);},3000);});});
+  var cfgTries=0;
+  function checkLive(cb){if(!liveCfg||!liveCfg.status){if(cb&&cfgTries++<10)setTimeout(function(){checkLive(cb);},500);else if(cb)cb();return;}if(isLive&&playing&&(liveEl.paused||liveEl.error))retune("checkLive "+(liveEl.error?"error":"paused"));fetch(liveCfg.status+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){liveStats=j&&j.icestats;var src=liveStats&&liveStats.source;var up=false;if(src){var list=Array.isArray(src)?src:[src];up=list.some(function(m){return /\/live$/.test(m.listenurl||"");});}up?goLive():endLive();showListeners();if(cb)cb();}).catch(function(){endLive();showListeners();if(cb)cb();});}
+  // ---- the meter: a spectrum of the sound itself where the browser allows it, lively bars on iPhones and Safari ----
+  // Hover (or tap) and it opens into a wide red spectrum with the transmitter's numbers beside it.
+  var meter=document.getElementById("meter"),vu=document.getElementById("vu"),signal=document.getElementById("signal");
+  var ac=null,an=null,out=null,fdata=null,clk=null,hot=false,pinned=false,fake=[],liveStats=null,sigTimer=null,raf=0;
+  function wireMeter(){if(ac!==null)return;ac=false;if(apple)return;var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;try{var c=new AC(),a=c.createAnalyser();a.fftSize=256;a.smoothingTimeConstant=.78;liveEl.crossOrigin="anonymous";[music,voice,liveEl].forEach(function(el){c.createMediaElementSource(el).connect(a);});var og=c.createGain();if(window.sfvQuiet)og.gain.value=0;a.connect(og);og.connect(c.destination);out=og;ac=c;an=a;fdata=new Uint8Array(a.frequencyBinCount);}catch(e){ac=false;an=null;}}
+  function tickSound(up){if(apple)return;try{var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;var c=ac||clk||(clk=new AC());if(c.state==="suspended")c.resume();var t=c.currentTime+.001,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.setValueAtTime(up?2200:1500,t);o.frequency.exponentialRampToValueAtTime(up?1400:900,t+.03);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.07,t+.003);g.gain.exponentialRampToValueAtTime(.0001,t+.045);o.connect(g);g.connect(out&&c===ac?out:c.destination);o.start(t);o.stop(t+.05);}catch(e){}}
+  function levels(n){var i,out=[];
+    if(an&&playing){an.getByteFrequencyData(fdata);var bins=Math.floor(fdata.length*.55);for(i=0;i<n;i++){var a=Math.floor(Math.pow(i/n,1.7)*bins),b=Math.max(a+1,Math.floor(Math.pow((i+1)/n,1.7)*bins)),m=0;for(var k=a;k<b;k++)if(fdata[k]>m)m=fdata[k];out.push(Math.pow(m/255,1.3));}return out;}
+    if(fake.length!==n){fake=[];for(i=0;i<n;i++)fake.push(0);}
+    var t=Date.now()/1000;for(i=0;i<n;i++){var target=playing?(.3+.7*Math.abs(Math.sin(t*(1.1+i*.29)+i*1.7)))*(.55+.45*Math.random()):0;fake[i]+=(target-fake[i])*(target>fake[i]?.3:.1);out.push(fake[i]);}return out;}
+  function drawMeter(){raf=0;var dpr=window.devicePixelRatio||1,cell=(vu.closest&&vu.closest("td")||document.body).clientWidth||400,W=hot?Math.max(120,Math.min(240,cell-150)):40,H=hot?22:11,n=hot?Math.round(W/5):12;
+    if(vu.width!==Math.round(W*dpr)||vu.height!==Math.round(H*dpr)){vu.width=Math.round(W*dpr);vu.height=Math.round(H*dpr);vu.style.width=W+"px";vu.style.height=H+"px";}
+    var g=vu.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);var lv=levels(n),gap=1,bw=(W-gap*(n-1))/n,busy=false;g.fillStyle=hot?"#ff0000":"#000080";
+    for(var i=0;i<n;i++){if(lv[i]>.02)busy=true;var h=Math.max(1,Math.round(lv[i]*H)),x=i*(bw+gap);if(hot)g.fillRect(x,Math.round((H-h)/2),bw,h);else g.fillRect(x,H-h,bw,h);}
+    if((playing||hot||busy)&&!document.hidden)raf=requestAnimationFrame(drawMeter);}
+  function meterOn(){if(!raf)raf=requestAnimationFrame(drawMeter);}
+  function mountStats(){if(!liveStats||!liveStats.source)return null;var list=Array.isArray(liveStats.source)?liveStats.source:[liveStats.source],total=0,start=null;list.forEach(function(m){total+=(+m.listeners||0);if(!start&&m.stream_start_iso8601)start=m.stream_start_iso8601;});return {listeners:total,start:start};}
+  function onAir(iso){var s=Math.max(0,Math.floor((Date.now()-Date.parse(iso.replace(/([+-]\d\d)(\d\d)$/,"$1:$2")))/1000)),h=Math.floor(s/3600),mi=Math.floor(s%3600/60);return h?h+" h "+mi+" m":mi+" m "+(s%60)+" s";}
+  // The audience: the real count plus a crowd that drifts every five minutes, usually six or so, now and then twenty, never past thirty-one.
+  function crowd(real){var slot=Math.floor(Date.now()/300000),h=Math.sin(slot*12.9898)*43758.5453,r=h-Math.floor(h);var n=r<.15?15+Math.floor(r/.15*10):4+Math.floor(r*6);return Math.min(31,n+(real||0));}
+  function showSignal(){var parts=[];if(isLive){var m=mountStats();parts.push("LIVE",/aac/.test((liveCfg&&liveCfg.stream)||"")?"AAC 256 kbps":"MP3 320 kbps");parts.push(crowd(m?m.listeners:0)+" listening");if(m&&m.start)parts.push(onAir(m.start)+" on the air");parts.push("Berry Drive, Studio City");}else{var v=valleyNow();parts.push("OFF AIR","transmitter at Berry Drive, Studio City",String(v.h).padStart(2,"0")+":"+String(v.m).padStart(2,"0")+" in the Valley");}signal.textContent=parts.join(" · ");}
+  var lbox=document.getElementById("listeners");
+  function showListeners(){if(isLive){var m=mountStats();lbox.className="";lbox.innerHTML='<span class="dot"></span>ON AIR &middot; <b>'+crowd(m?m.listeners:0)+'</b> listening';}else{lbox.className="off";lbox.innerHTML='<span class="dot"></span>OFF AIR';}}
+  setInterval(showListeners,60000);
+  function setHot(h){hot=h;signal.className=h?"show":"";clearInterval(sigTimer);if(h){showSignal();sigTimer=setInterval(showSignal,1000);checkLive();}meterOn();}
+  meter.addEventListener("mouseenter",function(){setHot(true);});meter.addEventListener("mouseleave",function(){if(!pinned)setHot(false);});
+  meter.addEventListener("click",function(){pinned=!pinned;setHot(pinned);});
+  document.addEventListener("visibilitychange",function(){if(!document.hidden)meterOn();});
+  meterOn();
+  var apple=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Safari/.test(navigator.userAgent)&&!/Chrome|Chromium|Edg/.test(navigator.userAgent));
+  fetch("live.json?t="+Math.floor(Date.now()/300000)).then(function(r){return r.json();}).then(function(c){if(apple&&c.stream_aac)c.stream=c.stream_aac;liveCfg=c;if(c&&c.status){checkLive();liveTimer=setInterval(checkLive,30000);}}).catch(function(){});
+  label(false);
+  var v0=valleyNow();document.getElementById("today").textContent=v0.weekday+", "+v0.month+" "+v0.day+", "+v0.year+", Pacific time";
+
+  // ---- conditions at the transmitter (NWS, no key) ----
+  function weather(){
+    var spots=fetch("https://api.open-meteo.com/v1/forecast?latitude=34.1683,34.1517,34.1511&longitude=-118.6059,-118.3525,-118.4490&current=temperature_2m&temperature_unit=fahrenheit&timezone=America%2FLos_Angeles").then(function(r){return r.json();}).then(function(j){
+      var list=Array.isArray(j)?j:[j],names=["Woodland Hills","Toluca Lake","Sherman Oaks"];
+      return names.map(function(nm,i){var c=list[i]&&list[i].current;return c&&c.temperature_2m!=null?nm+" "+Math.round(c.temperature_2m)+"\u00b0":null;}).filter(Boolean).join(", ");
+    }).catch(function(){return "";});
+    var airport=fetch("https://api.weather.gov/stations/KVNY/observations/latest",{headers:{"Accept":"application/geo+json"}}).then(function(r){return r.json();}).then(function(j){
+      var p=j.properties,c=p.temperature.value,f=c==null?null:Math.round(c*9/5+32),when=new Date(p.timestamp);
+      return "Van Nuys Airport "+(f==null?"":f+"\u00b0F, ")+(p.textDescription||"").toLowerCase()+", as of "+when.toLocaleTimeString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit"})+" PT";
+    }).catch(function(){return "";});
+    Promise.all([spots,airport]).then(function(r){document.getElementById("wx").textContent=[r[0],r[1]].filter(Boolean).join(". ")||"no report";});
+  }
+  weather();setInterval(weather,600000);
+})();
+</script>
+</body>
+</html>
