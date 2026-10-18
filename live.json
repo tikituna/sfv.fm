@@ -1,7 +1,7 @@
 {
-  "status": "https://sams-macbook-air.tail26a86d.ts.net:8443/status-json.xsl",
-  "stream": "https://sams-macbook-air.tail26a86d.ts.net:8443/live",
-  "stream_aac": "https://sams-macbook-air.tail26a86d.ts.net:8443/live.aac",
-  "nowplaying": "https://sams-macbook-air.tail26a86d.ts.net:8443/nowplaying.json",
-  "booth": "wss://sams-macbook-air.tail26a86d.ts.net:10000/booth"
+  "status": "https://otto-macmini.tail26a86d.ts.net:8443/status-json.xsl",
+  "stream": "https://otto-macmini.tail26a86d.ts.net:8443/live",
+  "stream_aac": "https://otto-macmini.tail26a86d.ts.net:8443/live.aac",
+  "nowplaying": "https://otto-macmini.tail26a86d.ts.net:8443/nowplaying.json",
+  "booth": "wss://otto-macmini.tail26a86d.ts.net:10000/booth"
 }
