@@ -57,11 +57,33 @@ a.artist{color:#800080}
 #camwrap{position:relative;display:inline-block;max-width:100%}
 #camwrap .dots{display:none;position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,#fff 0.9px,transparent 1.1px);background-size:3px 3px;mix-blend-mode:screen;opacity:.9}
 #camwrap.halftone .dots{display:block}
+#tune{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);cursor:pointer;opacity:0;transition:opacity .25s ease;-webkit-tap-highlight-color:transparent}
+#tune[hidden]{display:none}
+#tune.show{opacity:1}
+#tune .card{width:min(360px,100%);box-sizing:border-box;background:#fff;border:1px solid #000080;box-shadow:6px 6px 0 #000080;padding:16px 18px 12px;text-align:center;line-height:1.35;color:#000080}
+#tune .onair{font-size:11px;font-weight:bold;letter-spacing:.16em;color:#ff0000}
+#tune .onair .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#ff0000;vertical-align:0;margin-right:6px;animation:blink 2s ease-in-out infinite}
+#tune .name{margin:8px 0 1px;font-weight:bold;font-size:15px}
+#tune .where{font-size:13px}
+#tune .play{display:block;width:100%;margin:14px 0 9px;padding:13px 10px;font:inherit;font-size:21px;font-weight:bold;color:#fff;background:#000080;border:0;border-radius:0;cursor:pointer}
+#tune .play:active{transform:translate(1px,1px)}
+#tune .play:focus-visible{outline:2px solid #800080;outline-offset:3px}
+#tune .now{font-size:13px;min-height:1.35em}
+#tune .no{margin-top:8px;padding:4px 6px;font:inherit;font-size:12px;color:#800080;text-decoration:underline;background:none;border:0;cursor:pointer}
+@media (prefers-reduced-motion:reduce){#tune{transition:none}#tune .onair .dot{animation:none}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.16/hls.min.js" defer></script>
 <base target="_blank">
 </head>
 <body link="#800080" bgcolor="#ffffff" text="#000080" vlink="#ff0000">
+<div id="tune" hidden><div class="card" role="dialog" aria-modal="true" aria-label="San Fernando Valley Radio is on the air">
+  <div class="onair"><span class="dot"></span>ON THE AIR</div>
+  <div class="name"><font size="5">S</font>AN <font size="5">F</font>ERNANDO <font size="5">V</font>ALLEY <font size="5">R</font>ADIO</div>
+  <div class="where">Live from Berry Drive, Studio City</div>
+  <button type="button" class="play" id="tune-play">&#9654;&nbsp; Listen live</button>
+  <div class="now" id="tune-now"></div>
+  <button type="button" class="no" id="tune-no">Just looking</button>
+</div></div>
 <div id="listeners-wrap"><div id="listeners" class="off" aria-live="polite"><span class="dot"></span>OFF AIR</div></div>
 <p align="center"><b><font size="6">S</font><font size="4">AN </font><font size="6">F</font><font size="4">ERNANDO </font><font size="6">V</font><font size="4">ALLEY </font><font size="6">R</font><font size="4">ADIO</font><font size="2"><br>sfv.fm<br>Berry Drive, Studio City, California</font><br>On the Air</b><font size="1">&nbsp;</font></p>
 <hr>
@@ -223,7 +245,7 @@ a.artist{color:#800080}
   var SCHEDULE=false; // the recorded program is parked for now (Sam, Oct 14 2026): Sound only joins the live feed
   var soundPref="on";try{soundPref=localStorage.getItem("sfv-sound")||"on";}catch(e){}
   function remember(v){soundPref=v;try{localStorage.setItem("sfv-sound",v);}catch(e){}}
-  function on(){if(isLive){var q=tune();if(q&&q.then){q.then(function(){playing=true;label(true);pendingLine="";showLiveTrack();}).catch(function(){label(false);now.textContent="Tap anywhere on the page for the sound.";});}return;}if(!SCHEDULE){now.textContent="Checking the transmitter\u2026";checkLive(function(){if(isLive)on();else now.textContent="The station is off the air right now. Come back when Sam is on.";});return;}music.currentTime=secondsToday()%program.duration;var p=music.play();if(p&&p.then){p.then(function(){playing=true;label(true);showNow();ticker=setInterval(tick,1000);}).catch(function(){label(false);now.textContent="The browser would not start the sound. Try the link again.";});}}
+  function on(){if(isLive){var q=tune();if(q&&q.then){q.then(function(){playing=true;label(true);pendingLine="";hideTune();showLiveTrack();}).catch(function(err){label(false);now.textContent="Tap anywhere on the page for the sound.";if(err&&err.name==="NotAllowedError")showTune();});}return;}if(!SCHEDULE){now.textContent="Checking the transmitter\u2026";checkLive(function(){if(isLive)on();else now.textContent="The station is off the air right now. Come back when Sam is on.";});return;}music.currentTime=secondsToday()%program.duration;var p=music.play();if(p&&p.then){p.then(function(){playing=true;label(true);showNow();ticker=setInterval(tick,1000);}).catch(function(){label(false);now.textContent="The browser would not start the sound. Try the link again.";});}}
   function off(){music.pause();voice.pause();liveEl.pause();music.volume=1;playing=false;label(false);clearInterval(ticker);pendingLine="";now.textContent="The station is on the air. Turn the sound on to join the program in progress.";}
   // iOS lets a page start sound only from a tap; unlock the host and live elements during that tap so the
   // timer can start them later.
@@ -236,7 +258,16 @@ a.artist{color:#800080}
   fetch("http://127.0.0.1:8000/status-json.xsl",{mode:"cors",cache:"no-store"}).then(function(r){studio=!!r.ok;}).catch(function(){studio=false;}).then(function(){studioKnown=true;if(studio)now.textContent="Studio monitor. The sound stays off here: it would feed back into the broadcast.";autoSound();});
   var autoTried=false;
   function autoSound(){if(!studioKnown||studio||autoTried||playing||soundPref==="off"||!isLive)return;autoTried=true;on();}
-  function firstGesture(e){if(studio||playing||soundPref==="off")return;if(e.target&&e.target.closest&&e.target.closest("#radio"))return;if(e.type==="keydown"&&(e.metaKey||e.ctrlKey||e.altKey||/INPUT|TEXTAREA|SELECT/.test(e.target&&e.target.tagName)))return;document.removeEventListener("click",firstGesture,true);document.removeEventListener("keydown",firstGesture,true);wireMeter();if(!unlocked){unlocked=true;unlock(voice);if(!isLive)unlock(liveEl);}on();}
+  function firstGesture(e){if(studio||playing||soundPref==="off")return;if(e.target&&e.target.closest&&e.target.closest("#radio,#tune-no"))return;if(e.type==="keydown"&&(e.metaKey||e.ctrlKey||e.altKey||/^(Tab|Shift|Escape)$/.test(e.key)||/INPUT|TEXTAREA|SELECT/.test(e.target&&e.target.tagName)))return;document.removeEventListener("click",firstGesture,true);document.removeEventListener("keydown",firstGesture,true);wireMeter();if(!unlocked){unlocked=true;unlock(voice);if(!isLive)unlock(liveEl);}hideTune();on();}
+  // When the browser will not start the sound by itself (most do not until the page has had a tap), a screen says the
+  // station is on the air and the tap that lifts it starts the sound. "Just looking" (or Escape) lifts it and leaves the
+  // sound off for this visit; the Sound switch still works.
+  var tuneEl=document.getElementById("tune");
+  function showTune(){if(!isLive||playing||studio||soundPref==="off"||!tuneEl.hidden)return;tuneEl.hidden=false;requestAnimationFrame(function(){tuneEl.className="show";});try{document.getElementById("tune-play").focus({preventScroll:true});}catch(e){}}
+  function hideTune(){if(tuneEl.hidden)return;tuneEl.className="";tuneEl.hidden=true;}
+  function justLooking(){hideTune();document.removeEventListener("click",firstGesture,true);document.removeEventListener("keydown",firstGesture,true);now.textContent="The station is on the air. Turn the sound on to join the program in progress.";}
+  document.getElementById("tune-no").addEventListener("click",function(e){e.stopPropagation();justLooking();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!tuneEl.hidden)justLooking();});
   document.addEventListener("click",firstGesture,true);document.addEventListener("keydown",firstGesture,true);
   music.addEventListener("loadedmetadata",function(){if(music.duration&&isFinite(music.duration))program.duration=Math.round(music.duration);});
   // ---- live from Sherman Oaks: when the Mac is on the air, the schedule steps aside ----
@@ -354,9 +385,9 @@ a.artist{color:#800080}
   }
   document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a.record");if(a){e.preventDefault();if(lastTrack)recordCard(lastTrack);}});
   window.sfvLive={el:liveEl,lag:lag,retune:retune,toggle:function(){btn.click();},hush:function(){off();},tuneTo:function(c){liveCfg=c;checkLive();},state:function(){return {isLive:isLive,playing:playing,studio:studio,lag:lag(),paused:liveEl.paused,t:liveEl.currentTime,label:document.getElementById("radiolabel").textContent};}};
-  function showLiveTrack(){if(!liveCfg||!liveCfg.nowplaying)return;fetch(liveCfg.nowplaying+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(n){if(!isLive)return;var line="LIVE from Berry Drive, Studio City. ";if(n&&n.title){var extra=n.url?' &middot; <a href="'+esc(n.url)+'">Open in Spotify</a>':"";line+=(n.art?'<img src="'+esc(n.art)+'" width="18" height="18" alt="" style="vertical-align:-3px;border:1px solid #000080"> ':"")+'<a href="#" target="_self" class="artist" data-artist="'+esc(n.artist)+'" data-extra="'+esc(extra)+'">'+esc(n.artist)+"</a> \u2013 "+esc(n.title)+' &middot; <a href="#" target="_self" class="record">The record</a>';}else if(n&&n.host){line+=esc(n.host)+" has the station, from their own device.";}else{line+="Sam is on the air.";}var html=line+'';if(html===pendingLine)return;pendingLine=html;var wait=playing&&!liveEl.paused?Math.min(30,Math.round(lag())+3)*1000:0;var key=n&&n.title?(n.artist+"|"+n.title):"";setTimeout(function(){if(isLive&&pendingLine===html){now.innerHTML=html;if(key&&key!==cardKey){cardKey=key;lastTrack=n;if(!cardClosed)recordCard(n);}}},wait);}).catch(function(){});}
+  function showLiveTrack(){if(!liveCfg||!liveCfg.nowplaying)return;fetch(liveCfg.nowplaying+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(n){if(!isLive)return;document.getElementById("tune-now").textContent=n&&n.title?"Now: "+n.artist+" \u2013 "+n.title:"";var line="LIVE from Berry Drive, Studio City. ";if(n&&n.title){var extra=n.url?' &middot; <a href="'+esc(n.url)+'">Open in Spotify</a>':"";line+=(n.art?'<img src="'+esc(n.art)+'" width="18" height="18" alt="" style="vertical-align:-3px;border:1px solid #000080"> ':"")+'<a href="#" target="_self" class="artist" data-artist="'+esc(n.artist)+'" data-extra="'+esc(extra)+'">'+esc(n.artist)+"</a> \u2013 "+esc(n.title)+' &middot; <a href="#" target="_self" class="record">The record</a>';}else if(n&&n.host){line+=esc(n.host)+" has the station, from their own device.";}else{line+="Sam is on the air.";}var html=line+'';if(html===pendingLine)return;pendingLine=html;var wait=playing&&!liveEl.paused?Math.min(30,Math.round(lag())+3)*1000:0;var key=n&&n.title?(n.artist+"|"+n.title):"";setTimeout(function(){if(isLive&&pendingLine===html){now.innerHTML=html;if(key&&key!==cardKey){cardKey=key;lastTrack=n;if(!cardClosed)recordCard(n);}}},wait);}).catch(function(){});}
   function goLive(){if(isLive)return;isLive=true;pendingLine="";setTimeout(autoSound,0);showLiveTrack();clearInterval(npTimer);npTimer=setInterval(showLiveTrack,10000);if(playing){music.pause();voice.pause();tune().catch(function(){});}now.innerHTML="LIVE from Berry Drive, Studio City. Sam is on the air.";document.getElementById("host").textContent="Sam Sugarman, live from Berry Drive";}
-  function endLive(){if(!isLive)return;isLive=false;clearInterval(npTimer);closeCard();cardKey="";liveEl.pause();liveEl.removeAttribute("src");liveEl.load();document.getElementById("host").textContent="Buddy Sepulveda";if(playing){if(SCHEDULE){music.currentTime=secondsToday()%program.duration;music.play().catch(function(){});showNow();}else{playing=false;label(false);now.textContent="Sam has left the air. The recorded program is parked for now.";}}}
+  function endLive(){if(!isLive)return;isLive=false;hideTune();clearInterval(npTimer);closeCard();cardKey="";liveEl.pause();liveEl.removeAttribute("src");liveEl.load();document.getElementById("host").textContent="Buddy Sepulveda";if(playing){if(SCHEDULE){music.currentTime=secondsToday()%program.duration;music.play().catch(function(){});showNow();}else{playing=false;label(false);now.textContent="Sam has left the air. The recorded program is parked for now.";}}}
   // Live sound must stay at the live edge. A pause from the lock screen, a phone call or a slow link leaves the
   // browser replaying audio that can be minutes old (the backlog sits in the network pipe, where the media buffer
   // cannot see it), so compare the clock with how much has actually played and tune in again when they drift apart.
