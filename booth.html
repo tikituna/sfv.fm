@@ -52,9 +52,9 @@ body.is-owner label.owner{display:inline}
 <input type="url" id="rec-link" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://open.spotify.com/&hellip;" style="margin-top:6px"> <button type="submit" class="say" id="rec-play" disabled>Play it</button><br><font size="2" color="#ff0000" id="rec-msg" aria-live="polite"></font></form>
 <p style="margin:12px 0 4px" class="owner"><font size="2"><b>Announcer</b> <span id="ann-note"></span></font></p>
 <p style="margin:0 0 10px" class="owner"><font size="2">
-<label><input type="radio" name="ann" value="mix" id="ann-mix"> Buddy and Bob (Buddy most breaks, Bob about one in four)</label><br>
+<label><input type="radio" name="ann" value="mix" id="ann-mix"> Phil and Bob (Phil most breaks, Bob about one in four)</label><br>
 <label><input type="radio" name="ann" value="bob" id="ann-bob"> Bob Sherman, every break</label><br>
-<label><input type="radio" name="ann" value="buddy" id="ann-buddy"> Buddy Sepulveda only (free)</label><br>
+<label><input type="radio" name="ann" value="buddy" id="ann-buddy"> Phil Landers only (free)</label><br>
 Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>onyx</option></select> <button type="button" class="say" id="hear-bob" style="padding:6px 12px">Hear Bob</button> <font size="1">(on this phone only, not on the air)</font></font></p>
 <hr>
 <p class="owner"><font size="2"><b>Input:</b> <select id="input" style="font:inherit;font-size:15px;max-width:100%"><option value="phone">This device's microphone</option></select></font></p>
@@ -68,8 +68,8 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
 <p class="owner"><font size="2">Your name, so the station can say who has it: <input type="text" id="to-name" placeholder="optional" autocomplete="nickname" style="font:inherit;font-size:15px;border:1px solid #000080;padding:5px;width:45%"></font></p>
 <button type="button" class="say" id="to-btn" disabled>Take over</button>
 <p>&nbsp;</p>
-<p><font size="2"><b>Have Buddy say:</b></font></p>
-<textarea id="text" placeholder="Type a line for Buddy. He reads it on the air, Spotify ducks while he talks."></textarea>
+<p><font size="2"><b>Have Phil say:</b></font></p>
+<textarea id="text" placeholder="Type a line for Phil. He reads it on the air, Spotify ducks while he talks."></textarea>
 <p><button type="button" class="say" id="say" disabled>Say it</button> &nbsp; <font size="2"><label class="owner"><input type="checkbox" id="plain"> read it plain, no &ldquo;a word from Sam&rdquo;</label><span id="say-from"></span></font></p>
 <div id="log"></div>
 <hr>
@@ -116,7 +116,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
         var on=micOn||macOn;otherMic=(!on&&m.mic_who)?m.mic_who:"";otherMac=(!on&&!otherMic&&m.macmic_who&&role==="owner")?m.macmic_who:"";
         micBtn.textContent=on?"OFF MIC \u2014 you are on the air":(otherMic?(role==="owner"?"END "+otherMic.toUpperCase()+"\u2019S MIC":otherMic.toUpperCase()+" HAS THE MIC"):(otherMac?"END THE STUDIO MIC ("+otherMac.toUpperCase()+")":"ON MIC"));micBtn.className="big"+(on?" on":"");if(!micOn)stopAudio();
         var mblock=!!otherMic&&role!=="owner";if(mblock){micBtn.disabled=true;micBlocked=true;}else if(micBlocked&&!micPending){micBlocked=false;micBtn.disabled=!(ws&&ws.readyState===1);}sayBtn.disabled=!!m.saying;if(m.dry)log("transmitter is in dry mode");}
-      if(m.type==="said"){log(m.ok?"Buddy said: "+m.text:"Buddy could not say that");sayBtn.disabled=false;if(!m.ok&&m.text&&!text.value)text.value=m.text;}};
+      if(m.type==="said"){log(m.ok?"Phil said: "+m.text:"Phil could not say that");sayBtn.disabled=false;if(!m.ok&&m.text&&!text.value)text.value=m.text;}};
     ws.onclose=function(ev){clearTimeout(recTimer);recBusy=false;setConn(false,ev.code===4001?"Wrong password.":ev.code===4003?"Too many wrong passwords from this address. Try again in 10 minutes.":"Not connected. Trying again…");if(ev.code===4001){key=null;try{localStorage.removeItem("sfv-booth-key");}catch(x){}signin.style.display="block";signinMsg.textContent="That password was not accepted.";}stopAudio();micOn=false;micBtn.className="big";micBtn.textContent="ON MIC";if(ev.code!==4001){clearTimeout(retry);retry=setTimeout(connect,ev.code===4003?120000:3000);}};
     ws.onerror=function(){};
   }
@@ -215,9 +215,9 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   });
   // records: Spotify on the Mac, from here
   var recEl=function(id){return document.getElementById(id);},recArt=recEl("rec-art"),recTitle=recEl("rec-title"),recArtist=recEl("rec-artist"),recAlbum=recEl("rec-album"),recTime=recEl("rec-time"),recState=recEl("rec-state"),recPP=recEl("rec-pp"),recShuf=recEl("rec-shuf"),recLink=recEl("rec-link"),recMsg=recEl("rec-msg"),recPlaying=false,recShuffle=false,recArtUrl="";
-  // the watcher's reading: music loudness, Buddy against the music, the last thing it noticed
+  // the watcher's reading: music loudness, Phil against the music, the last thing it noticed
   var stLevel=document.getElementById("st-level");
-  function showLevel(x){if(!x){stLevel.textContent="Level watcher: no reading";return;}var p=["Level: "+x.state];if(x.music!=null)p.push("music "+x.music+" LUFS");if(x.buddy_gap!=null)p.push("Buddy "+(x.buddy_gap>0?"+":"")+x.buddy_gap+" dB");if(x.volume!=null&&x.volume<100)p.push("Spotify at "+x.volume);stLevel.textContent=p.join(", ")+(x.notes&&x.notes.length?". Last: "+x.notes[0]:"");}
+  function showLevel(x){if(!x){stLevel.textContent="Level watcher: no reading";return;}var p=["Level: "+x.state];if(x.music!=null)p.push("music "+x.music+" LUFS");if(x.buddy_gap!=null)p.push("Phil "+(x.buddy_gap>0?"+":"")+x.buddy_gap+" dB");if(x.volume!=null&&x.volume<100)p.push("Spotify at "+x.volume);stLevel.textContent=p.join(", ")+(x.notes&&x.notes.length?". Last: "+x.notes[0]:"");}
   // who is really listening (the public page's crowd is partly fiction; this is not), and who is in the booth
   var stPeople=document.getElementById("st-people");
   function ago(n){return n<1?"just now":n+" min";}
@@ -226,13 +226,13 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
     if(l){var who=(l.who||[]).map(function(p){return [p.device,p.place||"",ago(p.minutes)].concat(p.extra||[]).filter(Boolean).join(", ");});out.push("<b>Listening: "+l.count+"</b>"+(who.length?"<br>"+who.map(function(w){return "&middot; "+esc(w);}).join("<br>"):"")+(l.quiet?" &middot; "+l.quiet+" with the sound off":""));}
     if(b&&b.length)out.push("<b>In the booth:</b> "+b.map(function(x){return esc(x.who)+" on "+esc(x.device);}).join(", "));
     stPeople.innerHTML="";out.forEach(function(t,i){var d=document.createElement("span");d.innerHTML=t;if(i)stPeople.appendChild(document.createElement("br"));stPeople.appendChild(d);});}
-  // the announcer: Buddy (local, free) and Bob Sherman (OpenAI, within a monthly budget)
+  // the announcer: Phil (local, free) and Bob Sherman (OpenAI, within a monthly budget)
   var annNote=document.getElementById("ann-note");
   var bobSel=document.getElementById("bob-voice"),hearBob=document.getElementById("hear-bob"),bobAudio=new Audio(),bobVoices="";
   function showAnn(a){if(!a)return;var r=document.getElementById("ann-"+a.choice);if(r)r.checked=true;
     if(a.voices&&a.voices.join()!==bobVoices){bobVoices=a.voices.join();bobSel.innerHTML="";a.voices.forEach(function(v){var o=document.createElement("option");o.value=v;o.textContent=v;bobSel.appendChild(o);});}
     if(a.voice&&document.activeElement!==bobSel)bobSel.value=a.voice;
-    annNote.textContent=!a.bob_key?"(Bob is waiting for his OpenAI key; Buddy has every break)":"(Bob this month: $"+a.spent.toFixed(2)+" of $"+a.budget.toFixed(2)+", estimated on the high side"+(a.spent>=a.budget?"; used up, Buddy covers":"")+")";}
+    annNote.textContent=!a.bob_key?"(Bob is waiting for his OpenAI key; Phil has every break)":"(Bob this month: $"+a.spent.toFixed(2)+" of $"+a.budget.toFixed(2)+", estimated on the high side"+(a.spent>=a.budget?"; used up, Phil covers":"")+")";}
   bobSel.addEventListener("change",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"bobvoice",voice:bobSel.value}));log("Bob's voice: "+bobSel.value);}});
   hearBob.addEventListener("click",function(){if(!ws||ws.readyState!==1)return;
     try{bobAudio.muted=true;bobAudio.src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";var p=bobAudio.play();if(p&&p.catch)p.catch(function(){});}catch(e){}   // unlock playback during the tap (iPhone)
@@ -257,7 +257,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   stOn.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"station",on:true}));log("On Air: the station comes up within a few seconds");}});
   stOff.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"station",on:false}));log("Off Air: held off until On Air");}});
   stRoom.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"room",on:!roomOn}));log(roomOn?"room: Spotify silent on the Mac":"room: Spotify plays on the Mac too");}});
-  sayBtn.addEventListener("click",function(){var t=text.value.trim();if(!t||!ws||ws.readyState!==1)return;sayBtn.disabled=true;ws.send(JSON.stringify({type:"say",text:t,plain:plain.checked}));log("sent to Buddy: "+t);text.value="";});
+  sayBtn.addEventListener("click",function(){var t=text.value.trim();if(!t||!ws||ws.readyState!==1)return;sayBtn.disabled=true;ws.send(JSON.stringify({type:"say",text:t,plain:plain.checked}));log("sent to Phil: "+t);text.value="";});
   document.getElementById("signout").addEventListener("click",function(e){e.preventDefault();try{localStorage.removeItem("sfv-booth-key");}catch(x){}key=null;if(ws){ws.onclose=null;ws.close();}setConn(false,"Signed out.");signin.style.display="block";});
   fetch("live.json?t="+Math.floor(Date.now()/300000)).then(function(r){return r.json();}).then(function(c){url=c.booth;connect();}).catch(function(){setConn(false,"Could not read live.json.");});
   setInterval(function(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"status"}));},5000);
