@@ -71,6 +71,34 @@ a.artist{color:#800080}
 #tune .now{font-size:13px;min-height:1.35em}
 #tune .no{margin-top:8px;padding:4px 6px;font:inherit;font-size:12px;color:#800080;text-decoration:underline;background:none;border:0;cursor:pointer}
 @media (prefers-reduced-motion:reduce){#tune{transition:none}#tune .onair .dot{animation:none}}
+#chat{position:fixed;z-index:10;left:14px;bottom:14px;width:320px;height:440px;max-height:calc(100vh - 28px);box-sizing:border-box;display:flex;flex-direction:column;background:#fff;border:1px solid #000080;box-shadow:4px 4px 0 #000080;font-size:13px;line-height:1.35;color:#000080;text-align:left}
+#chat[hidden]{display:none}
+#chat.docked{position:absolute;bottom:auto}
+#chat .bar{display:flex;align-items:center;gap:7px;background:#000080;color:#fff;padding:4px 5px 4px 8px;font-weight:bold;font-size:12px;letter-spacing:.08em;user-select:none;-webkit-user-select:none}
+#chat .bar .dot{width:7px;height:7px;border-radius:50%;background:#ff0000;animation:blink 2s ease-in-out infinite;flex:none}
+#chat .bar .here{margin-left:auto;font-weight:normal;letter-spacing:0}
+#chat .bar button{flex:none;width:19px;height:19px;padding:0;border:0;background:#fff;color:#000080;font:bold 15px/19px Arial,Helvetica,sans-serif;cursor:pointer}
+#chat .bar button:focus-visible,#chattab:focus-visible{outline:2px solid #ff0000;outline-offset:1px}
+#chat .log{flex:1;min-height:0;overflow-y:auto;padding:8px 10px 2px;overscroll-behavior:contain;overflow-wrap:anywhere}
+#chat .ln{margin:0 0 4px}
+#chat .ln .t{color:#8a8ab8;font-size:11px;margin-right:5px;font-variant-numeric:tabular-nums}
+#chat .ln.sys{color:#6a6aa0;font-style:italic;font-size:12px}
+#chat .ln.track{color:#800080;font-size:12px}
+#chat .typing{min-height:15px;padding:0 10px 3px;font-size:11px;font-style:italic;color:#6a6aa0}
+#chat form{display:flex;gap:6px;padding:6px 8px 4px;border-top:1px solid #000080;margin:0}
+#chat input{flex:1;min-width:0;font:inherit;border:1px solid #000080;border-radius:0;padding:4px 6px;color:#000080;background:#fff}
+#chat input:focus{outline:2px solid #800080;outline-offset:0}
+#chat form button{font:inherit;font-weight:bold;background:#000080;color:#fff;border:0;border-radius:0;padding:4px 11px;cursor:pointer}
+#chat .foot{display:flex;gap:8px;justify-content:space-between;padding:0 8px 6px;font-size:11px;color:#6a6aa0}
+#chat .foot a{color:#800080}
+#chat .foot .err{color:#ff0000;text-align:right}
+#chattab{position:fixed;z-index:10;left:14px;bottom:14px;background:#fff;border:1px solid #000080;box-shadow:3px 3px 0 #000080;color:#000080;font:bold 12px/1 "Times New Roman",Times,serif;letter-spacing:.08em;padding:8px 11px;cursor:pointer}
+#chattab[hidden]{display:none}
+#chattab .new{color:#ff0000;letter-spacing:0}
+@media (max-width:600px),(max-height:500px){#chat{left:8px;right:8px;bottom:8px;width:auto;height:min(62vh,520px);max-height:calc(100vh - 16px)}#chat input{font-size:16px}#chattab{left:8px;bottom:8px}}
+@media (max-height:500px) and (min-width:601px){#chat{right:auto;width:360px;height:calc(100vh - 16px)}}
+
+@media (prefers-reduced-motion:reduce){#chat .bar .dot{animation:none}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.16/hls.min.js" defer></script>
 <base target="_blank">
@@ -84,6 +112,14 @@ a.artist{color:#800080}
   <div class="now" id="tune-now"></div>
   <button type="button" class="no" id="tune-no">Just looking</button>
 </div></div>
+<div id="chat" hidden role="complementary" aria-label="Station chat">
+  <div class="bar"><span class="dot"></span>SFV CHAT<span class="here" id="chat-here">connecting&hellip;</span><button type="button" id="chat-x" aria-label="Close the chat" title="Close">&times;</button></div>
+  <div class="log" id="chat-log" role="log" aria-live="polite"></div>
+  <div class="typing" id="chat-typing"></div>
+  <form id="chat-form" autocomplete="off"><input id="chat-in" maxlength="20" placeholder="Pick a name to chat" aria-label="Your name" enterkeyhint="send"><button type="submit" id="chat-go">Join</button></form>
+  <div class="foot"><span id="chat-who">Be kind.</span><span class="err" id="chat-err" role="status"></span></div>
+</div>
+<button type="button" id="chattab" hidden>SFV CHAT<span class="new" id="chat-new"></span></button>
 <div id="listeners-wrap"><div id="listeners" class="off" aria-live="polite"><span class="dot"></span>OFF AIR</div></div>
 <p align="center"><b><font size="6">S</font><font size="4">AN </font><font size="6">F</font><font size="4">ERNANDO </font><font size="6">V</font><font size="4">ALLEY </font><font size="6">R</font><font size="4">ADIO</font><font size="2"><br>sfv.fm<br>Berry Drive, Studio City, California</font><br>On the Air</b><font size="1">&nbsp;</font></p>
 <hr>
@@ -338,7 +374,7 @@ a.artist{color:#800080}
   // ---- the record: a card about the song itself. It opens to the side when a new one starts; close it and it stays closed until you ask for it.
   var card=null,cardKey="",cardClosed=/[?&]card\b/.test(location.search),cardCache={},lastTrack=null; // ?card: a capture for the link preview, no record popup
   function closeCard(){if(card){card.remove();card=null;}}
-  function openCard(html){closeCard();card=document.createElement("div");card.id="card";card.innerHTML='<button type="button" class="x" aria-label="Close">close</button>'+html;document.body.appendChild(card);card.querySelector(".x").addEventListener("click",function(){cardClosed=true;closeCard();});}
+  function openCard(html){closeCard();card=document.createElement("div");card.id="card";card.innerHTML='<button type="button" class="x" aria-label="Close">close</button>'+html;document.body.appendChild(card);if(chatUrl)chatPlace();card.querySelector(".x").addEventListener("click",function(){cardClosed=true;closeCard();});}
   function mbGet(u){var h={"Accept":"application/json"};return fetch(u,{headers:h}).then(function(r){if(r.status===503||r.status===429)return new Promise(function(res){setTimeout(res,1500);}).then(function(){return fetch(u,{headers:h});});return r;}).then(function(r){if(!r.ok)throw 0;return r.json();});}
   function cleanAlbum(a){return String(a||"").replace(/\s*[\(\[][^\)\]]*(edition|remaster|version|deluxe|expanded|anniversary|bonus|reissue)[^\)\]]*[\)\]]/ig,"").replace(/\s*-\s*(remaster|deluxe|expanded).*$/i,"").trim();}
   function mmss(ms){var t=Math.round(ms/1000);return Math.floor(t/60)+":"+String(t%60).padStart(2,"0");}
@@ -449,7 +485,7 @@ a.artist{color:#800080}
   document.addEventListener("visibilitychange",function(){if(!document.hidden)meterOn();});
   meterOn();
   var apple=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Safari/.test(navigator.userAgent)&&!/Chrome|Chromium|Edg/.test(navigator.userAgent));
-  fetch("live.json?t="+Math.floor(Date.now()/300000)).then(function(r){return r.json();}).then(function(c){if(apple&&c.stream_aac)c.stream=c.stream_aac;liveCfg=c;if(c&&c.status){checkLive();liveTimer=setInterval(checkLive,30000);}}).catch(function(){});
+  fetch("live.json?t="+Math.floor(Date.now()/300000)).then(function(r){return r.json();}).then(function(c){if(apple&&c.stream_aac)c.stream=c.stream_aac;liveCfg=c;if(c&&c.status){checkLive();liveTimer=setInterval(checkLive,30000);}if(c&&c.chat)chatStart(c.chat);}).catch(function(){});
   label(false);
   var v0=valleyNow();document.getElementById("today").textContent=v0.weekday+", "+v0.month+" "+v0.day+", "+v0.year+", Pacific time";
 
@@ -466,6 +502,109 @@ a.artist{color:#800080}
     Promise.all([spots,airport]).then(function(r){document.getElementById("wx").textContent=[r[0],r[1]].filter(Boolean).join(". ")||"no report";});
   }
   weather();setInterval(weather,600000);
+
+  // ---- the chat (tools/chat.py on the Mac, through the booth's door): people who pick a name, and the station's regulars.
+  // It docks beside the picture when there is room, floats bottom left when there is not, and is a tab on a phone. Open or
+  // closed is remembered; the name too. Every message goes in as text, never as markup.
+  var chatEl=document.getElementById("chat"),chatTab=document.getElementById("chattab"),chatLog=document.getElementById("chat-log"),
+      chatIn=document.getElementById("chat-in"),chatGo=document.getElementById("chat-go"),chatWho=document.getElementById("chat-who"),
+      chatErr=document.getElementById("chat-err"),chatTyping=document.getElementById("chat-typing"),chatHere=document.getElementById("chat-here"),
+      chatNew=document.getElementById("chat-new");
+  var chatWs=null,chatUrl=null,chatName=null,chatWant=null,chatOpen=false,chatUnread=0,chatRetry=2000,chatTypingT=null,chatErrT=null,chatIds={},chatPref=null,
+      chatShown=false,chatHelloed=false,chatPending="",chatToken="",chatJoined=false,chatSeenAt=null,chatReplaying=false;
+  try{chatWant=localStorage.getItem("sfv-chat-name");chatPref=localStorage.getItem("sfv-chat");chatToken=localStorage.getItem("sfv-chat-token")||"";}catch(e){}
+  if(!/^[a-z0-9]{24}$/.test(chatToken)){chatToken="";for(var ti=0;ti<24;ti++)chatToken+="abcdefghijklmnopqrstuvwxyz0123456789".charAt(Math.floor(Math.random()*36));try{localStorage.setItem("sfv-chat-token",chatToken);}catch(e){}}
+  var CHAT_REG={dale_vannuys:"#800000",sherman_oaks_sue:"#c0157a",nate_csun:"#007070",topanga_pete:"#2e6b2e",bev_burbank:"#8b4513"};
+  var CHAT_PAL=["#000080","#800080","#4b0082","#9a6c00","#2f4f4f","#a0522d","#191970","#5b7a1e"];
+  function chatColor(n){if(CHAT_REG[n])return CHAT_REG[n];var h=0;for(var i=0;i<n.length;i++)h=(h*31+n.charCodeAt(i))>>>0;return CHAT_PAL[h%CHAT_PAL.length];}
+  function chatTime(at){try{return new Date(at*1000).toLocaleTimeString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit"}).replace(/\s?[AP]M$/,"");}catch(e){return "";}}
+  function chatLine(m){
+    if(!m||!m.id||chatIds[m.id])return;chatIds[m.id]=1;
+    var near=chatLog.scrollHeight-chatLog.scrollTop-chatLog.clientHeight<48;
+    var d=document.createElement("div");d.className="ln"+(m.kind==="system"?" sys":m.kind==="track"?" track":"");d.id="cm-"+m.id;
+    var t=document.createElement("span");t.className="t";t.textContent=chatTime(m.at);d.appendChild(t);
+    if(m.kind==="track")d.appendChild(document.createTextNode("♪ "+m.text));
+    else if(m.kind==="system")d.appendChild(document.createTextNode("— "+m.text));
+    else{var b=document.createElement("b");b.textContent=m.name+": ";b.style.color=m.kind==="sam"?"#ff0000":chatColor(m.name);d.appendChild(b);d.appendChild(document.createTextNode(m.text));}
+    chatLog.appendChild(d);
+    while(chatLog.children.length>200)chatLog.removeChild(chatLog.firstChild);
+    if(near||(chatName&&m.name===chatName))chatLog.scrollTop=chatLog.scrollHeight;
+    var talk=m.kind==="person"||m.kind==="regular"||m.kind==="sam";
+    if(chatOpen)chatSeenAt=Math.max(chatSeenAt||0,m.at);
+    else if(talk&&!chatReplaying){chatUnread++;chatNew.textContent=" · "+chatUnread+" new";}
+  }
+  function chatHereSay(n){chatHere.textContent=n==null?"connecting…":n+" here";}
+  function chatSetTyping(n){clearTimeout(chatTypingT);chatTyping.setAttribute("data-name",n||"");chatTyping.textContent=n?n+" is typing…":"";if(n)chatTypingT=setTimeout(function(){chatSetTyping(null);},9000);}
+  function chatError(t){clearTimeout(chatErrT);chatErr.textContent=t||"";if(t)chatErrT=setTimeout(function(){chatErr.textContent="";},6000);}
+  function chatSend(type,o){if(chatWs&&chatWs.readyState===1){o=o||{};o.type=type;chatWs.send(JSON.stringify(o));return true;}return false;}
+  function chatForm(){
+    chatWho.textContent="";
+    if(chatName){chatIn.placeholder="Say something…";chatIn.setAttribute("aria-label","Message");chatIn.maxLength=280;chatGo.textContent="Send";
+      chatWho.appendChild(document.createTextNode("as "+chatName+" · "));var a=document.createElement("a");a.href="#";a.target="_self";a.textContent="change";
+      a.addEventListener("click",function(e){e.preventDefault();chatName=null;chatWant=null;try{localStorage.removeItem("sfv-chat-name");}catch(x){}chatForm();chatIn.focus();});chatWho.appendChild(a);}
+    else{chatIn.placeholder="Pick a name to chat";chatIn.setAttribute("aria-label","Your name");chatIn.maxLength=20;chatGo.textContent="Join";chatWho.textContent="Be kind.";}
+  }
+  function chatConnect(){
+    if(!chatUrl||(chatWs&&chatWs.readyState<2))return;
+    try{chatWs=new WebSocket(chatUrl);}catch(e){chatWs=null;return chatLater();}
+    chatHelloed=false;chatJoined=false;
+    chatWs.onopen=function(){chatSend("open",{open:chatSeen()});if(chatWant&&chatOpen)chatSend("join",{name:chatWant,token:chatToken});};
+    chatWs.onmessage=function(ev){var m;try{m=JSON.parse(ev.data);}catch(e){return;}
+      if(m.type==="hello"){chatHelloed=true;chatRetry=2000;
+        chatLog.setAttribute("aria-live","off");chatLog.textContent="";chatIds={};chatReplaying=true;(m.history||[]).forEach(chatLine);chatReplaying=false;
+        chatLog.scrollTop=chatLog.scrollHeight;setTimeout(function(){chatLog.setAttribute("aria-live","polite");},0);chatHereSay(m.here);
+        // what came in while this page was away and the window closed still counts as new; the first time, nothing does
+        var h=m.history||[],last=h.length?h[h.length-1].at:0;
+        if(chatSeenAt===null||chatOpen){chatSeenAt=last;chatUnread=0;}
+        else chatUnread=h.filter(function(x){return x.at>chatSeenAt&&(x.kind==="person"||x.kind==="regular"||x.kind==="sam");}).length;
+        chatNew.textContent=chatUnread?" · "+chatUnread+" new":"";
+        if(!chatShown){chatShown=true;chatShow(chatPref?chatPref==="open":chatDocks(chatScreen().getBoundingClientRect()),false);}}
+      else if(m.type==="msg"){if(chatTyping.getAttribute("data-name")===m.name)chatSetTyping(null);if(m.kind==="person"&&m.name===chatName)chatPending="";chatLine(m);}
+      else if(m.type==="here")chatHereSay(m.n);
+      else if(m.type==="typing")chatSetTyping(m.name);
+      else if(m.type==="joined"){chatName=m.name;chatWant=m.name;chatJoined=true;try{localStorage.setItem("sfv-chat-name",m.name);}catch(e){}chatForm();}
+      else if(m.type==="refused"){if(m.about==="name"||/can't post/.test(m.msg||"")){chatName=null;chatWant=null;chatJoined=false;chatForm();}
+        else if(/^Pick a name/.test(m.msg||"")&&chatWant){chatJoined=false;chatSend("join",{name:chatWant,token:chatToken});}
+        if(m.about==="say"&&chatPending&&!chatIn.value)chatIn.value=chatPending;chatPending="";chatError(m.msg);}
+      else if(m.type==="gone"){var g=document.getElementById("cm-"+m.id);if(g)g.parentNode.removeChild(g);}
+      else if(m.type==="clear"){chatLog.textContent="";chatIds={};}};
+    chatWs.onclose=function(ev){chatWs=null;chatJoined=false;chatHereSay(null);if(!chatHelloed||ev.code===1008)chatRetry=Math.max(chatRetry,30000);chatLater();};
+  }
+  // the wait doubles to a minute, with some scatter so every page does not knock at once; it starts over only once the
+  // server has actually said hello (a door that opens and shuts again is not a server that is up)
+  function chatLater(){setTimeout(chatConnect,chatRetry*(0.6+Math.random()*0.8));chatRetry=Math.min(chatRetry*2,60000);}
+  function chatSeen(){return chatOpen&&!document.hidden;}   // a window in a background tab is not someone reading
+  document.addEventListener("visibilitychange",function(){chatSend("open",{open:chatSeen()});});
+  document.getElementById("chat-form").addEventListener("submit",function(e){e.preventDefault();var v=chatIn.value.trim();if(!v)return;
+    if(!chatWs||chatWs.readyState!==1){chatError("Not connected yet. One moment.");chatConnect();return;}
+    if(!chatName){chatWant=v;chatSend("join",{name:v,token:chatToken});}
+    else{if(!chatJoined)chatSend("join",{name:chatName,token:chatToken});chatPending=v;chatSend("say",{text:v});}   // back after a reconnect: the name first
+    chatIn.value="";});
+  function chatScreen(){var tv=document.getElementById("tv");return tv&&tv.style.display&&tv.style.display!=="none"?tv:document.getElementById("camwrap");}
+  function chatDocks(r){return window.innerWidth>600&&r.width>0&&window.innerWidth-r.right-16>=316;}
+  function chatPlace(){
+    var card=document.getElementById("card");
+    chatTab.style.bottom=window.innerWidth<=600&&card?(card.offsetHeight+16)+"px":"";   // on a phone the record card sits at the bottom too
+    var r=chatScreen().getBoundingClientRect(),dock=!chatEl.hidden&&chatDocks(r);
+    if(dock){chatEl.classList.add("docked");chatEl.style.width=Math.min(380,window.innerWidth-r.right-40)+"px";chatEl.style.left=(r.right+window.pageXOffset+16)+"px";chatEl.style.top=(r.top+window.pageYOffset)+"px";chatEl.style.height=Math.max(380,Math.round(r.height))+"px";}
+    else{chatEl.classList.remove("docked");chatEl.style.width=chatEl.style.left=chatEl.style.top=chatEl.style.height="";}
+    // the record card: docked, it goes in the chat's column just under it; floating, it is lifted over the chat where they meet
+    if(!card)return;var cs=card.style;
+    if(dock){var cr=chatEl.getBoundingClientRect();cs.position="absolute";cs.right=cs.bottom="auto";cs.left=(cr.left+window.pageXOffset)+"px";cs.top=(cr.bottom+window.pageYOffset+12)+"px";cs.width=Math.max(200,cr.width-26)+"px";cs.zIndex="";return;}
+    cs.position=cs.right=cs.bottom=cs.left=cs.top=cs.width="";
+    var a=chatEl.getBoundingClientRect(),b=card.getBoundingClientRect();
+    cs.zIndex=!chatEl.hidden&&a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom?"11":"";
+  }
+  function chatShow(open,remember){chatOpen=open;chatEl.hidden=!open;chatTab.hidden=open;
+    if(open){chatUnread=0;chatNew.textContent="";chatPlace();chatLog.scrollTop=chatLog.scrollHeight;
+      chatSeenAt=Math.max(chatSeenAt||0,Date.now()/1000);if(chatWant&&!chatJoined)chatSend("join",{name:chatWant,token:chatToken});}
+    if(remember){try{localStorage.setItem("sfv-chat",open?"open":"closed");}catch(e){}}
+    chatSend("open",{open:chatSeen()});chatPlace();}
+  document.getElementById("chat-x").addEventListener("click",function(){chatShow(false,true);chatTab.focus({preventScroll:true});});
+  chatTab.addEventListener("click",function(){chatShow(true,true);if(window.matchMedia&&matchMedia("(pointer:fine)").matches)chatIn.focus({preventScroll:true});});   // no keyboard popping up on a phone
+  window.addEventListener("resize",chatPlace);
+  // nothing shows until the chat server has answered: with it down, the page looks as it did before the chat
+  function chatStart(url){if(chatUrl)return;chatUrl=url;chatForm();chatConnect();setInterval(chatPlace,1500);}
 })();
 </script>
 </body>
