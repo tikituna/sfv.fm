@@ -176,7 +176,9 @@ a.artist{color:#800080}
     {id:"sr170646shermanway",hls:"CCTV-646",name:"SR-170 at Sherman Way, North Hollywood"},
     {id:"sr17098northofroscoeblvd",hls:"CCTV-98",name:"SR-170 north of Roscoe Boulevard, Sun Valley"},
     // more Valley cameras with live video (Sam, 2026-10-20: "some other videos live!"), from Caltrans' District 7 list.
-    // Many show Caltrans' "Temporarily Unavailable" card at any given time; draw() skips those and the next camera comes up.
+    // Many show Caltrans' "Temporarily Unavailable" card at any given time; a camera showing it (still or video) is dark
+    // for DARK_MS and the next camera comes up. The card is a white page: measured 2026-10-20, 86% of its pixels are
+    // near white against at most 9% in a real picture, while its mean brightness (230) is under a bright day's.
     {id:"sr170647southsr170toeastsr134",hls:"CCTV-647",name:"SR-170 where it meets the 134, North Hollywood"},
     {id:"us101615universalstudiosblvd",hls:"CCTV-615",name:"US-101 at Universal Studios Boulevard, Universal City"},
     {id:"us101616lankershimblvd",hls:"CCTV-616",name:"US-101 at Lankershim Boulevard, Studio City"},
@@ -208,12 +210,14 @@ a.artist{color:#800080}
   var canvas=document.getElementById("cam"),ctx=canvas.getContext("2d"),cap=document.getElementById("cam-caption");
   var bayer=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
   var camIndex=Math.floor(Date.now()/120000)%cams.length, tries=0;
+  var DARK_MS=600000;
+  function dark(cam){cam.dark=Date.now()+DARK_MS;}
+  function isDark(c){return c.dark>Date.now();}
+  function pixels(src){var w=320,h=260,off=document.createElement("canvas");off.width=w;off.height=h;var o=off.getContext("2d");o.drawImage(src,0,0,w,h);return o.getImageData(0,0,w,h);}
+  function isCard(d){var p=d.data,white=0;for(var i=0;i<p.length;i+=4){if(0.299*p[i]+0.587*p[i+1]+0.114*p[i+2]>240)white++;}return white/(p.length/4)>0.5;}
   function draw(img,cam,isVideo){
-    var w=320,h=260,off=document.createElement("canvas");off.width=w;off.height=h;
-    var o=off.getContext("2d");o.drawImage(img,0,0,w,h);
-    var d=o.getImageData(0,0,w,h),p=d.data,sum=0;
-    for(var i=0;i<p.length;i+=4){sum+=0.299*p[i]+0.587*p[i+1]+0.114*p[i+2];}
-    if(sum/(p.length/4)>235) return false; // Caltrans "Temporarily Unavailable" card is nearly white
+    var d=pixels(img),p=d.data,w=320,h=260;
+    if(isCard(d)) return false;
     var out=ctx.createImageData(640,520),q=out.data;
     for(var y=0;y<h;y++){for(var x=0;x<w;x++){
       var i4=(y*w+x)*4,g=(0.299*p[i4]+0.587*p[i4+1]+0.114*p[i4+2])/255;
@@ -229,8 +233,11 @@ a.artist{color:#800080}
   function loadCam(){
     if(videoOn)return;
     var cam=cams[camIndex%cams.length],img=new Image();img.crossOrigin="anonymous";
-    img.onload=function(){ if(channel!==2)return; if(!draw(img,cam)){ if(++tries<cams.length){camIndex++;loadCam();} else cap.textContent="The cameras are dark for the moment."; } else tries=0; };
-    img.onerror=function(){ if(++tries<cams.length){camIndex++;loadCam();} else cap.textContent="The cameras are dark for the moment."; };
+    function skip(){ dark(cam);if(videoCam===cam)stopVideo();
+      if(++tries<cams.length){camIndex=nextCam();loadCam();var c=cams[camIndex%cams.length];if(pageLoaded&&hasVideo(c))startVideo(c);scheduleCut(hasVideo(c)?between(CAM_SECS):STILL_HOLD);}
+      else cap.textContent="The cameras are dark for the moment."; }
+    img.onload=function(){ if(channel!==2||cam!==cams[camIndex%cams.length])return; if(draw(img,cam))tries=0; else skip(); };
+    img.onerror=function(){ if(channel!==2||cam!==cams[camIndex%cams.length])return; skip(); };
     img.src="https://cwwp2.dot.ca.gov/data/d7/cctv/image/"+cam.id+"/"+cam.id+".jpg?t="+Math.floor(Date.now()/60000);
   }
   // ---- live video, when a viewer's browser can reach it; stills otherwise ----
@@ -248,14 +255,17 @@ a.artist{color:#800080}
     // "playing" alone is not a picture: some streams start with no frames (the box collapsed, 2026-10-16). The video takes
     // over only once it has a real size and its clock has moved; after that, a picture frozen for 12 s goes back to the still.
     var t0=-1;
+    function card(){try{return isCard(pixels(camv));}catch(e){return false;}}   // a tainted canvas is not a card
     function check(){
       if(started)return;
       if(!(camv.videoWidth>0&&camv.videoHeight>0&&camv.readyState>=2))return;
       if(t0<0){t0=camv.currentTime;return;}
       if(camv.currentTime-t0<0.4)return;
+      if(card()){dark(cam);fail();return;}   // the stream itself can carry the "Temporarily Unavailable" card
       started=true;clearTimeout(watchdog);videoOn=true;videoFrames(cam);
       var last=camv.currentTime,still=0;
       frameTimer=setInterval(function(){
+        if(card()){dark(cam);fail();return;}
         if(camv.currentTime>last+0.1||camv.paused&&document.hidden){last=camv.currentTime;still=0;return;}
         if(++still>=3||!(camv.videoWidth>0))fail();
       },4000);
@@ -588,10 +598,11 @@ a.artist{color:#800080}
   // with no video holds its still only STILL_HOLD before the next cut and is passed over for NOVID_MS, though now and then a
   // still-only camera still gets its moment.
   var STILL_HOLD=7000,NOVID_MS=600000,cutTimer=null;
-  function hasVideo(c){return !!(c&&c.hls)&&!(c.noVid>Date.now());}
-  function nextCam(){
+  function hasVideo(c){return !!(c&&c.hls)&&!(c.noVid>Date.now())&&!isDark(c);}
+  function nextCam(){   // the next camera that is not dark; one with live video, mostly
     var n=cams.length,v=[],st=[];
-    for(var k=1;k<=n;k++){var i=(camIndex+k)%n;(hasVideo(cams[i])?v:st).push(i);}
+    for(var k=1;k<=n;k++){var i=(camIndex+k)%n;if(isDark(cams[i]))continue;(hasVideo(cams[i])?v:st).push(i);}
+    if(!v.length&&!st.length)return (camIndex+1)%n;
     return st.length&&(!v.length||Math.random()<0.2)?st[0]:v[0];
   }
   function scheduleCut(ms){clearTimeout(cutTimer);cutTimer=setTimeout(cutNow,ms);}
