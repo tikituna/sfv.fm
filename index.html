@@ -318,7 +318,20 @@ a.artist{color:#800080}
     return order[(cycle++)%order.length];
   }
   function hideFeed(){adShown={wrap:wrap.style.display,tv:tv.style.display};wrap.style.display="none";tv.style.display="none";cap.hidden=true;adCap.hidden=false;}
-  function tvBreak(kind){
+  // A spot on the radio comes on the TV too (Sam: "i didnt see it"): the DJ says which spot and when it started
+  // (nowplaying.json spot_id, spot_at); the clip starts when the sound reaches this listener, or partway in if it already has.
+  var spotShown=null;
+  function tvSpot(n){
+    if(!n||!n.spot_id||channel===4||document.hidden)return;
+    var key=n.spot_id+"@"+n.spot_at;if(spotShown===key)return;
+    var a=null;for(var i=0;i<TVADS.length;i++)if(TVADS[i].v==="tv/"+n.spot_id+".mp4")a=TVADS[i];
+    if(!a)return;
+    spotShown=key;
+    var heard=(+n.spot_at||0)*1000+(playing?(lag()+2.5)*1000:0),wait=heard-Date.now(),into=-wait/1000;
+    if(into>(a.secs||30)-3)return;                       // over already
+    setTimeout(function(){if(adOn)endAd();tvBreak("spot",a,Math.max(0,into));},Math.max(0,wait));   // the radio's spot comes first, the second of a double too
+  }
+  function tvBreak(kind,item,offset){
     if(adOn||channel===4||document.hidden)return false;
     kind=kind||nextKind();
     if(kind==="banner"&&channel!==2)kind="still";
@@ -328,7 +341,7 @@ a.artist{color:#800080}
       adCap.textContent="Valley weather: the National Weather Service at Van Nuys Airport, and Open-Meteo for the neighborhoods.";
       adTimer=setTimeout(endAd,WX_SECS*1000);return true;
     }
-    var a=pickAd(kind==="video"?"v":"img");if(!a)return false;
+    var a=item||pickAd(kind==="still"||kind==="banner"?"img":"v");if(!a)return false;
     adOn=true;adKind=kind;
     if(kind==="banner"){
       banner.querySelector("img").src=a.img;
@@ -343,8 +356,9 @@ a.artist{color:#800080}
       adTimer=setTimeout(endAd,STILL_SECS*1000);return true;
     }
     adV.src=a.v;adV.style.display="inline-block";adV.onended=endAd;adV.onerror=endAd;
+    if(offset>0)adV.addEventListener("loadedmetadata",function seek(){adV.removeEventListener("loadedmetadata",seek);try{adV.currentTime=offset;}catch(e){}});
     var pl=adV.play();if(pl&&pl.catch)pl.catch(function(){endAd();});
-    adTimer=setTimeout(endAd,(a.secs||60)*1000+4000);return true;
+    adTimer=setTimeout(endAd,((a.secs||60)-(offset||0))*1000+4000);return true;
   }
   function endAd(){
     clearTimeout(adTimer);if(!adOn)return;var k=adKind;adOn=false;adKind=null;
@@ -527,7 +541,7 @@ a.artist{color:#800080}
   }
   document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a.record");if(a){e.preventDefault();if(lastTrack)recordCard(lastTrack);}});
   window.sfvLive={el:liveEl,lag:lag,retune:retune,toggle:function(){btn.click();},hush:function(){off();},tuneTo:function(c){liveCfg=c;checkLive();},state:function(){return {isLive:isLive,playing:playing,studio:studio,lag:lag(),paused:liveEl.paused,t:liveEl.currentTime,label:document.getElementById("radiolabel").textContent};}};
-  function showLiveTrack(){if(!liveCfg||!liveCfg.nowplaying)return;fetch(liveCfg.nowplaying+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(n){if(!isLive)return;document.getElementById("tune-now").textContent=n&&n.title?"Now: "+n.artist+" \u2013 "+n.title:"";var line="LIVE from Berry Drive, Studio City. ";if(n&&n.title){var extra=n.url?' &middot; <a href="'+esc(n.url)+'">Open in Spotify</a>':"";line+=(n.art?'<img src="'+esc(n.art)+'" width="18" height="18" alt="" style="vertical-align:-3px;border:1px solid #000080"> ':"")+'<a href="#" target="_self" class="artist" data-artist="'+esc(n.artist)+'" data-extra="'+esc(extra)+'">'+esc(n.artist)+"</a> \u2013 "+esc(n.title)+' &middot; <a href="#" target="_self" class="record">The record</a>';}else if(n&&n.spot){line+="A word from the Valley: "+esc(n.spot)+".";}else if(n&&n.host){line+=esc(n.host)+" has the station, from their own device.";}else{line+="Sam is on the air.";}var html=line+'';if(html===pendingLine)return;pendingLine=html;var wait=playing&&!liveEl.paused?Math.min(30,Math.round(lag())+3)*1000:0;var key=n&&n.title?(n.artist+"|"+n.title):"";setTimeout(function(){if(isLive&&pendingLine===html){now.innerHTML=html;if(key&&key!==cardKey){cardKey=key;lastTrack=n;if(!cardClosed)recordCard(n);}}},wait);}).catch(function(){});}
+  function showLiveTrack(){if(!liveCfg||!liveCfg.nowplaying)return;fetch(liveCfg.nowplaying+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(n){if(!isLive)return;if(n&&n.spot_id)tvSpot(n);document.getElementById("tune-now").textContent=n&&n.title?"Now: "+n.artist+" \u2013 "+n.title:"";var line="LIVE from Berry Drive, Studio City. ";if(n&&n.title){var extra=n.url?' &middot; <a href="'+esc(n.url)+'">Open in Spotify</a>':"";line+=(n.art?'<img src="'+esc(n.art)+'" width="18" height="18" alt="" style="vertical-align:-3px;border:1px solid #000080"> ':"")+'<a href="#" target="_self" class="artist" data-artist="'+esc(n.artist)+'" data-extra="'+esc(extra)+'">'+esc(n.artist)+"</a> \u2013 "+esc(n.title)+' &middot; <a href="#" target="_self" class="record">The record</a>';}else if(n&&n.spot){line+="A word from the Valley: "+esc(n.spot)+".";}else if(n&&n.host){line+=esc(n.host)+" has the station, from their own device.";}else{line+="Sam is on the air.";}var html=line+'';if(html===pendingLine)return;pendingLine=html;var wait=playing&&!liveEl.paused?Math.min(30,Math.round(lag())+3)*1000:0;var key=n&&n.title?(n.artist+"|"+n.title):"";setTimeout(function(){if(isLive&&pendingLine===html){now.innerHTML=html;if(key&&key!==cardKey){cardKey=key;lastTrack=n;if(!cardClosed)recordCard(n);}}},wait);}).catch(function(){});}
   function goLive(){if(isLive)return;isLive=true;pendingLine="";setTimeout(autoSound,0);showLiveTrack();clearInterval(npTimer);npTimer=setInterval(showLiveTrack,10000);if(playing){music.pause();voice.pause();tune().catch(function(){});}now.innerHTML="LIVE from Berry Drive, Studio City. Sam is on the air.";document.getElementById("host").textContent="Sam Sugarman, live from Berry Drive";}
   function endLive(){if(!isLive)return;isLive=false;hideTune();clearInterval(npTimer);closeCard();cardKey="";liveEl.pause();liveEl.removeAttribute("src");liveEl.load();document.getElementById("host").textContent="Phil Landers and Carol Reyes";if(playing){if(SCHEDULE){music.currentTime=secondsToday()%program.duration;music.play().catch(function(){});showNow();}else{playing=false;label(false);now.textContent="Sam has left the air. The recorded program is parked for now.";}}}
   // Live sound must stay at the live edge. A pause from the lock screen, a phone call or a slow link leaves the
