@@ -52,7 +52,8 @@ body.is-owner label.owner{display:inline}
 <input type="url" id="rec-link" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://open.spotify.com/&hellip;" style="margin-top:6px"> <button type="submit" class="say" id="rec-play" disabled>Play it</button><br><font size="2" color="#ff0000" id="rec-msg" aria-live="polite"></font></form>
 <p style="margin:12px 0 4px" class="owner"><font size="2"><b>Announcer</b> <span id="ann-note"></span></font></p>
 <p style="margin:0 0 10px" class="owner"><font size="2">
-<label><input type="radio" name="ann" value="mix" id="ann-mix"> Phil and Bob (Phil most breaks, Bob about one in four)</label><br>
+<label><input type="radio" name="ann" value="mix" id="ann-mix"> Phil, Carol and Bob (Phil most breaks, Carol about one in four, Bob about one in four when he has his key)</label><br>
+<label><input type="radio" name="ann" value="carol" id="ann-carol"> Carol Reyes, every break (free)</label><br>
 <label><input type="radio" name="ann" value="bob" id="ann-bob"> Bob Sherman, every break</label><br>
 <label><input type="radio" name="ann" value="buddy" id="ann-buddy"> Phil Landers only (free)</label><br>
 Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>onyx</option></select> <button type="button" class="say" id="hear-bob" style="padding:6px 12px">Hear Bob</button> <font size="1">(on this phone only, not on the air)</font></font></p>
@@ -217,7 +218,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   var recEl=function(id){return document.getElementById(id);},recArt=recEl("rec-art"),recTitle=recEl("rec-title"),recArtist=recEl("rec-artist"),recAlbum=recEl("rec-album"),recTime=recEl("rec-time"),recState=recEl("rec-state"),recPP=recEl("rec-pp"),recShuf=recEl("rec-shuf"),recLink=recEl("rec-link"),recMsg=recEl("rec-msg"),recPlaying=false,recShuffle=false,recArtUrl="";
   // the watcher's reading: music loudness, Phil against the music, the last thing it noticed
   var stLevel=document.getElementById("st-level");
-  function showLevel(x){if(!x){stLevel.textContent="Level watcher: no reading";return;}var p=["Level: "+x.state];if(x.music!=null)p.push("music "+x.music+" LUFS");if(x.buddy_gap!=null)p.push("Phil "+(x.buddy_gap>0?"+":"")+x.buddy_gap+" dB");if(x.volume!=null&&x.volume<100)p.push("Spotify at "+x.volume);stLevel.textContent=p.join(", ")+(x.notes&&x.notes.length?". Last: "+x.notes[0]:"");}
+  function showLevel(x){if(!x){stLevel.textContent="Level watcher: no reading";return;}var p=["Level: "+x.state];if(x.music!=null)p.push("music "+x.music+" LUFS");if(x.buddy_gap!=null)p.push("voice "+(x.buddy_gap>0?"+":"")+x.buddy_gap+" dB");if(x.volume!=null&&x.volume<100)p.push("Spotify at "+x.volume);stLevel.textContent=p.join(", ")+(x.notes&&x.notes.length?". Last: "+x.notes[0]:"");}
   // who is really listening (the public page's crowd is partly fiction; this is not), and who is in the booth
   var stPeople=document.getElementById("st-people");
   function ago(n){return n<1?"just now":n+" min";}
@@ -226,13 +227,13 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
     if(l){var who=(l.who||[]).map(function(p){return [p.device,p.place||"",ago(p.minutes)].concat(p.extra||[]).filter(Boolean).join(", ");});out.push("<b>Listening: "+l.count+"</b>"+(who.length?"<br>"+who.map(function(w){return "&middot; "+esc(w);}).join("<br>"):"")+(l.quiet?" &middot; "+l.quiet+" with the sound off":""));}
     if(b&&b.length)out.push("<b>In the booth:</b> "+b.map(function(x){return esc(x.who)+" on "+esc(x.device);}).join(", "));
     stPeople.innerHTML="";out.forEach(function(t,i){var d=document.createElement("span");d.innerHTML=t;if(i)stPeople.appendChild(document.createElement("br"));stPeople.appendChild(d);});}
-  // the announcer: Phil (local, free) and Bob Sherman (OpenAI, within a monthly budget)
+  // the announcer: Phil and Carol (local, free) and Bob Sherman (OpenAI, within a monthly budget)
   var annNote=document.getElementById("ann-note");
   var bobSel=document.getElementById("bob-voice"),hearBob=document.getElementById("hear-bob"),bobAudio=new Audio(),bobVoices="";
   function showAnn(a){if(!a)return;var r=document.getElementById("ann-"+a.choice);if(r)r.checked=true;
     if(a.voices&&a.voices.join()!==bobVoices){bobVoices=a.voices.join();bobSel.innerHTML="";a.voices.forEach(function(v){var o=document.createElement("option");o.value=v;o.textContent=v;bobSel.appendChild(o);});}
     if(a.voice&&document.activeElement!==bobSel)bobSel.value=a.voice;
-    annNote.textContent=!a.bob_key?"(Bob is waiting for his OpenAI key; Phil has every break)":"(Bob this month: $"+a.spent.toFixed(2)+" of $"+a.budget.toFixed(2)+", estimated on the high side"+(a.spent>=a.budget?"; used up, Phil covers":"")+")";}
+    annNote.textContent=!a.bob_key?"(Bob is waiting for his OpenAI key; Phil takes his breaks)":"(Bob this month: $"+a.spent.toFixed(2)+" of $"+a.budget.toFixed(2)+", estimated on the high side"+(a.spent>=a.budget?"; used up, Phil covers":"")+")";}
   bobSel.addEventListener("change",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"bobvoice",voice:bobSel.value}));log("Bob's voice: "+bobSel.value);}});
   hearBob.addEventListener("click",function(){if(!ws||ws.readyState!==1)return;
     try{bobAudio.muted=true;bobAudio.src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";var p=bobAudio.play();if(p&&p.catch)p.catch(function(){});}catch(e){}   // unlock playback during the tap (iPhone)
