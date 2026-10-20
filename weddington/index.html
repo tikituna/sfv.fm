@@ -2333,11 +2333,25 @@ const CANT_HERE = 'The station can’t play inside this page. Listen at sfv.fm.'
 // pressed, so no one else is asked about local network access.
 const macDesktop = /Macintosh/.test(navigator.userAgent) && (navigator.maxTouchPoints || 0) < 2;
 let studio = null, radioTok = 0, radioUnlocked = false, silentUrl = '';
+// It is the studio only if its own Icecast carries the live broadcast and that is the broadcast the station's address
+// serves: a Mac that was once the transmitter still answers on port 8000 with nothing on it (Sam, 2026-10-20).
+function liveStart(j) {
+  try { let s = j.icestats.source; s = Array.isArray(s) ? s : (s ? [s] : []); for (const x of s) if (/\/live$/.test(x.listenurl || '')) return x.stream_start_iso8601 || x.stream_start || 'on'; } catch (e) { /* not a status page */ }
+  return null;
+}
 function checkStudio() {
   if (studio !== null) return Promise.resolve(studio);
   const ac = window.AbortController ? new AbortController() : null, t = setTimeout(() => { if (ac) ac.abort(); }, 4000);
   return fetch('http://127.0.0.1:8000/status-json.xsl', { mode: 'cors', cache: 'no-store', signal: ac ? ac.signal : undefined })
-    .then((r) => !!r.ok).catch(() => false).then((v) => { clearTimeout(t); studio = v; return v; });
+    .then((r) => (r.ok ? r.json() : null))
+    .then((j) => {
+      const mine = j && liveStart(j); if (!mine) return false;
+      return fetch('https://sfv.fm/live.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => r.json())
+        .then((c) => fetch(c.status, { cache: 'no-store' })).then((r) => r.json())
+        .then((pub) => { const theirs = liveStart(pub); return !theirs || theirs === mine; })
+        .catch(() => true);   // no way to compare: a live local server is the studio
+    })
+    .catch(() => false).then((v) => { clearTimeout(t); studio = !!v; return studio; });
 }
 function silentWav() {   // a tenth of a second of silence, to unlock playback inside the tap
   const n = 800, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf), w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };

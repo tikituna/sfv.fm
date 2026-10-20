@@ -389,8 +389,15 @@ a.artist{color:#800080}
   btn.addEventListener("click",function(){wireMeter();if(!unlocked){unlocked=true;unlock(voice);if(!isLive)unlock(liveEl);}tickSound(!playing);if(navigator.vibrate){try{navigator.vibrate(8);}catch(e){}}remember(playing?"off":"on");if(studio&&!playing)now.textContent="Studio monitor: this is the transmitter. Playing here feeds the broadcast back into itself.";playing?off():on();});
   // Sound is on by default. The browser may refuse to start it without a gesture; then the first tap or key anywhere starts it.
   // The transmitter's own Mac: a browser there must not play the stream, or it feeds straight back into the broadcast.
+  // It is the studio only if its own Icecast is carrying the live broadcast, and it is the same broadcast the station's
+  // address is serving: a Mac that was once the transmitter still answers on port 8000 with nothing on it (2026-10-20, the Air).
   var studio=false,studioKnown=false;
-  fetch("http://127.0.0.1:8000/status-json.xsl",{mode:"cors",cache:"no-store"}).then(function(r){studio=!!r.ok;}).catch(function(){studio=false;}).then(function(){studioKnown=true;if(studio)now.textContent="Studio monitor. The sound stays off here: it would feed back into the broadcast.";autoSound();});
+  function liveStart(j){try{var s=j.icestats.source;s=Array.isArray(s)?s:(s?[s]:[]);for(var i=0;i<s.length;i++)if(/\/live$/.test(s[i].listenurl||""))return s[i].stream_start_iso8601||s[i].stream_start||"on";}catch(e){}return null;}
+  fetch("http://127.0.0.1:8000/status-json.xsl",{mode:"cors",cache:"no-store"}).then(function(r){return r.ok?r.json():null;}).then(function(j){
+    var mine=j&&liveStart(j);if(!mine)return false;
+    return fetch("live.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(c){return fetch(c.status,{cache:"no-store"});}).then(function(r){return r.json();})
+      .then(function(pub){var theirs=liveStart(pub);return !theirs||theirs===mine;}).catch(function(){return true;});   // no way to compare: a live local server is the studio
+  }).catch(function(){return false;}).then(function(v){studio=!!v;studioKnown=true;if(studio)now.textContent="Studio monitor. The sound stays off here: it would feed back into the broadcast.";autoSound();});
   var autoTried=false;
   function autoSound(){if(!studioKnown||studio||autoTried||playing||soundPref==="off"||!isLive)return;autoTried=true;on();}
   function firstGesture(e){if(studio||playing||soundPref==="off")return;if(e.target&&e.target.closest&&e.target.closest("#radio,#tune-no"))return;if(e.type==="keydown"&&(e.metaKey||e.ctrlKey||e.altKey||/^(Tab|Shift|Escape)$/.test(e.key)||/INPUT|TEXTAREA|SELECT/.test(e.target&&e.target.tagName)))return;document.removeEventListener("click",firstGesture,true);document.removeEventListener("keydown",firstGesture,true);wireMeter();if(!unlocked){unlocked=true;unlock(voice);if(!isLive)unlock(liveEl);}hideTune();on();}
