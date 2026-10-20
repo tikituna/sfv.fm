@@ -172,7 +172,36 @@ a.artist{color:#800080}
     {id:"i405677northofburbankblvd",hls:"CCTV-677",name:"I-405 north of Burbank Boulevard, Van Nuys"},
     {id:"us101619sr170tujunga",hls:"CCTV-619",name:"US-101 at the 170, North Hollywood"},
     {id:"sr170646shermanway",hls:"CCTV-646",name:"SR-170 at Sherman Way, North Hollywood"},
-    {id:"sr17098northofroscoeblvd",hls:"CCTV-98",name:"SR-170 north of Roscoe Boulevard, Sun Valley"}
+    {id:"sr17098northofroscoeblvd",hls:"CCTV-98",name:"SR-170 north of Roscoe Boulevard, Sun Valley"},
+    // more Valley cameras with live video (Sam, 2026-10-20: "some other videos live!"), from Caltrans' District 7 list.
+    // Many show Caltrans' "Temporarily Unavailable" card at any given time; draw() skips those and the next camera comes up.
+    {id:"sr170647southsr170toeastsr134",hls:"CCTV-647",name:"SR-170 where it meets the 134, North Hollywood"},
+    {id:"us101615universalstudiosblvd",hls:"CCTV-615",name:"US-101 at Universal Studios Boulevard, Universal City"},
+    {id:"us101616lankershimblvd",hls:"CCTV-616",name:"US-101 at Lankershim Boulevard, Studio City"},
+    {id:"us101618moorparkst",hls:"CCTV-618",name:"US-101 at Moorpark Street, North Hollywood"},
+    {id:"us101625eastofvannuysblvd",hls:"CCTV-625",name:"US-101 east of Van Nuys Boulevard, Sherman Oaks"},
+    {id:"us101626westofvannuysblvd",hls:"CCTV-626",name:"US-101 west of Van Nuys Boulevard, Sherman Oaks"},
+    {id:"us101633resedablvd",hls:"CCTV-633",name:"US-101 at Reseda Boulevard, Tarzana"},
+    {id:"us101634tampaave",hls:"CCTV-634",name:"US-101 at Tampa Avenue, Tarzana"},
+    {id:"i405675venturablvd",hls:"CCTV-675",name:"I-405 at Ventura Boulevard, Sherman Oaks"},
+    {id:"i405676northofus101",hls:"CCTV-676",name:"I-405 north of the 101, Van Nuys"},
+    {id:"sr17096sovictoryblvd",hls:"CCTV-96",name:"SR-170 south of Victory Boulevard, North Hollywood"},
+    {id:"sr17097oxnardst",hls:"CCTV-97",name:"SR-170 at Oxnard Street, North Hollywood"},
+    {id:"sr134652hollywoodway",hls:"CCTV-652",name:"SR-134 at Hollywood Way, Burbank"},
+    {id:"sr134653buenavista",hls:"CCTV-653",name:"SR-134 at Buena Vista Street, Burbank"},
+    {id:"sr134654westofforestlawn",hls:"CCTV-654",name:"SR-134 west of Forest Lawn, Burbank"},
+    {id:"sr134657eastofroute5",hls:"CCTV-657",name:"SR-134 east of the 5, Burbank"},
+    {id:"i536alamedast",hls:"CCTV-36",name:"I-5 at Alameda Avenue, Burbank"},
+    {id:"i537olive",hls:"CCTV-37",name:"I-5 at Olive Avenue, Burbank"},
+    {id:"i540northofburbankblvd",hls:"CCTV-40",name:"I-5 north of Burbank Boulevard, Burbank"},
+    {id:"i542buenavista",hls:"CCTV-42",name:"I-5 at Buena Vista Street, Burbank"},
+    {id:"i544roscoeblvdramp",hls:"CCTV-44",name:"I-5 at Roscoe Boulevard"},
+    {id:"i545nosunlandblvd",hls:"CCTV-45",name:"I-5 north of Sunland Boulevard"},
+    {id:"i552vannuysblvd",hls:"CCTV-52",name:"I-5 at Van Nuys Boulevard"},
+    {id:"i556sanfernandomissionblvd",hls:"CCTV-56",name:"I-5 at San Fernando Mission Boulevard"},
+    {id:"i560soroxfordst",hls:"CCTV-60",name:"I-5 south of Roxford Street"},
+    {id:"i566towbrte210",hls:"CCTV-66",name:"I-5 at the 210"},
+    {id:"sr11868eastofsr118connector",hls:"CCTV-68",name:"SR-118 east of the 5 connector, Pacoima"}
   ];
   var canvas=document.getElementById("cam"),ctx=canvas.getContext("2d"),cap=document.getElementById("cam-caption");
   var bayer=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
