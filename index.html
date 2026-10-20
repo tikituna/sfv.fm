@@ -45,7 +45,12 @@ a.artist{color:#800080}
 #camv{display:none;width:640px;max-width:100%;height:auto;aspect-ratio:auto 16/9;border:1px solid #000080;background:#000}
 #wxcard{width:100%;max-width:640px;aspect-ratio:640/520;box-sizing:border-box;border:1px solid #000080;background:#000080;color:#fff;font-family:"Times New Roman",Times,serif;display:inline-flex;flex-direction:column;justify-content:center;align-items:center;gap:.35em;padding:1em;text-align:center;vertical-align:top}
 #wxcard[hidden]{display:none}#wxcard .h{font-weight:bold;letter-spacing:.14em;font-size:clamp(14px,3.4vw,22px)}#wxcard .t{font-weight:bold;font-size:clamp(46px,14vw,108px);line-height:1}#wxcard .d{font-size:clamp(14px,3.6vw,24px)}#wxcard .n{font-size:clamp(12px,3vw,19px);opacity:.92}#wxcard .s{font-size:clamp(10px,2.4vw,14px);letter-spacing:.12em;opacity:.8;margin-top:.6em}
-#tv,#ad{display:none;width:100%;max-width:640px;aspect-ratio:16/9;height:auto;border:1px solid #000080;background:#000;vertical-align:top}
+#ad,#adimg{display:none;width:100%;max-width:640px;aspect-ratio:640/520;object-fit:contain;background:#000;border:1px solid #000080;vertical-align:top;overflow:hidden}
+#adimg.kb{animation:kb 7s ease-out forwards}@keyframes kb{from{transform:scale(1)}to{transform:scale(1.07)}}
+#banner{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:10px;padding:6px 10px;background:rgba(0,0,128,.92);color:#fff;font-family:"Times New Roman",Times,serif;font-size:clamp(12px,2.6vw,16px);line-height:1.25;text-align:left;transform:translateY(105%);transition:transform .5s ease}
+#banner.on{transform:none}#banner[hidden]{display:none}#banner img{height:clamp(36px,9vw,64px);width:auto;border:1px solid #fff;background:#000;flex:none}#banner b{letter-spacing:.08em}
+@media (prefers-reduced-motion:reduce){#adimg.kb{animation:none}#banner{transition:none}}
+#tv{display:none;width:100%;max-width:640px;aspect-ratio:16/9;height:auto;border:1px solid #000080;background:#000;vertical-align:top}
 #channels a{color:#800080}
 #listeners{position:absolute;top:10px;right:14px;border:1px solid #000080;padding:3px 8px;font-size:11px;line-height:1.3;background:#fff;white-space:nowrap}
 #listeners b{font-size:14px}
@@ -125,7 +130,7 @@ a.artist{color:#800080}
 <div id="listeners-wrap"><div id="listeners" class="off" aria-live="polite"><span class="dot"></span>OFF AIR</div></div>
 <p align="center"><b><font size="6">S</font><font size="4">AN </font><font size="6">F</font><font size="4">ERNANDO </font><font size="6">V</font><font size="4">ALLEY </font><font size="6">R</font><font size="4">ADIO</font><font size="2"><br>sfv.fm<br>Berry Drive, Studio City, California</font><br>On the Air</b><font size="1">&nbsp;</font></p>
 <hr>
-<p align="center"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><span class="dots"></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><iframe id="ad" width="640" height="360" frameborder="0" title="A commercial from the archive" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe><span id="wxcard" role="img" aria-label="Valley weather" hidden></span><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span><span id="ad-caption" hidden></span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
+<p align="center"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><span class="dots"></span><span id="banner" hidden><img alt=""><span></span></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><video id="ad" muted playsinline preload="none" aria-label="A commercial from the archive"></video><img id="adimg" alt="" hidden><span id="wxcard" role="img" aria-label="Valley weather" hidden></span><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span><span id="ad-caption" hidden></span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
 <table border="0" cellspacing="0" cellpadding="4" align="center" width="90%">
   <tr><td valign="top" width="50%"><font size="2"><button type="button" class="sw" id="radio" aria-pressed="false" aria-label="Sound"><span class="knob"></span></button><span id="radiolabel">Sound off</span><span class="meter" id="meter" title="Signal"><canvas id="vu" width="40" height="11"></canvas></span><span id="signal"></span><br><span id="now">The station is on the air. Turn the sound on to join the program in progress.</span></font></td>
       <td valign="top" width="50%"><font size="2"><b>Host:</b> <span id="host">Phil Landers and Carol Reyes</span><br><b>Next break:</b> <span id="next-break">&mdash;</span><br><b>Conditions:</b> <span id="wx">&mdash;</span></font></td></tr>
@@ -259,68 +264,43 @@ a.artist{color:#800080}
   document.addEventListener("keydown",function(e){if(e.metaKey||e.ctrlKey||e.altKey)return;if(e.target&&/INPUT|TEXTAREA|SELECT/.test(e.target.tagName))return;if(e.key==="2"||e.key==="4"||e.key==="7")setChannel(+e.key,true);});
   var savedCh=2;try{var sc=+localStorage.getItem("sfv-channel");if(sc===4||sc===7)savedCh=sc;}catch(e){}
   setChannel(savedCh,false);
-  // ---- now and then, a commercial (Sam, 2026-10-20): a real Valley car-dealer spot from the archive, on YouTube. Only over
-  // the freeways and the aquarium, never over Huell (his sound is on), and only while the page is in view. It plays in its
-  // own frame on top, so the channel underneath keeps going and comes straight back.
-  var ads=[   // checked 2026-10-20: each is embeddable and really that business's commercial, and the business is Valley; dates as the sources give them
-    {id: "55eVMMNIRVM", who: "Galpin", cap: "Galpin Ford's three-day RV sale, a TV commercial from about 1985.", by: "xntryk1", secs: 31},
-    {id: "NqUOqAarqTE", who: "Galpin", cap: "Go Galpin, a Galpin commercial with its customers; the uploader dates it to 1993.", by: "Games & TV", secs: 30},
-    {id: "0mOpH5w7cFA", who: "Galpin", cap: "Go Galpin, a Galpin commercial with a customer.", by: "Games & TV", secs: 31},
-    {id: "OmcAfo__RBQ", who: "Galpin", cap: "Galpin 6000: six thousand vehicles in a hundred days, a Galpin Ford commercial from about 2002.", by: "The Black Canyon Collection", secs: 31},
-    {id: "7iqvEBmIyRg", who: "Keyes", cap: "Keyes on Van Nuys, with the yellow Keyes blimp.", by: "ArmstrongAnimation", secs: 30},
-    {id: "TqoUfQbxfK4", who: "Keyes", cap: "Keyes on Van Nuys: the jingle, by the Backbeats.", by: "ArmstrongAnimation", secs: 15},
-    {id: "Hj3Pg7mEssw", who: "Keyes", cap: "Keyes on Van Nuys: the jingle, by a gospel group.", by: "ArmstrongAnimation", secs: 15},
-    {id: "xC-XekgBj2A", who: "Builders Emporium", cap: "Builders Emporium, the hardware chain that started in Van Nuys, a TV spot from 1983.", secs: 28},
-    {id: "2md_ZEDgecI", who: "Glendale Federal", cap: "Glendale Federal, the savings and loan headquartered in Glendale, a TV spot from 1983.", secs: 30},
-    {id: "yWV5BoEhxGY", who: "Glendale Federal", cap: "Glendale Federal, the savings and loan headquartered in Glendale, a TV spot from 1984.", secs: 31},
-    {id: "RijpLhoY7mE", who: "Lamps Plus", cap: "Lamps Plus, the lighting chain that started in North Hollywood, a January clearance spot from 1985.", secs: 29},
-    {id: "pu5a9vpXPOs", who: "Lamps Plus", cap: "Lamps Plus, the lighting chain that started in North Hollywood, a storewide clearance spot from 1986.", secs: 30},
-    {id: "iTinSIEuhrU", who: "Glendale Federal", cap: "Glendale Federal Bank of Glendale, its 'Jar Ceremony' TV spot from 1991.", secs: 28},
-    {id: "YJeAX7gh9fE", who: "Baxter-Northup", cap: "Baxter-Northup Music Co. on Ventura Blvd in Sherman Oaks, a TV spot from 1993.", secs: 28},
-    {id: "kOz4yATsBb4", who: "Sitting Pretty", cap: "Sitting Pretty Furniture on Darby Ave in Reseda, a warehouse sale spot from 1994.", secs: 29},
-    {id: "LWPHIolzX94", who: "Media City Center", cap: "Media City Center, the Burbank mall now called Burbank Town Center, a TV spot from 1995.", secs: 30},
-    {id: "7rBmgjAWp1w", who: "Toyota of North Hollywood", cap: "Toyota of North Hollywood on Lankershim at the 134, a lease special spot from 1995.", secs: 30},
-    {id: "NvO7JiMB108", who: "Sitting Pretty", cap: "Sitting Pretty Furniture, with its showroom on Darby Ave in Reseda, a TV spot from 1996.", secs: 30},
-    {id: "9MVEBv847A8", who: "Canoga Park Mitsubishi", cap: "Canoga Park Mitsubishi on Roscoe Blvd, a TV spot from 1997.", secs: 28},
-    {id: "7pVBvNcdVsc", who: "Northridge Fashion Center", cap: "Northridge Fashion Center, a TV spot from 1998.", secs: 29},
-    {id: "i94C60ICgZU", who: "Robertson Honda", cap: "Robertson Honda in North Hollywood, a TV spot from 1998.", secs: 28},
-    {id: "UPL7rm06pK8", who: "Allen Gwynn Chevrolet", cap: "Allen Gwynn Chevrolet on South Brand Blvd in Glendale, a TV spot from 1998.", secs: 29},
-    {id: "4LPCnc7BImo", who: "Valley Pontiac", cap: "Valley Pontiac GMC Buick on Lankershim at the 134 in North Hollywood, a TV spot from 1998.", secs: 30},
-    {id: "08ELY6BY6Lo", who: "Casa de Cadillac", cap: "Casa de Cadillac at Ventura and Beverly Glen in Sherman Oaks, its 50th anniversary spot from 1999.", secs: 30},
-    {id: "vBbpaBF0eJ4", who: "Metro Ford", cap: "Metro Ford at 5500 Lankershim Blvd in North Hollywood, a TV spot from 1999.", secs: 30},
-    {id: "VLyir7xp_u8", who: "Toyota of North Hollywood", cap: "Toyota of North Hollywood on Lankershim at the 134, a certified used car spot from 1999.", secs: 29},
-    {id: "fEHvePIUei4", who: "Toyota of North Hollywood", cap: "Toyota of North Hollywood and its used car lot on Lankershim Blvd, a TV spot from 1999.", secs: 28},
-    {id: "Zy2hebParD4", who: "Toyota of North Hollywood", cap: "Toyota of North Hollywood, its 'Other Toyota Dealer' spot from 2000.", secs: 30},
-    {id: "xv90WFMlZ_c", who: "Parkway GM", cap: "Parkway GM Supercenter on Creekside Road in Valencia, a TV spot from 2000.", secs: 30},
-    {id: "r5Y-s6ylzII", who: "Miller Nissan", cap: "Miller Nissan on Van Nuys Blvd, 'The Giant of the Valley,' a TV spot from 2001.", secs: 23},
-    {id: "H2YN-FU__oE", who: "Topanga used cars", cap: "A public used car tent sale at Victory Blvd and Topanga Canyon in Woodland Hills, a TV spot from 2002.", secs: 30},
-    {id: "-WgsqQKZGOU", who: "Busch Gardens", cap: "Busch Gardens in Van Nuys, a 1975 TV spot for its Showtime America shows.", secs: 30},
-    {id: "vQ9-PJSLi1Y", who: "Magic Mountain", cap: "Magic Mountain in Valencia, a 1976 TV spot for the new Revolution coaster.", secs: 60},
-    {id: "1IkS_7RwX9k", who: "Universal", cap: "The Universal Studios Tour in Universal City, a TV spot from about 1977.", secs: 29},
-    {id: "shO-MW1ctPE", who: "Universal", cap: "The Universal Studios Tour in Universal City, a Tour News TV spot from about 1978.", secs: 30},
-    {id: "6L_ZDnL7gOg", who: "Magic Mountain", cap: "Six Flags Magic Mountain in Valencia, a 1979 TV spot for $6 after 6 PM.", secs: 30},
-    {id: "fROJvgI12jY", who: "Universal", cap: "The Universal Studios Tour in Universal City, a 1979 TV spot for the Battle of Galactica.", secs: 30},
-    {id: "3adaGgRwMW4", who: "Magic Mountain", cap: "Six Flags Magic Mountain in Valencia, a 1981 TV spot for the new Roaring Rapids ride.", secs: 30},
-    {id: "XEPQJ4xpsKM", who: "Bob's Big Boy", cap: "Bob's Big Boy, born in Glendale with its oldest standing restaurant in Burbank, a 1982 TV spot.", secs: 29},
-    {id: "PH1Rr5k6SSY", who: "Love's Barbecue", cap: "Love's Wood Pit Barbecue, a 1983 spot that aired on Valley Cable during a Valley high school football game.", secs: 33},
-    {id: "tveCsNfUf20", who: "Universal", cap: "The Universal Studios Tour in Universal City, a TV spot from 1984.", secs: 31},
-    {id: "yvKgfcDOj18", who: "Bob's Big Boy", cap: "Bob's Big Boy, a TV spot that aired on Burbank's KNBC on November 23, 1984.", secs: 29},
-    {id: "PCkPwS7ztPk", who: "Magic Mountain", cap: "Six Flags Magic Mountain in Valencia, a TV spot from KTTV in September 1987.", secs: 30},
-    {id: "FXrFcE1feIE", who: "Universal", cap: "The Universal Amphitheatre in Universal City, a December 1990 spot for the Waterboys, the Go-Go's and the Pixies.", secs: 30},
-    {id: "aXuVrRdYe0Y", who: "Universal", cap: "Universal Studios Hollywood in Universal City, a 1991 TV spot for the new E.T. Adventure ride.", secs: 30},
-    {id: "3VMNYADO4uw", who: "Hurricane Harbor", cap: "Six Flags Hurricane Harbor in Valencia, a TV spot for the water park's 1995 opening.", secs: 30}
+  // ---- the feed (Sam, 2026-10-20: "it just comes on", "the video player doesnt alternate very much"). The freeway cams cut
+  // every half minute or so, and every minute or two something comes on: one of the station's own commercials (cut from old
+  // Valley TV kept by the Internet Archive, in tv/, silent; the radio is the sound), a still (a commercial's closing card), a
+  // banner across the bottom of the cam, or the Valley weather card. No YouTube. Over the freeways and the aquarium, never
+  // over Huell, and only while the page is in view.
+  var TVADS=[
+    {v:"tv/bobs-1978.mp4",img:"tv/bobs-1978.jpg",cap:"Bob's Big Boy, a TV spot from 1978",who:"Bob's Big Boy",secs:30.7},
+    {v:"tv/bobs-1979.mp4",img:"tv/bobs-1979.jpg",cap:"Bob's Big Boy, the ham steak dinner for $3.65, 1979",who:"Bob's Big Boy",secs:30.8},
+    {v:"tv/magic-mountain-1989.mp4",img:"tv/magic-mountain-1989.jpg",cap:"Magic Mountain and the new Tidal Wave, 1989",who:"Magic Mountain",secs:31.1},
+    {v:"tv/universal-tour-1988.mp4",img:"tv/universal-tour-1988.jpg",cap:"The Universal Studios Tour and its live Star Trek Adventure, 1988",who:"Universal Studios",secs:30.6},
+    {v:"tv/ultrazone-2001.mp4",img:"tv/ultrazone-2001.jpg",cap:"Ultrazone laser tag, Ventura Boulevard and Cedros in Sherman Oaks, about 2001",who:"Ultrazone",secs:27.2},
+    {v:"tv/waadt-appliance-1994.mp4",img:"tv/waadt-appliance-1994.jpg",cap:"Waadt Appliance on Sherman Way at Balboa in Van Nuys, a local cable spot from 1994",who:"Waadt Appliance",secs:30.6},
+    {v:"tv/waadt-appliance-1994-2.mp4",img:"tv/waadt-appliance-1994-2.jpg",cap:"Waadt Appliance in Van Nuys, Mel Cain's price spot from 1994",who:"Waadt Appliance",secs:30.6},
+    {v:"tv/michael-s-furniture-2000.mp4",img:"tv/michael-s-furniture-2000.jpg",cap:"Michael's Furniture Warehouse in Van Nuys, a Mattress Mike spot from 2000",who:"Michael's Furniture",secs:31.1},
+    {v:"tv/auditory-odyssey-1993.mp4",img:"tv/auditory-odyssey-1993.jpg",cap:"Auditory Odyssey at Laurel Canyon and Victory in North Hollywood, a local MTV spot from 1993",who:"Auditory Odyssey",secs:31.6},
+    {v:"tv/west-valley-cablevision-1990.mp4",img:"tv/west-valley-cablevision-1990.jpg",cap:"West Valley Cablevision and the LA Times Valley Edition TV Times, a local cable spot from 1990",who:"West Valley Cablevision",secs:45.2},
+    {v:"tv/winston-tire-1985.mp4",img:"tv/winston-tire-1985.jpg",cap:"Winston Tire, the Burbank tire chain, in a KTLA spot from 1985",who:"Winston Tire",secs:30.6},
+    {v:"tv/magic-mountain-1993.mp4",img:"tv/magic-mountain-1993.jpg",cap:"Six Flags Magic Mountain in Valencia, a KCOP spot from 1993 pitching it against Disneyland",who:"Magic Mountain",secs:30.9},
+    {v:"tv/magic-mountain-1991.mp4",img:"tv/magic-mountain-1991.jpg",cap:"Six Flags Magic Mountain in Valencia announcing its new Psyclone coaster, KTLA, 1991",who:"Magic Mountain",secs:31.1},
+    {v:"tv/magic-mountain-2001.mp4",img:"tv/magic-mountain-2001.jpg",cap:"Six Flags Magic Mountain in Valencia selling Goliath and its extreme coasters, Fox 11, 2001",who:"Magic Mountain",secs:33.6},
+    {v:"tv/universal-studios-1994.mp4",img:"tv/universal-studios-1994.jpg",cap:"Universal Studios Hollywood, the 'Come out and shout' spot from the 1994 Oscars broadcast",who:"Universal Studios",secs:30.6},
+    {v:"tv/universal-studios-1995.mp4",img:"tv/universal-studios-1995.jpg",cap:"Universal Studios Hollywood launching its Waterworld live show, KTLA, 1995",who:"Universal Studios",secs:30.6},
+    {v:"tv/lamps-plus-1987.mp4",img:"tv/lamps-plus-1987.jpg",cap:"Lamps Plus, the North Hollywood-born lighting chain, with its 10th anniversary sale in 1987",who:"Lamps Plus",secs:28.6},
+    {v:"tv/virgil-s-hardware-1990.mp4",img:"tv/virgil-s-hardware-1990.jpg",cap:"Virgil's Hardware Home Center on North Glendale Avenue, a local spot from the 1990s",who:"Virgil's Hardware",secs:30.6},
+    {v:"tv/topanga-used-car-sale-2002.mp4",img:"tv/topanga-used-car-sale-2002.jpg",cap:"A used car tent sale at Victory and Topanga Canyon in Woodland Hills, a local spot dated 2002",who:"Topanga used car sale",secs:30.9},
+    {v:"tv/bob-s-big-boy-1991.mp4",img:"tv/bob-s-big-boy-1991.jpg",cap:"Bob's Big Boy and its $3.99 all-you-can-eat breakfast bar, KTLA, 1991",who:"Bob's Big Boy",secs:30.3}
   ];
-  var adFrame=document.getElementById("ad"),adCap=document.getElementById("ad-caption"),wxCard=document.getElementById("wxcard"),adOn=false,adTimer=null,adLast=-1,adShown={},breakN=0;
-  // A station break every few minutes, the way local TV ran them (Sam: "more on the screen between weather, freeway cams
-  // etc."). On the freeways every other break opens with the Valley weather card; then a commercial, and now and then a
-  // second from another business. The aquarium gets the commercials only, Huell nothing.
-  var BREAK_FIRST=[1.5,3],BREAK_EVERY=[4,7],WX_SECS=10,TWO=0.35;   // minutes between breaks; seconds of weather; how often two
-  function adWait(r){return (r[0]+Math.random()*(r[1]-r[0]))*60000;}
-  function pickAd(avoid){
-    var last=ads[adLast],pool=ads.filter(function(a,i){return i!==adLast&&a.who!==avoid&&!(last&&a.who===last.who);});
-    if(!pool.length)pool=ads.filter(function(a,i){return i!==adLast&&a.who!==avoid;});
-    if(!pool.length)pool=ads;
-    var a=pool[Math.floor(Math.random()*pool.length)];adLast=ads.indexOf(a);return a;
+  var adV=document.getElementById("ad"),adImg=document.getElementById("adimg"),banner=document.getElementById("banner"),adCap=document.getElementById("ad-caption"),wxCard=document.getElementById("wxcard");
+  var adOn=false,adKind=null,adTimer=null,adShown={},lastWx=0,cycle=0,recent=[];
+  var CAM_SECS=[25,40],BREAK_SECS=[55,110],WX_EVERY=240,WX_SECS=9,STILL_SECS=7,BANNER_SECS=10;
+  function between(r){return (r[0]+Math.random()*(r[1]-r[0]))*1000;}
+  function pickAd(need){
+    var pool=TVADS.filter(function(a){return a[need]&&recent.indexOf(a.who)<0;});
+    if(!pool.length)pool=TVADS.filter(function(a){return a[need];});
+    var a=pool[Math.floor(Math.random()*pool.length)];
+    if(a){recent.push(a.who);while(recent.length>Math.min(4,TVADS.length-1))recent.shift();}
+    return a;
   }
   function showWx(){
     var w=wxNow,a=w.air;
@@ -330,36 +310,51 @@ a.artist{color:#800080}
       '<span class="s">'+(a&&a.when?"AS OF "+esc(a.when)+" PT &middot; ":"")+"SFV.FM</span>";
     wxCard.hidden=false;
   }
-  function tvBreak(){
+  function nextKind(){
+    if(channel===2&&wxNow&&Date.now()-lastWx>WX_EVERY*1000)return "weather";
+    var order=channel===2?["video","still","banner","video","banner","still"]:["video","still"];
+    return order[(cycle++)%order.length];
+  }
+  function hideFeed(){adShown={wrap:wrap.style.display,tv:tv.style.display};wrap.style.display="none";tv.style.display="none";cap.hidden=true;adCap.hidden=false;}
+  function tvBreak(kind){
     if(adOn||channel===4||document.hidden)return false;
-    var seq=[];breakN++;
-    if(channel===2&&wxNow&&breakN%2===1)seq.push("wx");
-    if(ads.length){var a=pickAd(null);seq.push(a);if(ads.length>1&&Math.random()<TWO)seq.push(pickAd(a.who));}
-    if(!seq.length)return false;
-    adShown={wrap:wrap.style.display,tv:tv.style.display};adOn=true;
-    wrap.style.display="none";tv.style.display="none";cap.hidden=true;adCap.hidden=false;
-    (function next(i){
-      if(!adOn)return;
-      adFrame.removeAttribute("src");adFrame.style.display="none";wxCard.hidden=true;
-      if(i>=seq.length){endAd();return;}
-      var it=seq[i];
-      if(it==="wx"){showWx();adCap.textContent="Valley weather: the National Weather Service at Van Nuys Airport, and Open-Meteo for the neighborhoods.";adTimer=setTimeout(function(){next(i+1);},WX_SECS*1000);return;}
-      adFrame.style.display="inline-block";
-      adFrame.src="https://www.youtube-nocookie.com/embed/"+it.id+"?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1&controls=0&disablekb=1"+(it.start?"&start="+it.start:"")+(it.end?"&end="+it.end:"");
-      adCap.innerHTML="A word from the Valley: "+esc(it.cap)+' <a href="https://www.youtube.com/watch?v='+it.id+(it.start?"&t="+it.start+"s":"")+'">On YouTube</a>'+(it.by?", from "+esc(it.by):"")+".";
-      adTimer=setTimeout(function(){next(i+1);},(it.secs+2)*1000);
-    })(0);
-    return true;
+    kind=kind||nextKind();
+    if(kind==="banner"&&channel!==2)kind="still";
+    if(kind==="weather"){
+      if(!wxNow)return false;
+      lastWx=Date.now();adOn=true;adKind=kind;hideFeed();showWx();
+      adCap.textContent="Valley weather: the National Weather Service at Van Nuys Airport, and Open-Meteo for the neighborhoods.";
+      adTimer=setTimeout(endAd,WX_SECS*1000);return true;
+    }
+    var a=pickAd(kind==="video"?"v":"img");if(!a)return false;
+    adOn=true;adKind=kind;
+    if(kind==="banner"){
+      banner.querySelector("img").src=a.img;
+      banner.querySelector("span").innerHTML="<b>A WORD FROM THE VALLEY</b><br>"+esc(a.cap);
+      banner.hidden=false;void banner.offsetWidth;banner.classList.add("on");
+      adTimer=setTimeout(endAd,BANNER_SECS*1000);return true;
+    }
+    hideFeed();adCap.innerHTML="A word from the Valley: "+esc(a.cap)+". From old Valley TV, kept by the Internet Archive.";
+    if(kind==="still"){
+      adImg.src=a.img;adImg.alt=a.cap;adImg.hidden=false;adImg.style.display="inline-block";
+      adImg.classList.remove("kb");void adImg.offsetWidth;adImg.classList.add("kb");
+      adTimer=setTimeout(endAd,STILL_SECS*1000);return true;
+    }
+    adV.src=a.v;adV.style.display="inline-block";adV.onended=endAd;adV.onerror=endAd;
+    var pl=adV.play();if(pl&&pl.catch)pl.catch(function(){endAd();});
+    adTimer=setTimeout(endAd,(a.secs||60)*1000+4000);return true;
   }
   function endAd(){
-    clearTimeout(adTimer);if(!adOn)return;adOn=false;
-    adFrame.removeAttribute("src");adFrame.style.display="none";wxCard.hidden=true;adCap.hidden=true;adCap.innerHTML="";cap.hidden=false;
+    clearTimeout(adTimer);if(!adOn)return;var k=adKind;adOn=false;adKind=null;
+    if(k==="banner"){banner.classList.remove("on");setTimeout(function(){if(!banner.classList.contains("on"))banner.hidden=true;},600);return;}
+    adV.onended=adV.onerror=null;try{adV.pause();}catch(e){}adV.removeAttribute("src");try{adV.load();}catch(e){}adV.style.display="none";
+    adImg.hidden=true;adImg.style.display="none";adImg.removeAttribute("src");wxCard.hidden=true;adCap.hidden=true;adCap.innerHTML="";cap.hidden=false;
     wrap.style.display=adShown.wrap;tv.style.display=adShown.tv;
   }
-  (function nextBreak(wait){setTimeout(function(){tvBreak();nextBreak(adWait(BREAK_EVERY));},wait);})(adWait(BREAK_FIRST));
-  if(location.hash==="#commercial")setTimeout(tvBreak,2500);   // sfv.fm/#commercial: a break right away, to show someone
+  (function feed(wait){setTimeout(function(){tvBreak();feed(between(BREAK_SECS));},wait);})(between([20,45]));
+  if(location.hash==="#commercial")setTimeout(function(){tvBreak("video");},2500);   // sfv.fm/#commercial: one right away, to show someone
   window.addEventListener("load",function(){pageLoaded=true;if(channel===2)startVideo(cams[camIndex%cams.length]);});
-  setInterval(function(){if(channel!==2)return;var next=Math.floor(Date.now()/300000)%cams.length;if(videoOn&&videoCam===cams[next])return;camIndex=next;tries=0;loadCam();if(!videoOn||videoCam!==cams[next])startVideo(cams[next]);},60000);
+  (function cut(){setTimeout(function(){if(channel===2&&!adOn&&!document.hidden){camIndex=(camIndex+1)%cams.length;tries=0;stopVideo();loadCam();if(pageLoaded)startVideo(cams[camIndex]);}cut();},between(CAM_SECS));})();
 
   // ---- the sound: one program all day, joined in progress by the clock; breaks on top ----
   var music=document.getElementById("music"),voice=document.getElementById("voice"),btn=document.getElementById("radio"),now=document.getElementById("now");
