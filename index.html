@@ -330,7 +330,7 @@ a.artist{color:#800080}
       '<span class="s">'+(a&&a.when?"AS OF "+esc(a.when)+" PT &middot; ":"")+"SFV.FM</span>";
     wxCard.hidden=false;
   }
-  function playBreak(){
+  function tvBreak(){
     if(adOn||channel===4||document.hidden)return false;
     var seq=[];breakN++;
     if(channel===2&&wxNow&&breakN%2===1)seq.push("wx");
@@ -356,8 +356,8 @@ a.artist{color:#800080}
     adFrame.removeAttribute("src");adFrame.style.display="none";wxCard.hidden=true;adCap.hidden=true;adCap.innerHTML="";cap.hidden=false;
     wrap.style.display=adShown.wrap;tv.style.display=adShown.tv;
   }
-  (function nextBreak(wait){setTimeout(function(){playBreak();nextBreak(adWait(BREAK_EVERY));},wait);})(adWait(BREAK_FIRST));
-  if(location.hash==="#commercial")setTimeout(playBreak,2500);   // sfv.fm/#commercial: a break right away, to show someone
+  (function nextBreak(wait){setTimeout(function(){tvBreak();nextBreak(adWait(BREAK_EVERY));},wait);})(adWait(BREAK_FIRST));
+  if(location.hash==="#commercial")setTimeout(tvBreak,2500);   // sfv.fm/#commercial: a break right away, to show someone
   window.addEventListener("load",function(){pageLoaded=true;if(channel===2)startVideo(cams[camIndex%cams.length]);});
   setInterval(function(){if(channel!==2)return;var next=Math.floor(Date.now()/300000)%cams.length;if(videoOn&&videoCam===cams[next])return;camIndex=next;tries=0;loadCam();if(!videoOn||videoCam!==cams[next])startVideo(cams[next]);},60000);
 
