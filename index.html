@@ -332,6 +332,12 @@ a.artist{color:#800080}
     {v:"tv/ihop-1989.mp4",img:"tv/ihop-1989.jpg",cap:"IHOP's International Passport Breakfast, from the pancake house that started in Toluca Lake, a KABC spot from 1989",who:"IHOP",secs:30.3},
     {v:"tv/universal-tour-1980s.mp4",img:"tv/universal-tour-1980s.jpg",cap:"The Universal Studios Tour, a TV spot from the 1980s",who:"Universal Studios",secs:30.3},
     {v:"tv/bobs-1990.mp4",img:"tv/bobs-1990.jpg",cap:"Bob's Big Boy, Frank's Return, a 1990 commercial",who:"Bob's Big Boy",secs:43.3},
+    {v:"tv/ernest-1991.mp4",img:"tv/ernest-1991.jpg",cap:"Ernest for Cerritos Auto Square: hey Vern, you been out looking at new cars? A KCAL spot from 1991",who:"Ernest",secs:30.0,weight:0.3},
+    {v:"tv/ernest-deal-days.mp4",img:"tv/ernest-deal-days.jpg",cap:"Ernest Deal Days at Cerritos Auto Square, 605 Freeway at South Street",who:"Ernest",secs:8.2,weight:0.3},
+    {v:"tv/ernest-santa.mp4",img:"tv/ernest-santa.jpg",cap:"Ernest and old Santa Claus, for Cerritos Auto Square",who:"Ernest",secs:11.6,weight:0.3},
+    {v:"tv/sunland-dentistry-2000.mp4",img:"tv/sunland-dentistry-2000.jpg",cap:"Sunland Family Dentistry on Foothill Boulevard in Sunland, a local cable spot from 2000",who:"Sunland Family Dentistry",secs:30.5},
+    {v:"tv/supply-sergeant-2000.mp4",img:"tv/supply-sergeant-2000.jpg",cap:"The Supply Sergeant army-navy surplus on North Victory Boulevard in Burbank, a local cable spot from 2000",who:"Supply Sergeant",secs:30.6},
+    {v:"tv/hong-kong-tailors-1988.mp4",img:"tv/hong-kong-tailors-1988.jpg",cap:"Stuart Felman's Hong Kong Custom Tailors, now on Ventura Boulevard in Tarzana, a KCOP spot from 1988",who:"Hong Kong Custom Tailors",secs:30.1},
     // stills (Sam: "short still images taking up the box", "more banner style"): old Valley postcards, matchbooks, print ads and
     // signs, public domain or Creative Commons, each with its credit; the wide ones run as banners across the cam
     {img:"tv/stills/schabers.jpg",cap:"Schaber's Cafeteria, North Hollywood, the Valley's newest and finest, a matchbook from about 1955",who:"Schaber's",credit:"Public domain, via Wikimedia Commons",wide:true},
@@ -381,7 +387,8 @@ a.artist{color:#800080}
   function pickAd(need){
     var pool=TVADS.filter(function(a){return adFits(a,need)&&recent.indexOf(a.who)<0;});
     if(!pool.length)pool=TVADS.filter(function(a){return adFits(a,need);});
-    var a=pool[Math.floor(Math.random()*pool.length)];
+    var tot=0,i,r;for(i=0;i<pool.length;i++)tot+=pool[i].weight||1;   // a weight under 1 (Ernest) comes up now and then
+    r=Math.random()*tot;var a=pool[pool.length-1];for(i=0;i<pool.length;i++){r-=pool[i].weight||1;if(r<0){a=pool[i];break;}}
     if(a){recent.push(a.who);while(recent.length>Math.min(4,TVADS.length-1))recent.shift();}
     return a;
   }
