@@ -958,8 +958,20 @@ a.artist{color:#800080}
   document.addEventListener("visibilitychange",function(){if(!document.hidden)meterOn();});
   meterOn();
   var apple=/iPhone|iPad|iPod/.test(navigator.userAgent)||(/Safari/.test(navigator.userAgent)&&!/Chrome|Chromium|Edg/.test(navigator.userAgent));
-  fetch("live.json?t="+Math.floor(Date.now()/300000)).then(function(r){return r.json();}).then(function(c){if(apple&&c.stream_aac)c.stream=c.stream_aac;liveCfg=c;if(c&&c.status){checkLive();liveTimer=setInterval(checkLive,30000);}if(c&&c.chat)chatStart(c.chat);}).catch(function(){});
+  fetch("live.json?t="+Math.floor(Date.now()/300000)).then(function(r){return r.json();}).then(function(c){if(apple&&c.stream_aac)c.stream=c.stream_aac;liveCfg=c;loadSchedule();setInterval(loadSchedule,600000);if(c&&c.status){checkLive();liveTimer=setInterval(checkLive,30000);}if(c&&c.chat)chatStart(c.chat);}).catch(function(){});
   label(false);
+  // ---- the programs on the page (Sam, 2026-10-21: "make sure the program is listed on the homepage"): schedule.json, which the
+  // DJ writes beside nowplaying.json whenever the programs change; rows in the Today's Programs table, and the next one due
+  function fmtTime(at){var p=at.split(":"),h=+p[0];return (h%12||12)+":"+p[1]+" "+(h<12?"AM":"PM");}
+  function fmtDays(d){if(d.indexOf("daily")>=0)return "nightly";var N={mon:"Mon",tue:"Tue",wed:"Wed",thu:"Thu",fri:"Fri",sat:"Sat",sun:"Sun"},o=["mon","tue","wed","thu","fri","sat","sun"],s=o.filter(function(x){return d.indexOf(x)>=0;});if(s.length===6&&d.indexOf("sun")<0)return "Mon\u2013Sat";return s.map(function(x){return N[x];}).join(", ");}
+  function loadSchedule(){if(!liveCfg||!liveCfg.schedule)return;fetch(liveCfg.schedule+"?t="+Math.floor(Date.now()/600000),{cache:"no-store"}).then(function(r){return r.json();}).then(function(s){
+    var tb=document.getElementById("schedule");Array.prototype.slice.call(tb.querySelectorAll("tr.prog")).forEach(function(r){r.parentNode.removeChild(r);});
+    var slots=(s.slots||[]).slice().sort(function(a,b){function k(x){var h=+x.at.split(":")[0];return (h<6?h+24:h)*60+(+x.at.split(":")[1]);}return k(a)-k(b);});   // the evening first, the small hours last
+    slots.forEach(function(sl){var tr=document.createElement("tr");tr.className="prog";var titles=sl.programs.map(function(p){return esc(p.title);});
+      var body=titles.length>4?titles.slice(0,3).join(" &middot; ")+" &middot; and "+(titles.length-3)+" more, taking turns":titles.length>1?titles.join(" &middot; ")+", taking turns":titles[0]||"";
+      tr.innerHTML='<td valign="top" nowrap><font size="2">'+fmtTime(sl.at)+'<br>'+fmtDays(sl.days)+'</font></td><td valign="top"><font size="2">'+body+'</font></td>';tb.appendChild(tr);});
+    if(s.next&&s.next.when){var t=document.getElementById("today"),d=new Date(s.next.when);t.textContent=t.textContent.replace(/ \u00b7 Next:.*$/,"")+" \u00b7 Next: "+s.next.title+", "+d.toLocaleString("en-US",{timeZone:"America/Los_Angeles",weekday:"long",hour:"numeric",minute:"2-digit"});}
+  }).catch(function(){});}
   var v0=valleyNow();document.getElementById("today").textContent=v0.weekday+", "+v0.month+" "+v0.day+", "+v0.year+", Pacific time";
 
   // ---- conditions at the transmitter (NWS, no key); kept in wxNow for the weather card on the TV ----
