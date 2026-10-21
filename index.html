@@ -531,7 +531,7 @@ a.artist{color:#800080}
   ];
   var adV=document.getElementById("ad"),adImg=document.getElementById("adimg"),banner=document.getElementById("banner"),adCap=document.getElementById("ad-caption"),wxCard=document.getElementById("wxcard");
   var adOn=false,adKind=null,adTimer=null,adShown={},lastWx=0,cycle=0,recent=[];
-  var CAM_SECS=[50,90],BREAK_SECS=[45,90],WX_EVERY=240,WX_SECS=9,STILL_SECS=7,BANNER_SECS=10;
+  var CAM_SECS=[15,30],BREAK_SECS=[45,90],WX_EVERY=240,WX_SECS=9,STILL_SECS=7,BANNER_SECS=10;
   function between(r){return (r[0]+Math.random()*(r[1]-r[0]))*1000;}
   function adFits(a,need){return need==="banner"?!!a.img&&(a.wide||!!a.v):!!a[need];}   // banners: the wide pictures, or a commercial's closing card
   function pickAd(need){
@@ -610,7 +610,7 @@ a.artist{color:#800080}
   if(location.hash==="#commercial")setTimeout(function(){tvBreak("video");},2500);   // sfv.fm/#commercial: one right away, to show someone
   window.addEventListener("load",function(){pageLoaded=true;if(channel===2)startVideo(cams[camIndex%cams.length]);});
   // ---- the cams' rhythm. A cut shows the camera's dithered still at once and its live video as soon as that plays; the
-  // shot runs CAM_SECS (Sam, 2026-10-20: "stay longer on freeway shots") and fades into the look before the next cut. A
+  // shot runs CAM_SECS (Sam, 2026-10-20: "15 - 30 seconds max") and fades into the look before the next cut. A
   // camera with no video holds its still only STILL_HOLD and is passed over for NOVID_MS; stills are the opener and the
   // fallback, not a shot of their own, while any camera has video.
   var STILL_HOLD=7000,NOVID_MS=600000,cutTimer=null;
