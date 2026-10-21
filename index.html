@@ -663,7 +663,7 @@ a.artist{color:#800080}
   }
   function nextKind(){
     if(channel===2&&wxNow&&Date.now()-lastWx>WX_EVERY*1000)return "weather";
-    var order=channel===2?["video","still","banner","video","banner","still"]:["video","still"];
+    var order=channel===2?["video","photo","still","banner","video","photo"]:["video","photo","still"];   // a photograph, Ken Burns, every third break (Sam, 2026-10-21: "i havent seen them")
     return order[(cycle++)%order.length];
   }
   function hideFeed(){adShown={wrap:wrap.style.display,tv:tv.style.display};wrap.style.display="none";tv.style.display="none";cap.hidden=true;adCap.hidden=false;}
@@ -690,7 +690,8 @@ a.artist{color:#800080}
       adCap.textContent="Valley weather: the National Weather Service at Van Nuys Airport, and Open-Meteo for the neighborhoods.";
       adTimer=setTimeout(endAd,WX_SECS*1000);return true;
     }
-    var a=item||pickAd(kind==="still"?"img":kind==="banner"?"banner":"v");if(!a)return false;
+    var a=item||pickAd(kind==="still"?"img":kind==="photo"?"ken":kind==="banner"?"banner":"v");if(!a)return false;
+    if(kind==="photo")kind="still";   // shown the way a still is; a.ken picks the slow drift
     adOn=true;adKind=kind;
     if(kind==="banner"){
       banner.querySelector("img").src=a.img;banner.classList.toggle("wide",!!a.wide);
