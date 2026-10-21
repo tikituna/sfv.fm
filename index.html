@@ -42,7 +42,7 @@ a.artist{color:#800080}
 @media (max-width:600px){#card{left:4vw;right:4vw;bottom:8px;width:auto}}
 @media (prefers-reduced-motion:reduce){.sw .knob,.sw{transition:none}}
 @media (max-width:600px){td{display:block;width:auto !important}#sponsors td{display:inline-block;width:46% !important;vertical-align:top;box-sizing:border-box;padding:8px 10px}}
-#camv{display:none;width:640px;max-width:100%;height:auto;aspect-ratio:auto 16/9;border:1px solid #000080;background:#000}
+#camv,#camv2{display:none;width:640px;max-width:100%;height:auto;aspect-ratio:auto 16/9;border:1px solid #000080;background:#000}
 #wxcard{width:100%;max-width:640px;aspect-ratio:640/520;box-sizing:border-box;border:1px solid #000080;background:#000080;color:#fff;font-family:"Times New Roman",Times,serif;display:inline-flex;flex-direction:column;justify-content:center;align-items:center;gap:.35em;padding:1em;text-align:center;vertical-align:top}
 #wxcard[hidden]{display:none}#wxcard .h{font-weight:bold;letter-spacing:.14em;font-size:clamp(14px,3.4vw,22px)}#wxcard .t{font-weight:bold;font-size:clamp(46px,14vw,108px);line-height:1}#wxcard .d{font-size:clamp(14px,3.6vw,24px)}#wxcard .n{font-size:clamp(12px,3vw,19px);opacity:.92}#wxcard .s{font-size:clamp(10px,2.4vw,14px);letter-spacing:.12em;opacity:.8;margin-top:.6em}
 #ad,#adimg{display:none;width:100%;max-width:640px;aspect-ratio:640/520;object-fit:contain;background:#000;border:1px solid #000080;vertical-align:top;overflow:hidden}
@@ -132,7 +132,7 @@ a.artist{color:#800080}
 <div id="listeners-wrap"><div id="listeners" class="off" aria-live="polite"><span class="dot"></span>OFF AIR</div></div>
 <p align="center"><b><font size="6">S</font><font size="4">AN </font><font size="6">F</font><font size="4">ERNANDO </font><font size="6">V</font><font size="4">ALLEY </font><font size="6">R</font><font size="4">ADIO</font><font size="2"><br>sfv.fm<br>Berry Drive, Studio City, California</font><br>On the Air</b><font size="1">&nbsp;</font></p>
 <hr>
-<p align="center"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><span class="dots"></span><span id="banner" hidden><img alt=""><span></span></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><video id="ad" muted playsinline preload="none" aria-label="A commercial from the archive"></video><img id="adimg" alt="" hidden><span id="wxcard" role="img" aria-label="Valley weather" hidden></span><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span><span id="ad-caption" hidden></span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
+<p align="center"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><video id="camv2" muted playsinline crossorigin="anonymous"></video><span class="dots"></span><span id="banner" hidden><img alt=""><span></span></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><video id="ad" muted playsinline preload="none" aria-label="A commercial from the archive"></video><img id="adimg" alt="" hidden><span id="wxcard" role="img" aria-label="Valley weather" hidden></span><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span><span id="ad-caption" hidden></span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
 <table border="0" cellspacing="0" cellpadding="4" align="center" width="90%">
   <tr><td valign="top" width="50%"><font size="2"><button type="button" class="sw" id="radio" aria-pressed="false" aria-label="Sound"><span class="knob"></span></button><span id="radiolabel">Sound off</span><span class="meter" id="meter" title="Signal"><canvas id="vu" width="40" height="11"></canvas></span><span id="signal"></span><br><span id="now">The station is on the air. Turn the sound on to join the program in progress.</span></font></td>
       <td valign="top" width="50%"><font size="2"><b>Host:</b> <span id="host">Phil Landers and Carol Reyes</span><br><b>Next break:</b> <span id="next-break">&mdash;</span><br><b>Conditions:</b> <span id="wx">&mdash;</span></font></td></tr>
@@ -233,67 +233,63 @@ a.artist{color:#800080}
     cap.textContent=cam.name+", "+new Date().toLocaleTimeString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit"})+" PT";
     return true;
   }
-  // Before a cut, the live picture takes on the look over FADE_MS (Sam, 2026-10-20: "instead of having still photos with this
-  // effect, before we switch and cut from a real freeway moving shot, it starts to fade into this color effect scheme").
-  var FADE_MS=3500,fadeTimer=null;
-  function fadeOut(done){
-    var t0=Date.now();canvas.width=640;canvas.height=360;canvas.style.display="";camv.style.display="none";
-    function frame(){
-      var t=Math.min(1,(Date.now()-t0)/FADE_MS);
-      try{ctx.drawImage(camv,0,0,640,360);ctx.globalAlpha=t*t;ctx.drawImage(dither(camv,320,180),0,0);ctx.globalAlpha=1;}
-      catch(e){t=1;}   // a picture the canvas may not read: straight to the cut
-      if(t<1)fadeTimer=setTimeout(frame,80);else{fadeTimer=null;done();}
-    }
-    frame();
-  }
   function loadCam(){
-    if(videoOn)return;
+    if(live.on)return;
     var cam=cams[camIndex%cams.length],img=new Image();img.crossOrigin="anonymous";
-    function skip(){ dark(cam);if(videoCam===cam)stopVideo();
+    function skip(){ dark(cam);if(live.cam===cam)stopVideo();
       if(++tries<cams.length){camIndex=nextCam();loadCam();var c=cams[camIndex%cams.length];if(pageLoaded&&hasVideo(c))startVideo(c);scheduleCut(hasVideo(c)?between(CAM_SECS):STILL_HOLD);}
       else cap.textContent="The cameras are dark for the moment."; }
     img.onload=function(){ if(channel!==2||cam!==cams[camIndex%cams.length])return; if(draw(img,cam))tries=0; else skip(); };
     img.onerror=function(){ if(channel!==2||cam!==cams[camIndex%cams.length])return; skip(); };
     img.src="https://cwwp2.dot.ca.gov/data/d7/cctv/image/"+cam.id+"/"+cam.id+".jpg?t="+Math.floor(Date.now()/60000);
   }
-  // ---- live video, when a viewer's browser can reach it; stills otherwise ----
-  var camv=document.getElementById("camv"),wrap=document.getElementById("camwrap"),hls=null,videoOn=false,frameTimer=null,videoCam=null,watchdog=null;
-  function stopVideo(fallback){videoOn=false;clearInterval(frameTimer);clearTimeout(watchdog);clearTimeout(fadeTimer);fadeTimer=null;camv.onplaying=camv.ontimeupdate=camv.onresize=camv.onloadeddata=camv.onerror=camv.onended=null;if(hls){try{hls.destroy();}catch(e){}hls=null;}try{camv.pause();camv.removeAttribute("src");camv.load();}catch(e){}camv.style.display="none";canvas.style.display="";wrap.classList.remove("halftone");
+  // ---- live video, when a viewer's browser can reach it; stills otherwise. Two players: one on the air, one warming the
+  // next camera's stream out of sight so a cut can go straight from one live picture to the next ----
+  var wrap=document.getElementById("camwrap");
+  function player(el){
+    var P={el:el,cam:null,on:false,ready:false,failed:false,hls:null,timer:null,watchdog:null};
+    P.stop=function(){P.on=false;P.ready=false;P.cam=null;clearInterval(P.timer);clearTimeout(P.watchdog);el.onplaying=el.ontimeupdate=el.onresize=el.onloadeddata=el.onerror=el.onended=null;if(P.hls){try{P.hls.destroy();}catch(e){}P.hls=null;}try{el.pause();el.removeAttribute("src");el.load();}catch(e){}el.style.display="none";};
+    P.card=function(){try{return isCard(pixels(el));}catch(e){return false;}};   // a tainted canvas is not a card
+    P.start=function(cam,onReady,onFail){
+      P.stop();P.failed=false;if(!cam.hls)return;P.cam=cam;
+      var src="https://wzmedia.dot.ca.gov/D7/"+cam.hls+".stream/playlist.m3u8",started=false,t0=-1;
+      function fail(){if(P.cam!==cam)return;P.stop();P.failed=true;onFail();}
+      P.watchdog=setTimeout(function(){if(!started)fail();},10000);
+      // "playing" alone is not a picture: some streams start with no frames (the box collapsed, 2026-10-16). The stream is
+      // ready only once it has a real size and its clock has moved; after that, a picture frozen for 12 s is a failure.
+      function check(){
+        if(started)return;
+        if(!(el.videoWidth>0&&el.videoHeight>0&&el.readyState>=2))return;
+        if(t0<0){t0=el.currentTime;return;}
+        if(el.currentTime-t0<0.4)return;
+        if(P.card()){dark(cam);fail();return;}   // the stream itself can carry the "Temporarily Unavailable" card
+        started=true;clearTimeout(P.watchdog);P.ready=true;onReady(P);
+        var last=el.currentTime,still=0;
+        P.timer=setInterval(function(){
+          if(P.card()){dark(cam);fail();return;}
+          if(el.currentTime>last+0.1||el.paused&&document.hidden){last=el.currentTime;still=0;return;}
+          if(++still>=3||!(el.videoWidth>0))fail();
+        },4000);
+      }
+      el.onplaying=check;el.ontimeupdate=check;el.onresize=check;el.onloadeddata=check;
+      el.onerror=function(){fail();};el.onended=function(){if(started)fail();};
+      // hls.js first wherever there is full Media Source (desktops, Android): Chrome's own new HLS player plays these streams
+      // for under a second and then fails (error 4, seen 2026-10-16), while hls.js plays them steadily. iPhones, with no
+      // MediaSource, keep Apple's player, which is the one that works there.
+      if(window.Hls&&window.MediaSource&&Hls.isSupported()){P.hls=new Hls({enableWorker:true,lowLatencyMode:false,backBufferLength:10});P.hls.on(Hls.Events.ERROR,function(ev,data){if(data&&data.fatal)fail();});P.hls.loadSource(src);P.hls.attachMedia(el);el.play().catch(function(){});}
+      else if(el.canPlayType("application/vnd.apple.mpegurl")){el.src=src;el.play().catch(function(){});}
+      else P.stop();
+    };
+    return P;
+  }
+  var live=player(document.getElementById("camv")),next=player(document.getElementById("camv2"));
+  function stopVideo(fallback){live.stop();next.stop();clearTimeout(fadeTimer);fadeTimer=null;canvas.style.display="";wrap.classList.remove("halftone");
     if(fallback&&channel===2){tries=0;loadCam();}}   // a stream that failed or froze: back to the still, fresh; video is tried again within a minute
-  function videoFrames(cam){ // real footage: the picture itself, no dither
-    canvas.style.display="none";camv.style.display="inline-block";wrap.classList.remove("halftone");cap.textContent=cam.name+", live video";   // "" would leave the stylesheet's display:none in charge: a blank box (2026-10-16)
+  function show(P){ // real footage: the picture itself, no dither
+    canvas.style.display="none";P.el.style.display="inline-block";wrap.classList.remove("halftone");cap.textContent=P.cam.name+", live video";P.on=true;   // "" would leave the stylesheet's display:none in charge: a blank box (2026-10-16)
   }
   function startVideo(cam){
-    stopVideo();if(!cam.hls)return;videoCam=cam;
-    var src="https://wzmedia.dot.ca.gov/D7/"+cam.hls+".stream/playlist.m3u8",started=false;
-    function fail(){videoFailed(cam);stopVideo(true);}   // no picture from this camera: the still, briefly, then the next cut
-    watchdog=setTimeout(function(){if(!started)fail();},10000);
-    // "playing" alone is not a picture: some streams start with no frames (the box collapsed, 2026-10-16). The video takes
-    // over only once it has a real size and its clock has moved; after that, a picture frozen for 12 s goes back to the still.
-    var t0=-1;
-    function card(){try{return isCard(pixels(camv));}catch(e){return false;}}   // a tainted canvas is not a card
-    function check(){
-      if(started)return;
-      if(!(camv.videoWidth>0&&camv.videoHeight>0&&camv.readyState>=2))return;
-      if(t0<0){t0=camv.currentTime;return;}
-      if(camv.currentTime-t0<0.4)return;
-      if(card()){dark(cam);fail();return;}   // the stream itself can carry the "Temporarily Unavailable" card
-      started=true;clearTimeout(watchdog);videoOn=true;videoFrames(cam);
-      var last=camv.currentTime,still=0;
-      frameTimer=setInterval(function(){
-        if(card()){dark(cam);fail();return;}
-        if(camv.currentTime>last+0.1||camv.paused&&document.hidden){last=camv.currentTime;still=0;return;}
-        if(++still>=3||!(camv.videoWidth>0))fail();
-      },4000);
-    }
-    camv.onplaying=check;camv.ontimeupdate=check;camv.onresize=check;camv.onloadeddata=check;
-    camv.onerror=function(){fail();};camv.onended=function(){if(videoOn)fail();};
-    // hls.js first wherever there is full Media Source (desktops, Android): Chrome's own new HLS player plays these streams
-    // for under a second and then fails (error 4, seen 2026-10-16), while hls.js plays them steadily. iPhones, with no
-    // MediaSource, keep Apple's player, which is the one that works there.
-    if(window.Hls&&window.MediaSource&&Hls.isSupported()){hls=new Hls({enableWorker:true,lowLatencyMode:false,backBufferLength:10});hls.on(Hls.Events.ERROR,function(ev,data){if(data&&data.fatal)fail();});hls.loadSource(src);hls.attachMedia(camv);camv.play().catch(function(){});}
-    else if(camv.canPlayType("application/vnd.apple.mpegurl")){camv.src=src;camv.play().catch(function(){});}
-    else stopVideo();
+    stopVideo();live.start(cam,show,function(){videoFailed(cam);if(!fadeTimer)stopVideo(true);});   // no picture from this camera: the still, briefly, then the next cut
   }
   // ---- the television: channel 2 is the freeways, 4 is Huell Howser, 7 is the aquarium ----
   var tv=document.getElementById("tv"),chanBox=document.getElementById("channels"),channel=2,pageLoaded=false;
@@ -622,9 +618,31 @@ a.artist{color:#800080}
     return v.length?v[0]:st[0];
   }
   function scheduleCut(ms){clearTimeout(cutTimer);cutTimer=setTimeout(cutNow,ms);}
+  // A cut from a live picture (Sam, 2026-10-20: "instead of having still photos with this effect, before we switch and cut
+  // from a real freeway moving shot, it starts to fade into this color effect scheme"; a still between two live shots "is
+  // a weird cut"): the next camera's stream warms up out of sight while this picture takes on the look over FADE_MS and
+  // stays there, moving, for DITHER_HOLD at least; when the next picture is ready the cut goes straight to it. If the next
+  // one never plays within HOLD_MAX, the plain cut.
+  var FADE_MS=3500,DITHER_HOLD=2500,HOLD_MAX=12000,fadeTimer=null;
   function cutNow(){
-    if(channel===2&&videoOn&&!fadeTimer&&!document.hidden&&(!adOn||adKind==="banner")){fadeOut(doCut);return;}
+    if(channel===2&&live.on&&!fadeTimer&&!document.hidden&&(!adOn||adKind==="banner")){crossCut();return;}
     doCut();
+  }
+  function crossCut(){
+    var to=nextCam(),cam=cams[to],warm=pageLoaded&&hasVideo(cam);
+    if(warm)next.start(cam,function(){},function(){videoFailed(cam);});
+    var t0=Date.now();canvas.width=640;canvas.height=360;canvas.style.display="";live.el.style.display="none";
+    function frame(){
+      var age=Date.now()-t0,t=Math.min(1,age/FADE_MS);
+      if(live.on){try{ctx.drawImage(live.el,0,0,640,360);ctx.globalAlpha=t*t;ctx.drawImage(dither(live.el,320,180),0,0);ctx.globalAlpha=1;}catch(e){}}
+      if(age>=FADE_MS+DITHER_HOLD&&(!warm||next.ready||next.failed||age>=HOLD_MAX)){fadeTimer=null;if(next.ready)swap(to);else doCut();return;}
+      fadeTimer=setTimeout(frame,80);
+    }
+    fadeTimer=setTimeout(frame,0);
+  }
+  function swap(to){   // the warmed stream becomes the picture
+    camIndex=to;tries=0;live.stop();var p=live;live=next;next=p;show(live);
+    scheduleCut(between(CAM_SECS));
   }
   function doCut(){
     if(channel===2&&(!adOn||adKind==="banner")&&!document.hidden){camIndex=nextCam();tries=0;stopVideo();loadCam();if(pageLoaded&&hasVideo(cams[camIndex]))startVideo(cams[camIndex]);}   // a banner rides over the cuts
@@ -824,7 +842,7 @@ a.artist{color:#800080}
   function boothBeat(){try{var u=(liveCfg&&liveCfg.booth||"").replace(/^wss:/,"https:").replace(/\/booth$/,"/hb");if(!u)return;
     fetch(u+"?id="+sid+"&t="+(liveEl.currentTime||0).toFixed(0)+"&playing="+playing+"&muted="+liveEl.muted+"&vis="+(document.visibilityState||"")+"&ch="+channel+"&src="+encodeURIComponent(liveEl.currentSrc?liveEl.currentSrc.split("/").pop().split("?")[0]:"-")+"&stalls="+stalls,{mode:"no-cors",cache:"no-store"}).catch(function(){});}catch(e){}}
   setInterval(function(){if(isLive||playing)boothBeat();},10000);
-  setInterval(function(){if(!isLive&&!playing)return;var v=document.getElementById("camv");logEv("hb id="+sid+" t="+(liveEl.currentTime||0).toFixed(1)+" paused="+liveEl.paused+" muted="+liveEl.muted+" vol="+liveEl.volume+" rs="+liveEl.readyState+" ns="+liveEl.networkState+" err="+(liveEl.error?liveEl.error.code:0)+" drift="+Math.round(drift())+" playing="+playing+" src="+(liveEl.currentSrc?liveEl.currentSrc.split("/").pop().split("?")[0]:"-")+" cam="+(v&&!v.paused?"video":"still")+" ch="+channel);},10000);
+  setInterval(function(){if(!isLive&&!playing)return;var v=live.el;logEv("hb id="+sid+" t="+(liveEl.currentTime||0).toFixed(1)+" paused="+liveEl.paused+" muted="+liveEl.muted+" vol="+liveEl.volume+" rs="+liveEl.readyState+" ns="+liveEl.networkState+" err="+(liveEl.error?liveEl.error.code:0)+" drift="+Math.round(drift())+" playing="+playing+" src="+(liveEl.currentSrc?liveEl.currentSrc.split("/").pop().split("?")[0]:"-")+" cam="+(v&&!v.paused?"video":"still")+" ch="+channel);},10000);
   function tune(why){tunedAt=Date.now();playedAt=0;logEv("tune "+(why||"")+" ua="+(apple?"apple":"other"));liveEl.src=liveCfg.stream+"?t="+Date.now();return liveEl.play();}
   liveEl.addEventListener("playing",function(){if(!playedAt){playedAt=Date.now();t0=liveEl.currentTime||0;}});
   function lag(){try{var b=liveEl.buffered;return b.length?b.end(b.length-1)-liveEl.currentTime:0;}catch(e){return 0;}}
