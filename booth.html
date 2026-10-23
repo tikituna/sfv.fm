@@ -15,6 +15,10 @@ body{max-width:520px;margin:0 auto;padding:0 14px}
 .big:disabled{opacity:.45}
 #level{height:8px;border:1px solid #000080;margin:0 0 12px}
 #level i{display:block;height:100%;width:0;background:#000080;transition:width .08s linear}
+.vy-meter{position:relative;height:8px;border:1px solid #000080;margin:3px 0}
+.vy-meter i{display:block;height:100%;width:0;background:#000080}
+.vy-meter i.hot{background:#ff0000}
+.vy-meter b{position:absolute;top:-3px;bottom:-3px;width:2px;background:#ff0000;left:95%}
 .big.on+#level i{background:#ff0000}
 textarea{width:100%;box-sizing:border-box;font:inherit;font-size:16px;border:1px solid #000080;padding:8px;min-height:72px}
 button.say{font:inherit;font-size:16px;font-weight:bold;border:1px solid #000080;background:#fff;color:#000080;padding:10px 16px;border-radius:8px;cursor:pointer}
@@ -69,6 +73,13 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
 <p class="owner"><font size="2">Your name, so the station can say who has it: <input type="text" id="to-name" placeholder="optional" autocomplete="nickname" style="font:inherit;font-size:15px;border:1px solid #000080;padding:5px;width:45%"></font></p>
 <button type="button" class="say" id="to-btn" disabled>Take over</button>
 <p>&nbsp;</p>
+<p><font size="2"><b>Live vinyl from this computer</b> <span id="vy-who"></span></font></p>
+<p><font size="2">A turntable through an audio interface (the Apollo, fed from the receiver&rsquo;s Tape Out). Pick the input and press Check level: play the loudest part of the record and set the interface&rsquo;s gain so the bars just reach the red mark. Put on vinyl fades Spotify out over four seconds and plays the record in stereo, nothing done to it; press again to hand it back. Chrome, Firefox or Edge on a computer.</font></p>
+<p><font size="2">Input: <select id="vy-in" style="font:inherit;font-size:15px;max-width:70%"><option value="">the default input</option></select> <button type="button" class="say" id="vy-check">Check level</button></font></p>
+<div class="vy-meter"><i id="vy-l"></i><b></b></div><div class="vy-meter"><i id="vy-r"></i><b></b></div>
+<p style="margin:2px 0 8px"><font size="1" id="vy-db">L &mdash; &nbsp; R &mdash;</font></p>
+<button type="button" class="say" id="vy-btn" disabled>Put on vinyl</button>
+<p>&nbsp;</p>
 <p><font size="2"><b>Have Phil say:</b></font></p>
 <textarea id="text" placeholder="Type a line for Phil. He reads it on the air, Spotify ducks while he talks."></textarea>
 <p><button type="button" class="say" id="say" disabled>Say it</button> &nbsp; <font size="2"><label class="owner"><input type="checkbox" id="plain"> read it plain, no &ldquo;a word from Sam&rdquo;</label><span id="say-from"></span></font></p>
@@ -86,7 +97,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   // one command at a time; during a takeover only Shuffle stays live (the server refuses the rest)
   function applyRec(){var up=!!(ws&&ws.readyState===1);recBtns.forEach(function(b){b.disabled=!up||recBusy||(!!takeover&&b.id!=="rec-shuf");});}
   function log(s){var d=document.createElement("div");d.textContent=new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit",second:"2-digit"})+"  "+s;logEl.insertBefore(d,logEl.firstChild);try{if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"log",text:s}));}catch(e){}}
-  function setConn(ok,msg){dot.className="dot"+(ok?" ok":"");conn.textContent=msg;micBtn.disabled=!ok;sayBtn.disabled=!ok;stOn.disabled=!ok;stOff.disabled=!ok;stRoom.disabled=!ok;applyRec();toBtn.disabled=!ok||!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);}
+  function setConn(ok,msg){dot.className="dot"+(ok?" ok":"");conn.textContent=msg;micBtn.disabled=!ok;sayBtn.disabled=!ok;stOn.disabled=!ok;stOff.disabled=!ok;stRoom.disabled=!ok;applyRec();toBtn.disabled=!ok||!(navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);if(typeof showVinyl==="function")showVinyl();}
   function showNow(n){now.textContent=n&&n.title?n.artist+" – "+n.title:(n&&n.live===false?"off the air":"—");}
   function connect(){
     if(!key){setConn(false,"Not signed in.");signin.style.display="block";return;}
@@ -109,7 +120,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
         else{recMsg.textContent="";if(m.do==="play")recLink.value="";if(/^(play|next|previous|resume)$/.test(m.do))setTimeout(function(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"status"}));},1500);}}
       if(m.type==="bobsample"){hearBob.disabled=false;hearBob.textContent="Hear Bob";if(m.ok){bobAudio.muted=false;bobAudio.src="data:audio/mpeg;base64,"+m.mp3;var pp=bobAudio.play();if(pp&&pp.catch)pp.catch(function(){log("tap Hear Bob again to play the sample");});log("Bob, in "+(m.voice||"his current voice"));}else log("Bob: "+m.msg);}
       if(m.type==="status"&&!m.role&&role!=="owner"){role="owner";document.body.classList.add("is-owner");}
-      if(m.type==="status"){showAnn(m.announcer);showPeople(m.listeners,m.booth);showLevel(m.meter);takeover=m.takeover||null;showRec(m.rec);applyRec();if(takeover)recState.textContent="("+takeover.who+" has the station)";if(takeover){toWho.textContent="\u2014 "+takeover.who+" is on the air from their device, "+Math.floor(takeover.since/60)+" min";toBtn.textContent=(toMine||takeover.mine)?"Hand it back":(role==="owner"?"End "+takeover.who+"\u2019s takeover":takeover.who+" has the station");}else{toWho.textContent="";toBtn.textContent="Take over";if(toMine&&!toPending)stopTakeover(false);}
+      if(m.type==="status"){showAnn(m.announcer);showPeople(m.listeners,m.booth);showLevel(m.meter);takeover=m.takeover||null;showRec(m.rec);applyRec();if(takeover)recState.textContent="("+takeover.who+" has the station)";if(takeover){toWho.textContent="\u2014 "+takeover.who+" is on the air from their device, "+Math.floor(takeover.since/60)+" min";toBtn.textContent=(toMine||takeover.mine)?"Hand it back":(role==="owner"?"End "+takeover.who+"\u2019s takeover":takeover.who+" has the station");}else{toWho.textContent="";toBtn.textContent="Take over";if(toMine&&!toPending)stopTakeover(false);}showVinyl();
         var tblock=!!(takeover&&!toMine&&!takeover.mine&&role!=="owner");if(tblock){toBtn.disabled=true;toBlocked=true;}else if(toBlocked){toBlocked=false;toBtn.disabled=!(ws&&ws.readyState===1&&navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);}showNow(m.now);if(m.mic||!micOpening)micOn=!!m.mic;if(m.mic){micOpening=false;clearTimeout(micOpenTimer);}macOn=!!m.macmic;
         if(m.mic&&!micOpening&&!stream){ws.send(JSON.stringify({type:"mic",on:false}));micOn=false;log("closed a mic this page had lost");}var liveDuck=(micOn||macOn)&&!m.takeover;document.getElementById("duck-"+(liveDuck?(m.music_under?"under":"mix"):duckPref)).checked=true;
         if(m.station){var st=m.station,lc=m.listeners?(" &middot; "+m.listeners.count+" listening"):"";stAir.innerHTML=st.onair?'<font color="#ff0000">&#9679; ON THE AIR'+lc+'</font>':(st.hold?'OFF THE AIR \u2014 held off until On Air':'OFF THE AIR');stSpot.textContent=st.spotify||"?";roomOn=!!st.room;stRoom.textContent=roomOn?"Room: Spotify on this Mac":"Room: Spotify silent here";stOn.disabled=!st.hold&&st.onair;stOff.disabled=!!st.hold;var ps=[];for(var k in st.pieces)ps.push(k+(st.pieces[k]?" \u2713":" \u2717"));stPieces.textContent=ps.join("  ");}
@@ -197,7 +208,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   var toName=document.getElementById("to-name");try{toName.value=localStorage.getItem("sfv-booth-name")||"";}catch(e){}
   toName.addEventListener("change",function(){try{localStorage.setItem("sfv-booth-name",toName.value.trim());}catch(e){}});
   function deviceLabel(){var ua=navigator.userAgent,os=/iPhone/.test(ua)?"iPhone":/iPad/.test(ua)?"iPad":/Mac/.test(ua)?"Mac":/Windows/.test(ua)?"Windows PC":/Android/.test(ua)?"Android":"a device";var br=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/Brave/.test(ua)||(navigator.brave)?"Brave":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"a browser";return os+", "+br;}
-  function stopTakeover(tell){clearInterval(toPump);toPump=null;try{if(toRec&&toRec.state!=="inactive")toRec.stop();}catch(e){}toRec=null;try{if(toStream)toStream.getTracks().forEach(function(t){t.stop();});}catch(e){}toStream=null;toMine=false;if(tell&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:"takeover",on:false}));}
+  function stopTakeover(tell){clearInterval(toPump);toPump=null;try{if(toRec&&toRec.state!=="inactive")toRec.stop();}catch(e){}toRec=null;try{if(toStream)toStream.getTracks().forEach(function(t){t.stop();});}catch(e){}toStream=null;toMine=false;if(toVinyl){toVinyl=false;vyStream=null;vyStopMeter();}if(tell&&ws&&ws.readyState===1)ws.send(JSON.stringify({type:"takeover",on:false}));if(typeof showVinyl==="function")showVinyl();}
   toBtn.addEventListener("click",function(){
     if(!ws||ws.readyState!==1)return;
     if(takeover){if(toMine)stopTakeover(true);else ws.send(JSON.stringify({type:"takeover",on:false}));log("takeover ended");return;}
@@ -214,6 +225,58 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
       log("taking over: crossfading to this device");toBtn.disabled=false;
     }).catch(function(e){log("takeover refused: "+(e&&(e.name+" "+e.message)||e));toBtn.disabled=false;});
   });
+  // live vinyl: a line input on this computer (the Apollo) as a takeover, stereo at 48 kHz with the browser's voice
+  // processing off; the Mac keeps it stereo and untouched (booth.py, vinyl=True)
+  var vyBtn=document.getElementById("vy-btn"),vyIn=document.getElementById("vy-in"),vyCheck=document.getElementById("vy-check"),vyWho=document.getElementById("vy-who"),
+      vyDb=document.getElementById("vy-db"),vyBars=[document.getElementById("vy-l"),document.getElementById("vy-r")],vyStream=null,vyCtx=null,vyTimer=null,vyPending=false,toVinyl=false;
+  var vyOk=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
+  function vySaved(){try{return localStorage.getItem("sfv-booth-vinyl-in")||"";}catch(e){return "";}}
+  function vyFill(){if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return Promise.resolve();
+    return navigator.mediaDevices.enumerateDevices().then(function(ds){var ins=ds.filter(function(d){return d.kind==="audioinput"&&d.deviceId!=="default"&&d.deviceId!=="communications";});
+      var want=vyIn.value||vySaved();if(!want){ins.forEach(function(d){if(!want&&/universal audio|apollo/i.test(d.label))want=d.deviceId;});}
+      vyIn.innerHTML='<option value="">the default input</option>';
+      ins.forEach(function(d,i){var o=document.createElement("option");o.value=d.deviceId;o.textContent=d.label||("Input "+(i+1));vyIn.appendChild(o);});
+      if(want&&[].some.call(vyIn.options,function(o){return o.value===want;}))vyIn.value=want;});}
+  function vyStopMeter(){clearInterval(vyTimer);vyTimer=null;if(vyCtx){try{vyCtx.close();}catch(e){}vyCtx=null;}vyBars.forEach(function(b){b.style.width="0";b.className="";});vyDb.innerHTML="L &mdash; &nbsp; R &mdash;";}
+  function vyMeter(st){vyStopMeter();var C=window.AudioContext||window.webkitAudioContext;if(!C)return;try{vyCtx=new C();}catch(e){return;}
+    var src=vyCtx.createMediaStreamSource(st),sp=vyCtx.createChannelSplitter(2),an=[vyCtx.createAnalyser(),vyCtx.createAnalyser()],buf=new Float32Array(2048),hold=[0,0],held=[-99,-99],at=[0,0];
+    src.connect(sp);an.forEach(function(a,i){a.fftSize=2048;sp.connect(a,i);});
+    vyTimer=setInterval(function(){var txt=[];for(var i=0;i<2;i++){an[i].getFloatTimeDomainData(buf);var pk=0;for(var j=0;j<buf.length;j++){var v=Math.abs(buf[j]);if(v>pk)pk=v;}
+      var db=pk>0?20*Math.log10(pk):-99;hold[i]=Math.max(db,hold[i]-1.5);if(db>=held[i]||Date.now()-at[i]>2000){held[i]=db;at[i]=Date.now();}
+      var w=Math.max(0,Math.min(100,(hold[i]+60)/60*100));vyBars[i].style.width=w+"%";vyBars[i].className=hold[i]>-1?"hot":"";txt.push((i?"R ":"L ")+(held[i]>-60?held[i].toFixed(1)+" dB":"&mdash;"));}
+      vyDb.innerHTML=txt.join(" &nbsp; ")+" &nbsp; (peaks; aim for about &minus;3 dB, the red mark)";},80);}
+  function vyOpen(){if(vyStream&&!toVinyl){vyStream.getTracks().forEach(function(t){t.stop();});vyStream=null;}
+    var id=vyIn.value;return navigator.mediaDevices.getUserMedia({audio:{deviceId:id?{exact:id}:undefined,channelCount:{ideal:2},sampleRate:{ideal:48000},
+      echoCancellation:false,noiseSuppression:false,autoGainControl:false},video:false}).then(function(st){vyStream=st;vyMeter(st);
+      var t=st.getAudioTracks()[0],s=t&&t.getSettings?t.getSettings():{};log("vinyl input: "+(t&&t.label||"?")+(s.channelCount?", "+s.channelCount+" channel"+(s.channelCount>1?"s":""):"")+(s.sampleRate?" at "+s.sampleRate+" Hz":""));
+      if(s.channelCount===1)log("this input came in mono: pick the interface's stereo pair (inputs 1-2)");
+      return vyFill().then(function(){return st;});});}
+  function showVinyl(){var up=!!(ws&&ws.readyState===1)&&vyOk,mine=toMine&&toVinyl,other=!!takeover&&!mine&&!takeover.mine;
+    vyBtn.textContent=mine?"Lift the needle (hand it back)":"Put on vinyl";vyBtn.style.background=mine?"#ff0000":"";vyBtn.style.color=mine?"#fff":"";
+    vyBtn.disabled=!up||vyPending||(other&&!(role==="owner"&&takeover&&takeover.vinyl));
+    vyWho.textContent=takeover&&takeover.vinyl?"— "+takeover.who+", on the air "+Math.floor(takeover.since/60)+" min":"";vyCheck.disabled=!vyOk||mine;vyIn.disabled=mine;}
+  if(!vyOk){vyCheck.disabled=true;log("live vinyl needs Chrome, Firefox or Edge on a computer");}
+  vyIn.addEventListener("change",function(){try{localStorage.setItem("sfv-booth-vinyl-in",vyIn.value);}catch(e){}if(vyStream&&!toVinyl)vyOpen().catch(function(e){log("vinyl input: "+(e&&e.name||e));});});
+  vyCheck.addEventListener("click",function(){if(vyStream&&!toVinyl){vyStream.getTracks().forEach(function(t){t.stop();});vyStream=null;vyStopMeter();vyCheck.textContent="Check level";return;}
+    vyOpen().then(function(){vyCheck.textContent="Stop checking";}).catch(function(e){log("vinyl input refused: "+(e&&(e.name+" "+e.message)||e));});});
+  vyBtn.addEventListener("click",function(){
+    if(!ws||ws.readyState!==1)return;
+    if(toMine&&toVinyl){stopTakeover(true);log("vinyl: handed back");return;}
+    if(takeover){if(role==="owner")ws.send(JSON.stringify({type:"takeover",on:false}));return;}
+    vyPending=true;showVinyl();
+    (vyStream?Promise.resolve(vyStream):vyOpen()).then(function(st){
+      var at=st.getAudioTracks();if(!at.length)throw new Error("no audio from that input");
+      var mime="";["audio/webm;codecs=opus","audio/ogg;codecs=opus","audio/webm","audio/mp4"].forEach(function(t){if(!mime&&MediaRecorder.isTypeSupported(t))mime=t;});
+      toStream=st;toVinyl=true;toRec=new MediaRecorder(st,mime?{mimeType:mime,audioBitsPerSecond:256000}:{audioBitsPerSecond:256000});
+      toRec.ondataavailable=function(e){if(e.data&&e.data.size>0&&ws&&ws.readyState===1&&toMine)ws.send(e.data);};
+      at[0].onended=function(){log("the vinyl input went away; handing back");stopTakeover(true);};
+      toMine=true;toPending=true;vyCheck.textContent="Check level";
+      ws.send(JSON.stringify({type:"takeover",on:true,vinyl:true,codec:toRec.mimeType||mime,name:toName.value.trim(),device:deviceLabel(),tab:(at[0].label||"")}));
+      toRec.start(250);toPump=setInterval(function(){try{if(toRec&&toRec.state==="recording")toRec.requestData();}catch(e){}},250);
+      log("vinyl: crossfading to the turntable");vyPending=false;showVinyl();
+    }).catch(function(e){vyPending=false;toVinyl=false;log("vinyl refused: "+(e&&(e.name+" "+e.message)||e));showVinyl();});
+  });
+  vyFill();
   // records: Spotify on the Mac, from here
   var recEl=function(id){return document.getElementById(id);},recArt=recEl("rec-art"),recTitle=recEl("rec-title"),recArtist=recEl("rec-artist"),recAlbum=recEl("rec-album"),recTime=recEl("rec-time"),recState=recEl("rec-state"),recPP=recEl("rec-pp"),recShuf=recEl("rec-shuf"),recLink=recEl("rec-link"),recMsg=recEl("rec-msg"),recPlaying=false,recShuffle=false,recArtUrl="";
   // the watcher's reading: music loudness, Phil against the music, the last thing it noticed
@@ -265,7 +328,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   // a booth left open picks up a new version of itself: when the page on the server changes, reload once nobody is on a mic or a takeover
   var pageStamp=null;
   setInterval(function(){fetch(location.pathname+"?v="+Date.now(),{method:"HEAD",cache:"no-store"}).then(function(r){var lm=r.headers.get("Last-Modified")||r.headers.get("ETag");if(!lm)return;if(pageStamp===null){pageStamp=lm;return;}
-    if(lm!==pageStamp&&!micOn&&!macOn&&!toMine&&!recBusy){log("a newer booth is out; reloading");setTimeout(function(){location.reload();},800);}}).catch(function(){});},180000);
+    if(lm!==pageStamp&&!micOn&&!macOn&&!toMine&&!vyStream&&!recBusy){log("a newer booth is out; reloading");setTimeout(function(){location.reload();},800);}}).catch(function(){});},180000);
 })();
 </script>
 </body>
