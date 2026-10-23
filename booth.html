@@ -63,6 +63,8 @@ body.is-owner label.owner{display:inline}
 Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>onyx</option></select> <button type="button" class="say" id="hear-bob" style="padding:6px 12px">Hear Bob</button> <font size="1">(on this phone only, not on the air)</font></font></p>
 <hr>
 <p class="owner"><font size="2"><b>Input:</b> <select id="input" style="font:inherit;font-size:15px;max-width:100%"><option value="phone">This device's microphone</option></select></font></p>
+<p id="here-row" style="margin:6px 0"><font size="2">This device&rsquo;s input: <select id="here-in" style="font:inherit;font-size:15px;max-width:60%"><option value="">the default microphone</option></select><br>
+<label><input type="checkbox" id="here-studio"> Studio mic (an audio interface like the Apollo): no echo cancelling, noise suppression or auto gain here, and no phone-voice processing on the Mac, only a safety limiter. Set the level in Console: peaks near &minus;6.</label></font></p>
 <button type="button" class="big" id="mic" disabled>ON MIC</button>
 <div id="level"><i></i></div>
 <p style="margin:0 0 14px"><font size="2"><b>While I'm on the mic:</b><br>
@@ -146,7 +148,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   // the recorder, made so it can be made again: a phone that sends nothing in the first seconds gets one fresh recorder
   var recMime="",sentBytes=0,micWatch=null;
   function makeRec(st){
-    try{rec=recMime?new MediaRecorder(st,{mimeType:recMime,audioBitsPerSecond:64000}):new MediaRecorder(st);}catch(e){rec=new MediaRecorder(st);}
+    try{rec=recMime?new MediaRecorder(st,{mimeType:recMime,audioBitsPerSecond:hereStudio.checked?128000:64000}):new MediaRecorder(st);}catch(e){rec=new MediaRecorder(st);}
     rec.ondataavailable=function(e){if(e.data&&e.data.size>0&&ws&&ws.readyState===1&&micOn){sentBytes+=e.data.size;ws.send(e.data);}};
     rec.onerror=function(e){log("recorder error: "+(e.error&&e.error.name||e.name||"?"));};
     rec.start(250);
@@ -163,8 +165,9 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
     },3500);
   }
   function startAudio(){
-    return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true},video:false}).then(function(st){
-      stream=st;
+    var studio=hereStudio.checked,id=hereIn.value,proc=!studio;
+    return navigator.mediaDevices.getUserMedia({audio:{deviceId:id?{exact:id}:undefined,channelCount:1,echoCancellation:proc,noiseSuppression:proc,autoGainControl:proc},video:false}).then(function(st){
+      stream=st;hereFill();var t=st.getAudioTracks()[0];log("mic input: "+(t&&t.label||"?")+(studio?", studio (no processing)":""));
       if(window.MediaRecorder){ // the browser's own recorder: iPhones make AAC in mp4, others Opus in webm; the Mac decodes either
         var types=["audio/webm;codecs=opus","audio/webm","audio/mp4","audio/ogg;codecs=opus"],mime="";
         for(var i=0;i<types.length;i++){if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(types[i])){mime=types[i];break;}}
@@ -195,6 +198,19 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   document.getElementById("duck-"+duckPref).checked=true;
   Array.prototype.forEach.call(document.querySelectorAll('input[name="duck"]'),function(r){r.addEventListener("change",function(){if(!r.checked)return;duckPref=r.value==="mix"?"mix":"under";try{localStorage.setItem("sfv-booth-duck",duckPref);}catch(e){}
     if((micOn||macOn)&&ws&&ws.readyState===1){ws.send(JSON.stringify({type:"micmode",duck:duckPref}));log(duckPref==="mix"?"music back up under the mic":"music fades under the mic");}});});
+  var hereIn=document.getElementById("here-in"),hereStudio=document.getElementById("here-studio");
+  try{hereStudio.checked=localStorage.getItem("sfv-booth-studio")==="1";}catch(e){}
+  function hereFill(){if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return;
+    navigator.mediaDevices.enumerateDevices().then(function(ds){var want=hereIn.value;try{want=want||localStorage.getItem("sfv-booth-here-in")||"";}catch(e){}
+      var ins=ds.filter(function(d){return d.kind==="audioinput"&&d.deviceId!=="default"&&d.deviceId!=="communications";});
+      hereIn.innerHTML='<option value="">the default microphone</option>';
+      ins.forEach(function(d,i){var o=document.createElement("option");o.value=d.deviceId;o.textContent=d.label||("Input "+(i+1));hereIn.appendChild(o);});
+      if(want&&[].some.call(hereIn.options,function(o){return o.value===want;}))hereIn.value=want;}).catch(function(){});}
+  hereIn.addEventListener("change",function(){try{localStorage.setItem("sfv-booth-here-in",hereIn.value);}catch(e){}
+    var o=hereIn.options[hereIn.selectedIndex];if(o&&/universal audio|apollo|focusrite|scarlett|motu|audient|ssl|rme|apogee/i.test(o.textContent)&&!hereStudio.checked){hereStudio.checked=true;try{localStorage.setItem("sfv-booth-studio","1");}catch(e){}log("studio mic on for "+o.textContent);}
+    if(micOn)log("the new input takes effect the next time you go on the mic");});
+  hereStudio.addEventListener("change",function(){try{localStorage.setItem("sfv-booth-studio",hereStudio.checked?"1":"0");}catch(e){}if(micOn)log("takes effect the next time you go on the mic");});
+  hereFill();
   micBtn.addEventListener("click",function(){
     if(!ws||ws.readyState!==1)return;
     if(otherMic&&!micOn&&!macOn){if(role==="owner"){ws.send(JSON.stringify({type:"mic",on:false,force:true}));log("ended "+otherMic+"\u2019s mic");}return;}
@@ -203,7 +219,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
     if(inputSel.value!=="phone"&&!micOn){ws.send(JSON.stringify({type:"macmic",on:true,duck:micDuck()}));macOn=true;micBtn.className="big on";micBtn.textContent="OFF MIC \u2014 you are on the air";log("Mac mic open ("+inputSel.value+"), "+duckWords());return;}
     if(micOn){ws.send(JSON.stringify({type:"mic",on:false}));micOn=false;stopAudio();micBtn.className="big";micBtn.textContent="ON MIC";log("mic closed");return;}
     micBtn.disabled=true;micPending=true;
-    startAudio().then(function(){ws.send(JSON.stringify({type:"mic",on:true,codec:codec,duck:micDuck()}));micOn=true;micOpening=true;clearTimeout(micOpenTimer);micOpenTimer=setTimeout(function(){micOpening=false;},6000);if(rec)watchMic();micBtn.className="big on";micBtn.textContent="OFF MIC — you are on the air";log("mic open, "+duckWords());}).catch(function(e){log("mic refused: "+(e&&(e.name+" "+e.message)||e));}).then(function(){micPending=false;micBtn.disabled=false;});
+    startAudio().then(function(){ws.send(JSON.stringify({type:"mic",on:true,codec:codec,duck:micDuck(),studio:hereStudio.checked}));micOn=true;micOpening=true;clearTimeout(micOpenTimer);micOpenTimer=setTimeout(function(){micOpening=false;},6000);if(rec)watchMic();micBtn.className="big on";micBtn.textContent="OFF MIC — you are on the air";log("mic open, "+duckWords());}).catch(function(e){log("mic refused: "+(e&&(e.name+" "+e.message)||e));}).then(function(){micPending=false;micBtn.disabled=false;});
   });
   inputSel.addEventListener("change",function(){var v=inputSel.value;try{localStorage.setItem("sfv-booth-input",v);}catch(e){}if(v==="phone"){log(hereLabel().toLowerCase()+" will be used");if(macOn){ws.send(JSON.stringify({type:"macmic",on:false}));macOn=false;micBtn.className="big";micBtn.textContent="ON MIC";}return;}if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"input",name:v}));log("Mac input: "+v);}});
   var toName=document.getElementById("to-name");try{toName.value=localStorage.getItem("sfv-booth-name")||"";}catch(e){}
