@@ -27,6 +27,16 @@
 .sw:focus-visible{outline:2px solid #800080;outline-offset:2px}
 #radiolabel{vertical-align:middle}
 #radiolabel.on{color:#ff0000}
+#vol{-webkit-appearance:none;appearance:none;--v:100%;width:64px;height:24px;margin:0 0 0 9px;padding:0;background:none;vertical-align:middle;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#vol::-webkit-slider-runnable-track{height:4px;border:1px solid #000080;border-radius:3px;background:linear-gradient(to right,#000080 var(--v),#fff var(--v))}
+#vol::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-4px;border:0;border-radius:50%;background:#000080;transition:transform .25s cubic-bezier(.34,1.6,.64,1)}
+#vol:active::-webkit-slider-thumb{transform:scale(1.25)}
+#vol::-moz-range-track{height:4px;border:1px solid #000080;border-radius:3px;background:#fff}
+#vol::-moz-range-progress{height:6px;border-radius:3px;background:#000080}
+#vol::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:#000080}
+#vol:focus{outline:none}
+#vol:focus-visible{outline:2px solid #800080;outline-offset:2px}
+@media (prefers-reduced-motion:reduce){#vol::-webkit-slider-thumb{transition:none}}
 .meter{display:inline-block;vertical-align:middle;margin-left:9px;cursor:pointer;line-height:0}
 .meter canvas{display:inline-block;vertical-align:middle;image-rendering:pixelated;image-rendering:crisp-edges}
 #signal{display:none;margin:3px 0 1px;font-size:11px;color:#000080;letter-spacing:.01em}
@@ -135,7 +145,7 @@ a.artist{color:#800080}
 <hr>
 <p align="center"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><video id="camv2" muted playsinline crossorigin="anonymous"></video><span class="dots"></span><span id="banner" hidden><img alt=""><span></span></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><video id="ad" muted playsinline preload="none" aria-label="A commercial from the archive"></video><img id="adimg" alt="" hidden><span id="wxcard" role="img" aria-label="Valley weather" hidden></span><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span><span id="ad-caption" hidden></span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
 <table border="0" cellspacing="0" cellpadding="4" align="center" width="90%">
-  <tr><td valign="top" width="50%"><font size="2"><button type="button" class="sw" id="radio" aria-pressed="false" aria-label="Sound"><span class="knob"></span></button><span id="radiolabel">Sound off</span><span class="meter" id="meter" title="Signal"><canvas id="vu" width="40" height="11"></canvas></span><span id="signal"></span><br><span id="now">The station is on the air. Turn the sound on to join the program in progress.</span></font></td>
+  <tr><td valign="top" width="50%"><font size="2"><button type="button" class="sw" id="radio" aria-pressed="false" aria-label="Sound"><span class="knob"></span></button><span id="radiolabel">Sound off</span><input type="range" id="vol" min="0" max="100" step="1" value="100" aria-label="Volume" title="Volume"><span class="meter" id="meter" title="Signal"><canvas id="vu" width="40" height="11"></canvas></span><span id="signal"></span><br><span id="now">The station is on the air. Turn the sound on to join the program in progress.</span></font></td>
       <td valign="top" width="50%"><font size="2"><b>Host:</b> <span id="host">Phil Landers and Carol Reyes</span><br><b>Next break:</b> <span id="next-break">&mdash;</span><br><b>Conditions:</b> <span id="wx">&mdash;</span></font></td></tr>
 </table>
 <audio id="music" preload="none" loop><source src="music/2007-compilation.m4a" type="audio/mp4"></audio>
@@ -1026,7 +1036,7 @@ a.artist{color:#800080}
   function boothBeat(){try{var u=(liveCfg&&liveCfg.booth||"").replace(/^wss:/,"https:").replace(/\/booth$/,"/hb");if(!u)return;
     fetch(u+"?id="+sid+"&t="+(liveEl.currentTime||0).toFixed(0)+"&playing="+playing+"&muted="+liveEl.muted+"&vis="+(document.visibilityState||"")+"&ch="+channel+"&src="+encodeURIComponent(liveEl.currentSrc?liveEl.currentSrc.split("/").pop().split("?")[0]:"-")+"&stalls="+stalls,{mode:"no-cors",cache:"no-store"}).catch(function(){});}catch(e){}}
   setInterval(function(){if(isLive||playing)boothBeat();},10000);
-  setInterval(function(){if(!isLive&&!playing)return;var v=live.el;logEv("hb id="+sid+" t="+(liveEl.currentTime||0).toFixed(1)+" paused="+liveEl.paused+" muted="+liveEl.muted+" vol="+liveEl.volume+" rs="+liveEl.readyState+" ns="+liveEl.networkState+" err="+(liveEl.error?liveEl.error.code:0)+" drift="+Math.round(drift())+" playing="+playing+" src="+(liveEl.currentSrc?liveEl.currentSrc.split("/").pop().split("?")[0]:"-")+" cam="+(v&&!v.paused?"video":"still")+" ch="+channel);},10000);
+  setInterval(function(){if(!isLive&&!playing)return;var v=live.el;logEv("hb id="+sid+" t="+(liveEl.currentTime||0).toFixed(1)+" paused="+liveEl.paused+" muted="+liveEl.muted+" vol="+liveEl.volume+" lvl="+vol+" rs="+liveEl.readyState+" ns="+liveEl.networkState+" err="+(liveEl.error?liveEl.error.code:0)+" drift="+Math.round(drift())+" playing="+playing+" src="+(liveEl.currentSrc?liveEl.currentSrc.split("/").pop().split("?")[0]:"-")+" cam="+(v&&!v.paused?"video":"still")+" ch="+channel);},10000);
   function tune(why){tunedAt=Date.now();playedAt=0;logEv("tune "+(why||"")+" ua="+(apple?"apple":"other"));liveEl.src=liveCfg.stream+"?t="+Date.now();return liveEl.play();}
   liveEl.addEventListener("playing",function(){if(!playedAt){playedAt=Date.now();t0=liveEl.currentTime||0;}});
   function lag(){try{var b=liveEl.buffered;return b.length?b.end(b.length-1)-liveEl.currentTime:0;}catch(e){return 0;}}
@@ -1045,13 +1055,22 @@ a.artist{color:#800080}
   // Hover (or tap) and it opens into a wide red spectrum with the transmitter's numbers beside it.
   var meter=document.getElementById("meter"),vu=document.getElementById("vu"),signal=document.getElementById("signal");
   var ac=null,an=null,out=null,fdata=null,clk=null,hot=false,pinned=false,fake=[],liveStats=null,sigTimer=null,raf=0;
-  function wireMeter(){if(ac!==null)return;ac=false;if(apple)return;var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;try{var c=new AC(),a=c.createAnalyser();a.fftSize=256;a.smoothingTimeConstant=.78;liveEl.crossOrigin="anonymous";[music,voice,liveEl].forEach(function(el){c.createMediaElementSource(el).connect(a);});var og=c.createGain();if(window.sfvQuiet)og.gain.value=0;a.connect(og);og.connect(c.destination);out=og;ac=c;an=a;fdata=new Uint8Array(a.frequencyBinCount);}catch(e){ac=false;an=null;}}
+  function wireMeter(){if(ac!==null)return;ac=false;if(apple)return;var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;try{var c=new AC(),a=c.createAnalyser();a.fftSize=256;a.smoothingTimeConstant=.78;liveEl.crossOrigin="anonymous";[music,voice,liveEl].forEach(function(el){c.createMediaElementSource(el).connect(a);});var og=c.createGain();if(window.sfvQuiet)og.gain.value=0;a.connect(og);og.connect(c.destination);out=og;ac=c;an=a;fdata=new Uint8Array(a.frequencyBinCount);applyVol();}catch(e){ac=false;an=null;}}
   function tickSound(up){if(apple)return;try{var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;var c=ac||clk||(clk=new AC());if(c.state==="suspended")c.resume();var t=c.currentTime+.001,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.setValueAtTime(up?2200:1500,t);o.frequency.exponentialRampToValueAtTime(up?1400:900,t+.03);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.07,t+.003);g.gain.exponentialRampToValueAtTime(.0001,t+.045);o.connect(g);g.connect(out&&c===ac?out:c.destination);o.start(t);o.stop(t+.05);}catch(e){}}
+  // ---- the volume bar: the listener's own level, remembered. It turns the gain after the meter, so the meter still shows
+  // the signal; without Web Audio (Safari) it sets the players. iPhones and iPads leave the volume to their own buttons (a
+  // page cannot set it there), so there the bar stays hidden. ----
+  var volEl=document.getElementById("vol"),vol=1;
+  try{var sv=localStorage.getItem("sfv-volume");if(sv!==null&&sv!==""&&isFinite(+sv))vol=Math.max(0,Math.min(1,+sv));}catch(e){}
+  function applyVol(glide){var g=window.sfvQuiet?0:vol,p=Math.round(vol*100);if(out){if(glide&&ac)out.gain.setTargetAtTime(g,ac.currentTime,.015);else out.gain.value=g;}voice.volume=liveEl.volume=out?1:vol;volEl.value=p;volEl.style.setProperty("--v",p+"%");volEl.title="Volume "+p+"%";}
+  (function(){var a=document.createElement("audio");a.volume=.5;if(a.volume!==.5)volEl.hidden=true;})();
+  volEl.addEventListener("input",function(){vol=volEl.value/100;applyVol(true);try{localStorage.setItem("sfv-volume",String(vol));}catch(e){}});
+  applyVol();
   function levels(n){var i,out=[];
     if(an&&playing){an.getByteFrequencyData(fdata);var bins=Math.floor(fdata.length*.55);for(i=0;i<n;i++){var a=Math.floor(Math.pow(i/n,1.7)*bins),b=Math.max(a+1,Math.floor(Math.pow((i+1)/n,1.7)*bins)),m=0;for(var k=a;k<b;k++)if(fdata[k]>m)m=fdata[k];out.push(Math.pow(m/255,1.3));}return out;}
     if(fake.length!==n){fake=[];for(i=0;i<n;i++)fake.push(0);}
     var t=Date.now()/1000;for(i=0;i<n;i++){var target=playing?(.3+.7*Math.abs(Math.sin(t*(1.1+i*.29)+i*1.7)))*(.55+.45*Math.random()):0;fake[i]+=(target-fake[i])*(target>fake[i]?.3:.1);out.push(fake[i]);}return out;}
-  function drawMeter(){raf=0;var dpr=window.devicePixelRatio||1,cell=(vu.closest&&vu.closest("td")||document.body).clientWidth||400,W=hot?Math.max(120,Math.min(240,cell-150)):40,H=hot?22:11,n=hot?Math.round(W/5):12;
+  function drawMeter(){raf=0;var dpr=window.devicePixelRatio||1,cell=(vu.closest&&vu.closest("td")||document.body).clientWidth||400,W=hot?Math.max(120,Math.min(240,cell-150-(volEl.offsetWidth?volEl.offsetWidth+9:0))):40,H=hot?22:11,n=hot?Math.round(W/5):12;
     if(vu.width!==Math.round(W*dpr)||vu.height!==Math.round(H*dpr)){vu.width=Math.round(W*dpr);vu.height=Math.round(H*dpr);vu.style.width=W+"px";vu.style.height=H+"px";}
     var g=vu.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);var lv=levels(n),gap=1,bw=(W-gap*(n-1))/n,busy=false;g.fillStyle=hot?"#ff0000":"#000080";
     for(var i=0;i<n;i++){if(lv[i]>.02)busy=true;var h=Math.max(1,Math.round(lv[i]*H)),x=i*(bw+gap);if(hot)g.fillRect(x,Math.round((H-h)/2),bw,h);else g.fillRect(x,H-h,bw,h);}
