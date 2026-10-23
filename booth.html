@@ -78,7 +78,8 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
 <p><font size="2">Input: <select id="vy-in" style="font:inherit;font-size:15px;max-width:70%"><option value="">the default input</option></select> <button type="button" class="say" id="vy-check">Check level</button></font></p>
 <div class="vy-meter"><i id="vy-l"></i><b></b></div><div class="vy-meter"><i id="vy-r"></i><b></b></div>
 <p style="margin:2px 0 8px"><font size="1" id="vy-db">L &mdash; &nbsp; R &mdash;</font></p>
-<button type="button" class="say" id="vy-btn" disabled>Put on vinyl</button>
+<button type="button" class="say" id="vy-btn" disabled>Put on vinyl</button> <button type="button" class="say" id="vy-spot" disabled>Spot break</button>
+<p style="margin:4px 0 0"><font size="1">Spot break, between records: your record fades out, one or two of the station&rsquo;s commercials play (change records while they run), and it fades back in.</font></p>
 <p>&nbsp;</p>
 <p><font size="2"><b>Have Phil say:</b></font></p>
 <textarea id="text" placeholder="Type a line for Phil. He reads it on the air, Spotify ducks while he talks."></textarea>
@@ -228,7 +229,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   // live vinyl: a line input on this computer (the Apollo) as a takeover, stereo at 48 kHz with the browser's voice
   // processing off; the Mac keeps it stereo and untouched (booth.py, vinyl=True)
   var vyBtn=document.getElementById("vy-btn"),vyIn=document.getElementById("vy-in"),vyCheck=document.getElementById("vy-check"),vyWho=document.getElementById("vy-who"),
-      vyDb=document.getElementById("vy-db"),vyBars=[document.getElementById("vy-l"),document.getElementById("vy-r")],vyStream=null,vyCtx=null,vyTimer=null,vyPending=false,toVinyl=false;
+      vyDb=document.getElementById("vy-db"),vyBars=[document.getElementById("vy-l"),document.getElementById("vy-r")],vyStream=null,vyCtx=null,vyTimer=null,vyPending=false,toVinyl=false,vySpot=document.getElementById("vy-spot");
   var vyOk=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia&&window.MediaRecorder);
   function vySaved(){try{return localStorage.getItem("sfv-booth-vinyl-in")||"";}catch(e){return "";}}
   function vyFill(){if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return Promise.resolve();
@@ -254,7 +255,9 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   function showVinyl(){var up=!!(ws&&ws.readyState===1)&&vyOk,mine=toMine&&toVinyl,other=!!takeover&&!mine&&!takeover.mine;
     vyBtn.textContent=mine?"Lift the needle (hand it back)":"Put on vinyl";vyBtn.style.background=mine?"#ff0000":"";vyBtn.style.color=mine?"#fff":"";
     vyBtn.disabled=!up||vyPending||(other&&!(role==="owner"&&takeover&&takeover.vinyl));
-    vyWho.textContent=takeover&&takeover.vinyl?"— "+takeover.who+", on the air "+Math.floor(takeover.since/60)+" min":"";vyCheck.disabled=!vyOk||mine;vyIn.disabled=mine;}
+    vyWho.textContent=takeover&&takeover.vinyl?"— "+takeover.who+", on the air "+Math.floor(takeover.since/60)+" min"+(takeover.spot!=null?" · spot break"+(takeover.spot?": "+takeover.spot:""):""):"";vyCheck.disabled=!vyOk||mine;vyIn.disabled=mine;
+    var sp=!!takeover&&takeover.spot!=null,canSpot=!!takeover&&!takeover.ending&&(takeover.mine||toMine||role==="owner");
+    vySpot.disabled=!up||!canSpot;vySpot.textContent=sp?"Back to the record":"Spot break";}
   if(!vyOk){vyCheck.disabled=true;log("live vinyl needs Chrome, Firefox or Edge on a computer");}
   vyIn.addEventListener("change",function(){try{localStorage.setItem("sfv-booth-vinyl-in",vyIn.value);}catch(e){}if(vyStream&&!toVinyl)vyOpen().catch(function(e){log("vinyl input: "+(e&&e.name||e));});});
   vyCheck.addEventListener("click",function(){if(vyStream&&!toVinyl){vyStream.getTracks().forEach(function(t){t.stop();});vyStream=null;vyStopMeter();vyCheck.textContent="Check level";return;}
@@ -276,6 +279,9 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
       log("vinyl: crossfading to the turntable");vyPending=false;showVinyl();
     }).catch(function(e){vyPending=false;toVinyl=false;log("vinyl refused: "+(e&&(e.name+" "+e.message)||e));showVinyl();});
   });
+  vySpot.addEventListener("click",function(){if(!ws||ws.readyState!==1||!takeover)return;var sp=takeover.spot!=null;
+    ws.send(JSON.stringify(sp?{type:"spot",stop:true}:{type:"spot"}));log(sp?"spot break: back to the record":"spot break: fading the record out");vySpot.disabled=true;
+    setTimeout(function(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"status"}));},1800);});
   vyFill();
   // records: Spotify on the Mac, from here
   var recEl=function(id){return document.getElementById(id);},recArt=recEl("rec-art"),recTitle=recEl("rec-title"),recArtist=recEl("rec-artist"),recAlbum=recEl("rec-album"),recTime=recEl("rec-time"),recState=recEl("rec-state"),recPP=recEl("rec-pp"),recShuf=recEl("rec-shuf"),recLink=recEl("rec-link"),recMsg=recEl("rec-msg"),recPlaying=false,recShuffle=false,recArtUrl="";
