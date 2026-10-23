@@ -77,6 +77,20 @@ a.artist{color:#800080}
 #camwrap{position:relative;display:inline-block;max-width:100%}
 #camwrap .dots{display:none;position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(circle,#fff 0.9px,transparent 1.1px);background-size:3px 3px;mix-blend-mode:screen;opacity:.9}
 #camwrap.halftone .dots{display:block}
+/* The screen (Sam, 2026-10-23: "more professional like a pro broadcast with ins and outs"): one 16:9 picture that never
+   changes size, with everything shown inside it; a dip to black between things; the station's bumper into and out of a break */
+#screen{position:relative;display:inline-block;width:640px;max-width:100%;aspect-ratio:16/9;background:#000;border:1px solid #000080;overflow:hidden;vertical-align:top}
+#screen>#camwrap,#screen>#tv,#screen>#ad,#screen>#adimg,#screen>#wxcard,#screen>#slate,#screen>#dip{position:absolute;top:0;left:0;width:100%;height:100%;max-width:none;aspect-ratio:auto;box-sizing:border-box;margin:0;border:0}
+#screen #cam,#screen #camv,#screen #camv2{position:absolute;top:0;left:0;width:100%;height:100%;max-width:none;aspect-ratio:auto;border:0;object-fit:cover}
+#screen #cam{background:#000080}#screen #camv,#screen #camv2{transition:opacity .45s ease}
+#screen #ad{object-fit:contain}   /* a 4:3 commercial in the 16:9 picture: black at the sides, the way TV shows old film */
+#dip{z-index:6;background:#000;opacity:0;transition:opacity .32s ease;pointer-events:none}#dip.on{opacity:1}
+#slate{z-index:5;background:#000080;color:#fff;font-family:"Times New Roman",Times,serif;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:.5em;text-align:center;pointer-events:none}#slate[hidden]{display:none}
+#slate .l{font-weight:bold;font-size:clamp(15px,4.2vw,27px)}#slate .l big{font-size:1.5em}
+#slate hr{width:min(56%,300px);height:0;border:0;border-top:1px solid rgba(255,255,255,.55);margin:.1em 0}
+#slate .u{font-size:clamp(10px,2.4vw,14px);letter-spacing:.2em;opacity:.88}
+#bug{position:absolute;right:10px;bottom:8px;color:#fff;font:bold 15px "Times New Roman",Times,serif;letter-spacing:.06em;opacity:.72;text-shadow:0 0 2px #000,0 0 6px rgba(0,0,0,.6);pointer-events:none;transition:opacity .4s ease}
+#camwrap.bannered #bug{opacity:0}
 #tune{position:fixed;top:0;right:0;bottom:0;left:0;z-index:20;display:flex;align-items:center;justify-content:center;box-sizing:border-box;padding:16px max(16px,env(safe-area-inset-right,0px)) 16px max(16px,env(safe-area-inset-left,0px));background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);cursor:pointer;opacity:0;transition:opacity .25s ease;-webkit-tap-highlight-color:transparent}
 #tune[hidden]{display:none}
 #tune.show{opacity:1}
@@ -143,7 +157,7 @@ a.artist{color:#800080}
 <div id="listeners-wrap"><div id="listeners" class="off" aria-live="polite"><span class="dot"></span>OFF AIR</div></div>
 <p align="center"><b><font size="6">S</font><font size="4">AN </font><font size="6">F</font><font size="4">ERNANDO </font><font size="6">V</font><font size="4">ALLEY </font><font size="6">R</font><font size="4">ADIO</font><font size="2"><br>sfv.fm<br>Berry Drive, Studio City, California</font><br>On the Air</b><font size="1">&nbsp;</font></p>
 <hr>
-<p align="center"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><video id="camv2" muted playsinline crossorigin="anonymous"></video><span class="dots"></span><span id="banner" hidden><img alt=""><span></span></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><video id="ad" muted playsinline preload="none" aria-label="A commercial from the archive"></video><img id="adimg" alt="" hidden><span id="wxcard" role="img" aria-label="Valley weather" hidden></span><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span><span id="ad-caption" hidden></span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
+<p align="center"><span id="screen"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><video id="camv2" muted playsinline crossorigin="anonymous"></video><span class="dots"></span><span id="bug" aria-hidden="true">SFV</span><span id="banner" hidden><img alt=""><span></span></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><video id="ad" muted playsinline preload="none" aria-label="A commercial from the archive"></video><img id="adimg" alt="" hidden><span id="wxcard" role="img" aria-label="Valley weather" hidden></span><span id="slate" role="img" aria-label="San Fernando Valley Radio" hidden></span><span id="dip" aria-hidden="true"></span></span><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span><span id="ad-caption" hidden></span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
 <table border="0" cellspacing="0" cellpadding="4" align="center" width="90%">
   <tr><td valign="top" width="50%"><font size="2"><button type="button" class="sw" id="radio" aria-pressed="false" aria-label="Sound"><span class="knob"></span></button><span id="radiolabel">Sound off</span><input type="range" id="vol" min="0" max="100" step="1" value="100" aria-label="Volume" title="Volume"><span class="meter" id="meter" title="Signal"><canvas id="vu" width="40" height="11"></canvas></span><span id="signal"></span><br><span id="now">The station is on the air. Turn the sound on to join the program in progress.</span></font></td>
       <td valign="top" width="50%"><font size="2"><b>Host:</b> <span id="host">Phil Landers and Carol Reyes</span><br><b>Next break:</b> <span id="next-break">&mdash;</span><br><b>Conditions:</b> <span id="wx">&mdash;</span></font></td></tr>
@@ -296,8 +310,10 @@ a.artist{color:#800080}
   var live=player(document.getElementById("camv")),next=player(document.getElementById("camv2"));
   function stopVideo(fallback){live.stop();next.stop();clearTimeout(fadeTimer);fadeTimer=null;canvas.style.display="";wrap.classList.remove("halftone");
     if(fallback&&channel===2){tries=0;loadCam();}}   // a stream that failed or froze: back to the still, fresh; video is tried again within a minute
-  function show(P){ // real footage: the picture itself, no dither
-    canvas.style.display="none";P.el.style.display="inline-block";wrap.classList.remove("halftone");cap.textContent=P.cam.name+", live video";P.on=true;   // "" would leave the stylesheet's display:none in charge: a blank box (2026-10-16)
+  function show(P){ // real footage: the picture itself, no dither, dissolving in over the still or the look
+    var el=P.el;el.style.opacity="0";el.style.display="inline-block";wrap.classList.remove("halftone");cap.textContent=P.cam.name+", live video";P.on=true;   // "" would leave the stylesheet's display:none in charge: a blank box (2026-10-16)
+    void el.offsetWidth;el.style.opacity="1";
+    setTimeout(function(){if(P.on&&P.el===el)canvas.style.display="none";},500);
   }
   function startVideo(cam){
     stopVideo();live.start(cam,show,function(){videoFailed(cam);if(!fadeTimer)stopVideo(true);});   // no picture from this camera: the still, briefly, then the next cut
@@ -320,7 +336,7 @@ a.artist{color:#800080}
   function pick(list,period){return list[Math.floor(Date.now()/period)%list.length];}
   function renderChannels(){var names={2:"Freeways",4:"Huell Howser",7:"Aquarium"};chanBox.innerHTML="Channel: "+[2,4,7].map(function(c){return c===channel?"<b>"+c+" "+names[c]+"</b>":'<a href="#" target="_self" data-ch="'+c+'">'+c+" "+names[c]+"</a>";}).join(" &middot; ");}
   function setChannel(ch,remember){
-    if(adOn)endAd();
+    if(adOn||gen)endAd(true);   // a break on, or on its way out (both still unset at the first call, as the page loads)
     channel=ch;renderChannels();if(remember){try{localStorage.setItem("sfv-channel",String(ch));}catch(e){}}
     if(ch===2){tv.style.display="none";tv.removeAttribute("src");wrap.style.display="";cap.textContent="Tuning the picture\u2026";loadCam();if(pageLoaded)startVideo(cams[camIndex%cams.length]);if(STILL_HOLD)scheduleCut(hasVideo(cams[camIndex%cams.length])?between(CAM_SECS):STILL_HOLD);return;}
     stopVideo();wrap.style.display="none";tv.style.display="inline-block";
@@ -717,7 +733,7 @@ a.artist{color:#800080}
     {img:"tv/stills/mels-sherman-oaks.jpg",cap:"Mel's, Sherman Oaks",who:"Mel's",credit:"Photo: fourbyfourblazer, CC BY 2.0",ken:true},
   ];
   var adV=document.getElementById("ad"),adImg=document.getElementById("adimg"),banner=document.getElementById("banner"),adCap=document.getElementById("ad-caption"),wxCard=document.getElementById("wxcard");
-  var adOn=false,adKind=null,adTimer=null,adShown={},lastWx=0,cycle=0,recent=[];
+  var adOn=false,adKind=null,adTimer=null,lastWx=0,cycle=0,recent=[];
   var CAM_SECS=[15,30],BREAK_SECS=[45,90],WX_EVERY=240,WX_SECS=9,STILL_SECS=7,KEN_SECS=12,BANNER_SECS=10;
   function between(r){return (r[0]+Math.random()*(r[1]-r[0]))*1000;}
   function adFits(a,need){return need==="banner"?!!a.img&&(a.wide||!!a.v):!!a[need];}   // banners: the wide pictures, or a commercial's closing card
@@ -742,7 +758,24 @@ a.artist{color:#800080}
     var order=channel===2?["video","photo","still","banner","video","photo"]:["video","photo","still"];   // a photograph, Ken Burns, every third break (Sam, 2026-10-21: "i havent seen them")
     return order[(cycle++)%order.length];
   }
-  function hideFeed(){adShown={wrap:wrap.style.display,tv:tv.style.display};wrap.style.display="none";tv.style.display="none";cap.hidden=true;adCap.hidden=false;}
+  function hideFeed(){wrap.style.display="none";tv.style.display="none";cap.hidden=true;adCap.hidden=false;}
+  function restoreFeed(){wrap.style.display=channel===2?"":"none";tv.style.display=channel===2?"none":"inline-block";adCap.hidden=true;adCap.innerHTML="";cap.hidden=false;}
+  function clearBreak(){   // whatever a break put up, taken down
+    adV.onended=adV.onerror=adV.ontimeupdate=null;try{adV.pause();}catch(e){}adV.removeAttribute("src");try{adV.load();}catch(e){}adV.style.display="none";
+    adImg.onload=adImg.onerror=null;adImg.hidden=true;adImg.style.display="none";adImg.removeAttribute("src");wxCard.hidden=true;slateEl.hidden=true;
+  }
+  // Ins and outs. dip(then): the picture fades to black, then() swaps what is on under the black, lift() fades the new one
+  // up. bumper(): the station's card between the program and a break, then a dip into what follows. gen counts breaks and
+  // ways out of them, so a late step of one that has been overtaken does nothing.
+  var dipEl=document.getElementById("dip"),slateEl=document.getElementById("slate"),DIP=320,BUMP_IN=1800,BUMP_OUT=1500,gen=0;
+  function dip(then){var g=gen;dipEl.classList.add("on");setTimeout(function(){if(g===gen)then();},DIP);}
+  function lift(){dipEl.classList.remove("on");}
+  function bumper(line,ms,then){
+    var g=gen;slateEl.innerHTML='<span class="l"><big>S</big>AN <big>F</big>ERNANDO <big>V</big>ALLEY <big>R</big>ADIO</span><hr><span class="u">'+line+"</span>";
+    slateEl.hidden=false;lift();
+    setTimeout(function(){if(g===gen)dip(function(){slateEl.hidden=true;then();});},ms);
+  }
+  function clock(){return new Date().toLocaleTimeString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit"});}
   // A spot on the radio comes on the TV too (Sam: "i didnt see it"): the DJ says which spot and when it started
   // (nowplaying.json spot_id, spot_at); the clip starts when the sound reaches this listener, or partway in if it already has.
   var spotShown=null;
@@ -754,47 +787,88 @@ a.artist{color:#800080}
     spotShown=key;
     var heard=(+n.spot_at||0)*1000+(playing?(lag()+2.5)*1000:0),wait=heard-Date.now(),into=-wait/1000;
     if(into>(a.secs||30)-3)return;                       // over already
-    setTimeout(function(){if(adOn)endAd();tvBreak("spot",a,Math.max(0,into));},Math.max(0,wait));   // the radio's spot comes first, the second of a double too
+    setTimeout(function(){   // the radio's spot comes first, the second of a double too: what is on dips straight into it
+      if(adOn&&adKind==="banner")endAd(true);else if(adOn){gen++;clearTimeout(adTimer);adOn=false;adKind=null;}
+      tvBreak("spot",a,Math.max(0,into));
+    },Math.max(0,wait));
   }
   function tvBreak(kind,item,offset){
     if(adOn||channel===4||document.hidden)return false;
     kind=kind||nextKind();
     if(kind==="banner"&&channel!==2)kind="still";
-    if(kind==="weather"){
-      if(!wxNow)return false;
-      lastWx=Date.now();adOn=true;adKind=kind;hideFeed();showWx();
-      adCap.textContent="Valley weather: the National Weather Service at Van Nuys Airport, and Open-Meteo for the neighborhoods.";
-      adTimer=setTimeout(endAd,WX_SECS*1000);return true;
+    if(kind==="weather"&&!wxNow)return false;
+    var a=null;
+    if(kind!=="weather"){
+      a=item||pickAd(kind==="still"?"img":kind==="photo"?"ken":kind==="banner"?"banner":"v");if(!a)return false;
+      if(kind==="photo")kind="still";   // shown the way a still is; a.ken picks the slow drift
     }
-    var a=item||pickAd(kind==="still"?"img":kind==="photo"?"ken":kind==="banner"?"banner":"v");if(!a)return false;
-    if(kind==="photo")kind="still";   // shown the way a still is; a.ken picks the slow drift
-    adOn=true;adKind=kind;
+    adOn=true;adKind=kind;var g=++gen;
     if(kind==="banner"){
       banner.querySelector("img").src=a.img;banner.classList.toggle("wide",!!a.wide);
       banner.querySelector("span").innerHTML="<b>A WORD FROM THE VALLEY</b><br>"+esc(a.cap)+(a.credit?'<small> '+esc(a.credit)+"</small>":"");
-      banner.hidden=false;void banner.offsetWidth;banner.classList.add("on");
+      banner.hidden=false;wrap.classList.add("bannered");void banner.offsetWidth;banner.classList.add("on");
       adTimer=setTimeout(endAd,BANNER_SECS*1000);return true;
     }
-    hideFeed();adCap.innerHTML="A word from the Valley: "+esc(a.cap)+". "+esc(a.credit||"From old Valley TV, kept by the Internet Archive.");
+    if(kind==="weather")lastWx=Date.now();
+    // In: a dip to black; before a commercial the TV puts on by itself, the station's bumper too (a picture or the weather
+    // is not a break of that kind, and a spot keeps time with the radio, so those go straight on)
+    dip(function(){
+      hideFeed();
+      if(kind==="video")bumper("WE&rsquo;LL BE RIGHT BACK",BUMP_IN,function(){put(kind,a,offset,g);});
+      else put(kind,a,offset,g);
+    });
+    return true;
+  }
+  function put(kind,a,offset,g){   // the break's own picture, up from black once it is really there
+    clearBreak();
+    if(kind==="weather"){
+      showWx();adCap.textContent="Valley weather: the National Weather Service at Van Nuys Airport, and Open-Meteo for the neighborhoods.";
+      lift();adTimer=setTimeout(endAd,WX_SECS*1000);return;
+    }
+    adCap.innerHTML="A word from the Valley: "+esc(a.cap)+". "+esc(a.credit||"From old Valley TV, kept by the Internet Archive.");
     if(kind==="still"){
+      adImg.onload=function(){if(g===gen)lift();};adImg.onerror=function(){if(g===gen)endAd();};
       adImg.src=a.img;adImg.alt=a.cap;adImg.hidden=false;adImg.style.display="inline-block";
       adImg.classList.remove("kb","kb2");void adImg.offsetWidth;
       if(a.ken){adImg.style.setProperty("--ko",Math.round(25+Math.random()*50)+"% "+Math.round(25+Math.random()*50)+"%");adImg.classList.add("kb2");}   // a photograph (Sam, 2026-10-20: "ken burns style")
       else adImg.classList.add("kb");
-      adTimer=setTimeout(endAd,(a.ken?KEN_SECS:STILL_SECS)*1000);return true;
+      if(adImg.complete&&adImg.naturalWidth)lift();
+      adTimer=setTimeout(endAd,(a.ken?KEN_SECS:STILL_SECS)*1000);return;
     }
-    adV.src=a.v;adV.style.display="inline-block";adV.onended=endAd;adV.onerror=endAd;
+    // a commercial: up from black once its frames move (no first frame hanging, no black flash), and out a beat before
+    // its last frame
+    var up=false;
+    adV.onended=function(){endAd();};adV.onerror=function(){endAd();};
+    adV.ontimeupdate=function(){
+      if(!up&&adV.currentTime>(offset||0)+0.05){up=true;lift();}
+      if(up&&adV.duration&&adV.duration-adV.currentTime<DIP/1000+0.05)endAd();
+    };
+    adV.src=a.v;adV.style.display="inline-block";
     if(offset>0)adV.addEventListener("loadedmetadata",function seek(){adV.removeEventListener("loadedmetadata",seek);try{adV.currentTime=offset;}catch(e){}});
-    var pl=adV.play();if(pl&&pl.catch)pl.catch(function(){endAd();});
-    adTimer=setTimeout(endAd,((a.secs||60)-(offset||0))*1000+4000);return true;
+    var pl=adV.play();if(pl&&pl.catch)pl.catch(function(){if(g===gen)endAd();});
+    setTimeout(function(){if(g===gen&&!up)lift();},4000);   // slow to start: up anyway rather than black for long
+    adTimer=setTimeout(endAd,((a.secs||60)-(offset||0))*1000+4000);
   }
-  function endAd(){
-    clearTimeout(adTimer);if(!adOn)return;var k=adKind;adOn=false;adKind=null;
-    if(k==="banner"){banner.classList.remove("on");setTimeout(function(){if(!banner.classList.contains("on"))banner.hidden=true;},600);return;}
-    adV.onended=adV.onerror=null;try{adV.pause();}catch(e){}adV.removeAttribute("src");try{adV.load();}catch(e){}adV.style.display="none";
-    adImg.hidden=true;adImg.style.display="none";adImg.removeAttribute("src");wxCard.hidden=true;adCap.hidden=true;adCap.innerHTML="";cap.hidden=false;
-    wrap.style.display=adShown.wrap;tv.style.display=adShown.tv;
-    if(channel===2&&STILL_HOLD)scheduleCut(1200);   // back from the break on a fresh camera, as TV does
+  function endAd(now){   // now: a channel change, no ceremony
+    clearTimeout(adTimer);var k=adKind,was=adOn;adOn=false;adKind=null;
+    if(k==="banner"||now){banner.classList.remove("on");wrap.classList.remove("bannered");setTimeout(function(){if(!banner.classList.contains("on"))banner.hidden=true;},600);}
+    if(now){gen++;clearBreak();restoreFeed();lift();return;}
+    if(!was||k==="banner")return;
+    // Out: a dip to black, after a commercial the station's bumper with the time, and back up on the program. After the
+    // radio's spot, ask at once whether a second one follows (a double): it dips straight in, no bumper between
+    if(k==="spot")[0,1000,1700].forEach(function(ms){setTimeout(showLiveTrack,ms);});   // and again: with the sound off the TV keeps the DJ's own time, and his next spot starts 1 to 1.5 s after this clip ends (the spot's padding, then his 0.4 s breath)
+    var g=++gen;
+    dip(function(){
+      clearBreak();
+      if(k!=="video"&&k!=="spot")back();
+      else setTimeout(function(){if(g===gen)bumper("SFV.FM &middot; "+clock(),BUMP_OUT,back);},k==="spot"?1900:0);   // after a spot, a beat of black while that answer comes
+    });
+    function back(){
+      if(g!==gen)return;
+      restoreFeed();
+      if(channel===2&&!live.on){doCut();setTimeout(function(){if(g===gen)lift();},700);}   // stills: a fresh camera, under the black
+      else{if(channel===2)scheduleCut(between(CAM_SECS));lift();}   // back to the live picture, which ran on through the break
+    }
   }
   (function feed(wait){setTimeout(function(){tvBreak();feed(between(BREAK_SECS));},wait);})(between([20,45]));
   if(location.hash==="#commercial")setTimeout(function(){tvBreak("video");},2500);   // sfv.fm/#commercial: one right away, to show someone
@@ -1202,7 +1276,7 @@ a.artist{color:#800080}
     if(!chatName){chatWant=v;chatSend("join",{name:v,token:chatToken});}
     else{if(!chatJoined)chatSend("join",{name:chatName,token:chatToken});chatPending=v;chatSend("say",{text:v});}   // back after a reconnect: the name first
     chatIn.value="";});
-  function chatScreen(){var tv=document.getElementById("tv");return tv&&tv.style.display&&tv.style.display!=="none"?tv:document.getElementById("camwrap");}
+  function chatScreen(){return document.getElementById("screen");}   // the picture: one size, whatever is on it
   function chatDocks(r){return window.innerWidth>600&&r.width>0&&window.innerWidth-r.right-16>=316;}
   function chatPlace(){
     var card=document.getElementById("card");
