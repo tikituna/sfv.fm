@@ -69,7 +69,8 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
 <div id="level"><i></i></div>
 <p style="margin:0 0 14px"><font size="2"><b>While I'm on the mic:</b><br>
 <label><input type="radio" name="duck" value="under" id="duck-under"> Fade the music under me</label><br>
-<label><input type="radio" name="duck" value="mix" id="duck-mix"> Keep the music up, just a small dip under my voice</label></font></p>
+<label><input type="radio" name="duck" value="mix" id="duck-mix"> Keep the music up, just a small dip under my voice</label><br>
+<label><input type="radio" name="duck" value="over" id="duck-over"> No dip: the music stays at full, my voice right over it (the RE20)</label></font></p>
 <p><font size="2"><b>Take over from this device</b> <span id="to-who"></span></font></p>
 <p><font size="2" id="to-help">Play your music in a browser tab (Spotify web player, YouTube, anything). Press the button, pick that tab, tick &ldquo;Share tab audio&rdquo;. The station crossfades to you over four seconds; press again to hand it back.</font></p>
 <p class="owner"><font size="2">Your name, so the station can say who has it: <input type="text" id="to-name" placeholder="optional" autocomplete="nickname" style="font:inherit;font-size:15px;border:1px solid #000080;padding:5px;width:45%"></font></p>
@@ -125,7 +126,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
       if(m.type==="status"&&!m.role&&role!=="owner"){role="owner";document.body.classList.add("is-owner");}
       if(m.type==="status"){showAnn(m.announcer);showPeople(m.listeners,m.booth);showLevel(m.meter);takeover=m.takeover||null;showRec(m.rec);applyRec();if(takeover)recState.textContent="("+takeover.who+" has the station)";if(takeover){toWho.textContent="\u2014 "+takeover.who+" is on the air from their device, "+Math.floor(takeover.since/60)+" min";toBtn.textContent=(toMine||takeover.mine)?"Hand it back":(role==="owner"?"End "+takeover.who+"\u2019s takeover":takeover.who+" has the station");}else{toWho.textContent="";toBtn.textContent="Take over";if(toMine&&!toPending)stopTakeover(false);}showVinyl();
         var tblock=!!(takeover&&!toMine&&!takeover.mine&&role!=="owner");if(tblock){toBtn.disabled=true;toBlocked=true;}else if(toBlocked){toBlocked=false;toBtn.disabled=!(ws&&ws.readyState===1&&navigator.mediaDevices&&navigator.mediaDevices.getDisplayMedia);}showNow(m.now);if(m.mic||!micOpening)micOn=!!m.mic;if(m.mic){micOpening=false;clearTimeout(micOpenTimer);}macOn=!!m.macmic;
-        if(m.mic&&!micOpening&&!stream){ws.send(JSON.stringify({type:"mic",on:false}));micOn=false;log("closed a mic this page had lost");}var liveDuck=(micOn||macOn)&&!m.takeover;document.getElementById("duck-"+(liveDuck?(m.music_under?"under":"mix"):duckPref)).checked=true;
+        if(m.mic&&!micOpening&&!stream){ws.send(JSON.stringify({type:"mic",on:false}));micOn=false;log("closed a mic this page had lost");}var liveDuck=(micOn||macOn)&&!m.takeover;document.getElementById("duck-"+(liveDuck?duckOf(m.music_mode||(m.music_under?"under":"mix")):duckPref)).checked=true;
         if(m.station){var st=m.station,lc=m.listeners?(" &middot; "+m.listeners.count+" listening"):"";stAir.innerHTML=st.onair?'<font color="#ff0000">&#9679; ON THE AIR'+lc+'</font>':(st.hold?'OFF THE AIR \u2014 held off until On Air':'OFF THE AIR');stSpot.textContent=st.spotify||"?";roomOn=!!st.room;stRoom.textContent=roomOn?"Room: Spotify on this Mac":"Room: Spotify silent here";stOn.disabled=!st.hold&&st.onair;stOff.disabled=!!st.hold;var ps=[];for(var k in st.pieces)ps.push(k+(st.pieces[k]?" \u2713":" \u2717"));stPieces.textContent=ps.join("  ");}
         if(m.inputs){lastInputs=m;var key=m.inputs.join("|")+"|"+m.input;if(key!==inputsKnown){var chosen=inputsKnown?(inputSel.value||""):savedInput();inputsKnown=key;fillInputs(m,chosen);}}
         var on=micOn||macOn;otherMic=(!on&&m.mic_who)?m.mic_who:"";otherMac=(!on&&!otherMic&&m.macmic_who&&role==="owner")?m.macmic_who:"";
@@ -192,12 +193,14 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   function meter(st){try{var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=ac||new AC();if(ac.state==="suspended")ac.resume();var s2=ac.createMediaStreamSource(st),an=ac.createAnalyser();an.fftSize=512;s2.connect(an);meterNode=s2;var buf=new Uint8Array(an.fftSize);(function tick(){if(!micOn)return;an.getByteTimeDomainData(buf);var p=0;for(var i=0;i<buf.length;i++){var v=Math.abs(buf[i]-128)/128;if(v>p)p=v;}level.style.width=Math.min(100,Math.round(p*140))+"%";requestAnimationFrame(tick);})();}catch(e){}}
   function stopAudio(){clearInterval(pump);pump=null;clearTimeout(micWatch);try{if(rec&&rec.state!=="inactive")rec.stop();}catch(e){}rec=null;try{if(node){node.disconnect();node.onaudioprocess=null;}if(src)src.disconnect();if(meterNode)meterNode.disconnect();if(stream)stream.getTracks().forEach(function(t){t.stop();});}catch(e){}node=src=stream=meterNode=null;level.style.width="0";}
   // fade the music under the mic, or keep it up with the voice on top; remembered here, switchable while the mic is open
-  var duckPref="under";try{duckPref=localStorage.getItem("sfv-booth-duck")==="mix"?"mix":"under";}catch(e){}
+  var DUCKS={under:"the music fades under you",mix:"the music stays up",over:"the music stays at full"};
+  function duckOf(v){return DUCKS[v]?v:"under";}
+  var duckPref="under";try{duckPref=duckOf(localStorage.getItem("sfv-booth-duck"));}catch(e){}
   function micDuck(){return duckPref;}
-  function duckWords(){return duckPref==="mix"?"the music stays up":"the music fades under you";}
+  function duckWords(){return DUCKS[duckPref];}
   document.getElementById("duck-"+duckPref).checked=true;
-  Array.prototype.forEach.call(document.querySelectorAll('input[name="duck"]'),function(r){r.addEventListener("change",function(){if(!r.checked)return;duckPref=r.value==="mix"?"mix":"under";try{localStorage.setItem("sfv-booth-duck",duckPref);}catch(e){}
-    if((micOn||macOn)&&ws&&ws.readyState===1){ws.send(JSON.stringify({type:"micmode",duck:duckPref}));log(duckPref==="mix"?"music back up under the mic":"music fades under the mic");}});});
+  Array.prototype.forEach.call(document.querySelectorAll('input[name="duck"]'),function(r){r.addEventListener("change",function(){if(!r.checked)return;duckPref=duckOf(r.value);try{localStorage.setItem("sfv-booth-duck",duckPref);}catch(e){}
+    if((micOn||macOn)&&ws&&ws.readyState===1){ws.send(JSON.stringify({type:"micmode",duck:duckPref}));log({under:"music fades under the mic",mix:"music back up under the mic, a small dip",over:"music at full, no dip"}[duckPref]);}});});
   var hereIn=document.getElementById("here-in"),hereStudio=document.getElementById("here-studio");
   try{hereStudio.checked=localStorage.getItem("sfv-booth-studio")==="1";}catch(e){}
   function hereFill(){if(!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return;
