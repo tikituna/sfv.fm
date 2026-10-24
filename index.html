@@ -1072,6 +1072,33 @@ a.artist{color:#800080}
   function albumWiki(n,f){var a=cleanAlbum(f&&f.album||n.album);if(!a)return Promise.reject(0);
     return wikiFromPointer(f||{}).then(function(j){if(!fits(n.artist,j))throw 0;return j;}).catch(function(){var tries=[a+" ("+n.artist+" album)",a+" (album)",a];
       return tries.reduce(function(pr,t){return pr.catch(function(){return wikiSummary(t).then(function(j){if(!/album|EP|soundtrack|compilation/i.test(j.description||"")||!fits(n.artist,j))throw 0;return j;});});},Promise.reject(0));});}
+  // A program on the air (Sam, 2026-10-23: "when Spotify is playing but overwritten by a scheduled program, we shouldn't
+  // show the Spotify playing now but instead should have thinking allowed as the popup thing with info about it with a
+  // picture"): the card is the program's, not the record paused under it. The picture is the Internet Archive's thumbnail
+  // for an archive.org program, YouTube's for a YouTube one, else the station's tower; the words are the Archive's own
+  // description (made plain text by DOMParser, which runs no scripts and loads no pictures), else Phil's intro.
+  function programCard(n){
+    var key="program|"+(n.program_id||n.program);cardClosed=false;cardKey=key;lastTrack=n;
+    if(cardCache[key]){openCard(cardCache[key]);return;}
+    var src=n.program_source||"",ia=(src.match(/archive\.org\/details\/([^\/?#]+)/)||[])[1],yt=(src.match(/[?&]v=([\w-]{11})/)||src.match(/youtu\.be\/([\w-]{11})/)||[])[1];
+    var pic=ia?"https://archive.org/services/img/"+encodeURIComponent(ia):yt?"https://i.ytimg.com/vi/"+yt+"/hqdefault.jpg":"images/favicon.svg";
+    var intro=(n.program_intro||"").replace(/^San Fernando Valley Radio\.\s*/,"");
+    function draw(about){
+      var html='<img src="'+esc(pic)+'" width="56" height="56" alt="" style="object-fit:cover"><b>'+esc(n.program)+"</b><br>"+(n.program_secs?Math.round(n.program_secs/60)+" minutes, ":"")+"on the air now";
+      if(about)html+='<p style="margin:6px 0 4px">'+esc(about)+"</p>";
+      if(n.program_credit)html+='<p style="margin:4px 0"><font size="1">'+esc(n.program_credit)+"</font></p>";
+      if(src)html+='<font size="1"><a href="'+esc(src)+'">'+(ia?"At the Internet Archive":yt?"On YouTube":"Where it comes from")+"</a></font>";
+      return html+'<div style="clear:both"></div>';
+    }
+    if(!ia){cardCache[key]=draw(intro);openCard(cardCache[key]);return;}
+    openCard(draw(intro||"Looking that up\u2026"));
+    fetch("https://archive.org/metadata/"+encodeURIComponent(ia)+"/metadata").then(function(r){return r.json();}).then(function(j){
+      var d=j&&j.result&&j.result.description;if(Array.isArray(d))d=d.join(" ");
+      var text=d?(new DOMParser().parseFromString(String(d).replace(/<br\s*\/?>|<\/(p|div|li|h\d)>/gi," "),"text/html").body.textContent||"").replace(/Published on \w+ \d+, \d{4}/,"").replace(/\s+/g," ").trim():"";   // line breaks kept as spaces; no upload date
+      if(text.length>460)text=text.slice(0,460).replace(/\s\S*$/,"")+"\u2026";
+      return text||intro;
+    }).catch(function(){return intro;}).then(function(about){cardCache[key]=draw(about);if(!cardClosed&&cardKey===key)openCard(cardCache[key]);});
+  }
   function recordCard(n){
     var key=n.artist+"|"+n.title;cardClosed=false;cardKey=key;lastTrack=n;
     if(cardCache[key]){openCard(cardCache[key]);return;}
@@ -1091,7 +1118,7 @@ a.artist{color:#800080}
   }
   document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a.record");if(a){e.preventDefault();if(lastTrack)recordCard(lastTrack);}});
   window.sfvLive={el:liveEl,lag:lag,retune:retune,toggle:function(){btn.click();},hush:function(){off();},tuneTo:function(c){liveCfg=c;checkLive();},state:function(){return {isLive:isLive,playing:playing,studio:studio,lag:lag(),paused:liveEl.paused,t:liveEl.currentTime,label:document.getElementById("radiolabel").textContent};}};
-  function showLiveTrack(){if(!liveCfg||!liveCfg.nowplaying)return;fetch(liveCfg.nowplaying+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(n){if(!isLive)return;if(n&&n.spot_id)tvSpot(n);document.getElementById("tune-now").textContent=n&&n.title?"Now: "+n.artist+" \u2013 "+n.title:n&&n.program?"Now: "+n.program:n&&n.vinyl?"Now: Live vinyl":"";var line="LIVE from Berry Drive, Studio City. ";if(n&&n.title){var extra=n.url?' &middot; <a href="'+esc(n.url)+'">Open in Spotify</a>':"";line+=(n.art?'<img src="'+esc(n.art)+'" width="18" height="18" alt="" style="vertical-align:-3px;border:1px solid #000080"> ':"")+'<a href="#" target="_self" class="artist" data-artist="'+esc(n.artist)+'" data-extra="'+esc(extra)+'">'+esc(n.artist)+"</a> \u2013 "+esc(n.title)+' &middot; <a href="#" target="_self" class="record">The record</a>';}else if(n&&n.program){line+="On the air: <b>"+esc(n.program)+"</b>"+(n.program_credit?". "+esc(n.program_credit):"")+".";}else if(n&&n.spot){line+="A word from the Valley: "+esc(n.spot)+".";}else if(n&&n.vinyl){line+="On the turntable: <b>"+esc(n.host||"Live vinyl")+"</b>, a record playing right now.";}else if(n&&n.host){line+=esc(n.host)+" has the station, from their own device.";}else{line+="Sam is on the air.";}var html=line+'';if(html===pendingLine)return;pendingLine=html;var wait=playing&&!liveEl.paused?Math.min(30,Math.round(lag())+3)*1000:0;var key=n&&n.title?(n.artist+"|"+n.title):"";setTimeout(function(){if(isLive&&pendingLine===html){now.innerHTML=html;if(key&&key!==cardKey){cardKey=key;lastTrack=n;if(!cardClosed)recordCard(n);}}},wait);}).catch(function(){});}
+  function showLiveTrack(){if(!liveCfg||!liveCfg.nowplaying)return;fetch(liveCfg.nowplaying+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(n){if(!isLive)return;if(n&&n.spot_id)tvSpot(n);document.getElementById("tune-now").textContent=n&&n.title?"Now: "+n.artist+" \u2013 "+n.title:n&&n.program?"Now: "+n.program:n&&n.vinyl?"Now: Live vinyl":"";var line="LIVE from Berry Drive, Studio City. ";if(n&&n.title){var extra=n.url?' &middot; <a href="'+esc(n.url)+'">Open in Spotify</a>':"";line+=(n.art?'<img src="'+esc(n.art)+'" width="18" height="18" alt="" style="vertical-align:-3px;border:1px solid #000080"> ':"")+'<a href="#" target="_self" class="artist" data-artist="'+esc(n.artist)+'" data-extra="'+esc(extra)+'">'+esc(n.artist)+"</a> \u2013 "+esc(n.title)+' &middot; <a href="#" target="_self" class="record">The record</a>';}else if(n&&n.program){line+="On the air: <b>"+esc(n.program)+"</b>"+(n.program_credit?". "+esc(n.program_credit):"")+".";}else if(n&&n.spot){line+="A word from the Valley: "+esc(n.spot)+".";}else if(n&&n.vinyl){line+="On the turntable: <b>"+esc(n.host||"Live vinyl")+"</b>, a record playing right now.";}else if(n&&n.host){line+=esc(n.host)+" has the station, from their own device.";}else{line+="Sam is on the air.";}var html=line+'';if(html===pendingLine)return;pendingLine=html;var wait=playing&&!liveEl.paused?Math.min(30,Math.round(lag())+3)*1000:0;var key=n&&n.title?(n.artist+"|"+n.title):n&&n.program?("program|"+(n.program_id||n.program)):"";setTimeout(function(){if(isLive&&pendingLine===html){now.innerHTML=html;if(key&&key!==cardKey){cardKey=key;lastTrack=n;if(!cardClosed)(n.title?recordCard:programCard)(n);}}},wait);}).catch(function(){});}
   function goLive(){if(isLive)return;isLive=true;pendingLine="";setTimeout(autoSound,0);showLiveTrack();clearInterval(npTimer);npTimer=setInterval(showLiveTrack,10000);if(playing){music.pause();voice.pause();tune().catch(function(){});}now.innerHTML="LIVE from Berry Drive, Studio City. Sam is on the air.";document.getElementById("host").textContent="Sam Sugarman, live from Berry Drive";}
   function endLive(){if(!isLive)return;isLive=false;hideTune();clearInterval(npTimer);closeCard();cardKey="";liveEl.pause();liveEl.removeAttribute("src");liveEl.load();document.getElementById("host").textContent="Phil Landers and Carol Reyes";if(playing){if(SCHEDULE){music.currentTime=secondsToday()%program.duration;music.play().catch(function(){});showNow();}else{playing=false;label(false);now.textContent="Sam has left the air. The recorded program is parked for now.";}}}
   // Live sound must stay at the live edge. A pause from the lock screen, a phone call or a slow link leaves the
