@@ -191,7 +191,20 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
   }
   // the level bar: an analyser on the side, harmless if the phone keeps it asleep
   function meter(st){try{var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;ac=ac||new AC();if(ac.state==="suspended")ac.resume();var s2=ac.createMediaStreamSource(st),an=ac.createAnalyser();an.fftSize=512;s2.connect(an);meterNode=s2;var buf=new Uint8Array(an.fftSize);(function tick(){if(!micOn)return;an.getByteTimeDomainData(buf);var p=0;for(var i=0;i<buf.length;i++){var v=Math.abs(buf[i]-128)/128;if(v>p)p=v;}level.style.width=Math.min(100,Math.round(p*140))+"%";requestAnimationFrame(tick);})();}catch(e){}}
-  function stopAudio(){clearInterval(pump);pump=null;clearTimeout(micWatch);try{if(rec&&rec.state!=="inactive")rec.stop();}catch(e){}rec=null;try{if(node){node.disconnect();node.onaudioprocess=null;}if(src)src.disconnect();if(meterNode)meterNode.disconnect();if(stream)stream.getTracks().forEach(function(t){t.stop();});}catch(e){}node=src=stream=meterNode=null;level.style.width="0";}
+  // OFF MIC (Sam, 2026-10-23: "the mic is cutting off when I record live. It cuts it off sooner"): the recorder still holds
+// the last moment of what was said (Safari close to a second), and hands it over only after it is asked to stop. So the
+// close waits for that last piece, sends it, and only then tells the Mac the mic is off and lets go of the microphone;
+// before, the off went first and the last piece was dropped here and there.
+function finishMic(){
+  if(!micOn||micBtn.disabled)return;
+  var r=rec,done=false;micBtn.disabled=true;micBtn.textContent="closing…";
+  function close(){if(done)return;done=true;if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"mic",on:false}));micOn=false;stopAudio();
+    micBtn.disabled=false;micBtn.className="big";micBtn.textContent="ON MIC";log("mic closed");}
+  if(r&&r.state!=="inactive"){clearInterval(pump);pump=null;r.addEventListener("stop",function(){setTimeout(close,30);});   // its last data comes just before "stop"
+    try{r.stop();}catch(e){close();return;}setTimeout(close,1500);}                                                          // a recorder that never answers
+  else close();
+}
+function stopAudio(){clearInterval(pump);pump=null;clearTimeout(micWatch);try{if(rec&&rec.state!=="inactive")rec.stop();}catch(e){}rec=null;try{if(node){node.disconnect();node.onaudioprocess=null;}if(src)src.disconnect();if(meterNode)meterNode.disconnect();if(stream)stream.getTracks().forEach(function(t){t.stop();});}catch(e){}node=src=stream=meterNode=null;level.style.width="0";}
   // fade the music under the mic, or keep it up with the voice on top; remembered here, switchable while the mic is open
   var DUCKS={under:"the music fades under you",mix:"the music stays up",over:"the music stays at full"};
   function duckOf(v){return DUCKS[v]?v:"under";}
@@ -220,7 +233,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
     if(otherMac&&!micOn&&!macOn){ws.send(JSON.stringify({type:"macmic",on:false}));log("ended the studio mic");return;}
     if(macOn){ws.send(JSON.stringify({type:"macmic",on:false}));macOn=false;micBtn.className="big";micBtn.textContent="ON MIC";log("Mac mic closed");return;}
     if(inputSel.value!=="phone"&&!micOn){ws.send(JSON.stringify({type:"macmic",on:true,duck:micDuck()}));macOn=true;micBtn.className="big on";micBtn.textContent="OFF MIC \u2014 you are on the air";log("Mac mic open ("+inputSel.value+"), "+duckWords());return;}
-    if(micOn){ws.send(JSON.stringify({type:"mic",on:false}));micOn=false;stopAudio();micBtn.className="big";micBtn.textContent="ON MIC";log("mic closed");return;}
+    if(micOn){finishMic();return;}
     micBtn.disabled=true;micPending=true;
     startAudio().then(function(){ws.send(JSON.stringify({type:"mic",on:true,codec:codec,duck:micDuck(),studio:hereStudio.checked}));micOn=true;micOpening=true;clearTimeout(micOpenTimer);micOpenTimer=setTimeout(function(){micOpening=false;},6000);if(rec)watchMic();micBtn.className="big on";micBtn.textContent="OFF MIC — you are on the air";log("mic open, "+duckWords());}).catch(function(e){log("mic refused: "+(e&&(e.name+" "+e.message)||e));}).then(function(){micPending=false;micBtn.disabled=false;});
   });
