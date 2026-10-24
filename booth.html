@@ -34,6 +34,11 @@ button.rec[aria-pressed=true]{background:#000080;color:#fff}
 body.is-owner td.owner{display:table-cell}
 body.is-owner p.owner{display:block}
 body.is-owner label.owner{display:inline}
+body.is-owner div.owner{display:block}
+.sp-row{display:flex;align-items:center;gap:8px;margin:4px 0;font-size:14px}.sp-row img{width:40px;height:40px;object-fit:cover;border:1px solid #000080;flex:none}
+.sp-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.sp-row button.say{padding:6px 12px;font-size:14px}
+#sp-q,#ask-q{font:inherit;font-size:16px;border:1px solid #000080;padding:7px;width:64%;box-sizing:border-box}
+#ask-log div{margin:4px 0;font-size:14px}#ask-log .you{color:#800080}
 </style>
 </head>
 <body link="#800080" bgcolor="#ffffff" text="#000080" vlink="#ff0000">
@@ -54,6 +59,13 @@ body.is-owner label.owner{display:inline}
 </tr><tr><td colspan="2"><button type="button" class="say rec" id="rec-prev" aria-label="Back" disabled>&laquo; Back</button><button type="button" class="say rec" id="rec-pp" disabled>Play</button><button type="button" class="say rec" id="rec-next" aria-label="Next" disabled>Next &raquo;</button><button type="button" class="say rec" id="rec-shuf" aria-pressed="false" disabled>Shuffle: off</button></td></tr></table>
 <form id="rec-form" novalidate style="margin:0 0 6px"><font size="2"><b>Put on a record.</b> Paste a Spotify link to a song, an album, a playlist or an artist (in the Spotify app: Share, then Copy Link). It plays right away, and goes out whenever the station is on the air.</font><br>
 <input type="url" id="rec-link" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://open.spotify.com/&hellip;" style="margin-top:6px"> <button type="submit" class="say" id="rec-play" disabled>Play it</button><br><font size="2" color="#ff0000" id="rec-msg" aria-live="polite"></font></form>
+<div id="sp" hidden><form id="sp-form" novalidate style="margin:10px 0 4px"><font size="2"><b>Find a record.</b> A song, an album, an artist or a playlist; tap Play to put it on.</font><br>
+<input type="search" id="sp-q" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Steely Dan Aja" style="margin-top:6px"> <button type="submit" class="say" id="sp-go">Search</button></form>
+<div id="sp-results" aria-live="polite"></div></div>
+<div class="owner" style="margin:10px 0 4px"><font size="2"><b>My playlists.</b> <a href="#" target="_self" id="sp-mine">Show them</a> <span id="sp-mine-note"></span></font><div id="sp-mine-list"></div></div>
+<div class="owner"><form id="ask-form" novalidate style="margin:10px 0 4px"><font size="2"><b>Ask for music.</b> In plain words: <i>play Aja</i>, <i>something mellow from the 70s</i>, <i>my Sunday playlist</i>, <i>skip this</i>.</font><br>
+<input type="text" id="ask-q" autocomplete="off" placeholder="What should go on?" style="margin-top:6px"> <button type="submit" class="say" id="ask-go">Ask</button></form>
+<div id="ask-log" aria-live="polite"></div></div>
 <p style="margin:12px 0 4px" class="owner"><font size="2"><b>Announcer</b> <span id="ann-note"></span></font></p>
 <p style="margin:0 0 10px" class="owner"><font size="2">
 <label><input type="radio" name="ann" value="mix" id="ann-mix"> Phil, Carol and Bob (Phil most breaks, Carol about one in four, Bob about one in four when he has his key)</label><br>
@@ -119,6 +131,10 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
         if(m.what==="takeover"){toPending=false;if(toMine)stopTakeover(false);}
         if(m.what==="say")sayBtn.disabled=false;}
       if(m.type==="took"){toPending=false;if(!m.ok){log("someone else has the station; end theirs first");stopTakeover(false);}}
+      if(m.type==="spsearch")spShow(spResults,m);
+      if(m.type==="myplaylists")spShow(spMineList,m);
+      if(m.type==="ask")askShow(m);
+      if(m.type==="status"&&m.spotify!==undefined)spState(m.spotify);
       if(m.type==="records"){clearTimeout(recTimer);recBusy=false;applyRec();
         if(!m.ok){recMsg.textContent=m.msg;log("records: "+m.msg);}
         else{recMsg.textContent="";if(m.do==="play")recLink.value="";if(/^(play|next|previous|resume)$/.test(m.do))setTimeout(function(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"status"}));},1500);}}
@@ -356,6 +372,25 @@ function stopAudio(){clearInterval(pump);pump=null;clearTimeout(micWatch);try{if
   recEl("rec-prev").addEventListener("click",function(){if(recSend({do:"previous"}))log("records: back");});
   recShuf.addEventListener("click",function(){if(recSend({do:"shuffle",on:!recShuffle}))log("records: shuffle "+(recShuffle?"off":"on"));});
   recEl("rec-form").addEventListener("submit",function(e){e.preventDefault();var v=recLink.value.trim();if(!v)return;if(recSend({do:"play",link:v})){log("records: putting on "+v.slice(0,80));recLink.blur();}});
+  // finding music: Spotify's catalog, Sam's own playlists, and asking in words (tools/spotify_api.py, tools/booth_ask.py)
+  var spBox=recEl("sp"),spResults=recEl("sp-results"),spMineList=recEl("sp-mine-list"),spMineNote=recEl("sp-mine-note"),askLog=recEl("ask-log"),spReady="none";
+  var KIND={track:"Song",album:"Album",artist:"Artist",playlist:"Playlist"};
+  function spState(st){spReady=st;spBox.hidden=st==="none";spMineNote.textContent=st==="ready"?"":st==="search"?"(needs one Spotify login on the Mac mini)":"(needs the station\u2019s Spotify keys)";}
+  function spRow(x){var d=document.createElement("div");d.className="sp-row";
+    if(x.art){var im=document.createElement("img");im.src=x.art;im.alt="";im.loading="lazy";d.appendChild(im);}
+    var t=document.createElement("span"),b=document.createElement("b"),f=document.createElement("font");f.size="1";b.textContent=x.name||"";
+    f.textContent=(KIND[x.kind]||"")+(x.by?" \u00b7 "+x.by:"")+(x.tracks?" \u00b7 "+x.tracks+" songs":"");t.appendChild(b);t.appendChild(document.createElement("br"));t.appendChild(f);d.appendChild(t);
+    var p=document.createElement("button");p.type="button";p.className="say";p.textContent="Play";
+    p.addEventListener("click",function(){if(recSend({do:"play",link:x.uri}))log("records: putting on "+(x.name||x.uri));});d.appendChild(p);return d;}
+  function spShow(box,m){box.textContent="";if(!m.ok){var e=document.createElement("font");e.color="#ff0000";e.size="2";e.textContent=m.msg||"Spotify did not answer.";box.appendChild(e);return;}
+    if(!m.items||!m.items.length){box.textContent="Nothing found.";return;}m.items.forEach(function(x){box.appendChild(spRow(x));});}
+  recEl("sp-form").addEventListener("submit",function(e){e.preventDefault();var q=recEl("sp-q").value.trim();if(!q||!ws||ws.readyState!==1)return;
+    ws.send(JSON.stringify({type:"spsearch",q:q}));spResults.textContent="Looking\u2026";recEl("sp-q").blur();});
+  recEl("sp-mine").addEventListener("click",function(e){e.preventDefault();if(!ws||ws.readyState!==1)return;ws.send(JSON.stringify({type:"myplaylists"}));spMineList.textContent="Looking\u2026";});
+  function askLine(cls,s){var d=document.createElement("div");d.className=cls;d.textContent=s;askLog.insertBefore(d,askLog.firstChild);while(askLog.childNodes.length>12)askLog.removeChild(askLog.lastChild);}
+  function askShow(m){recEl("ask-go").disabled=false;askLine("",m.reply||"");}
+  recEl("ask-form").addEventListener("submit",function(e){e.preventDefault();var q=recEl("ask-q").value.trim();if(!q||!ws||ws.readyState!==1)return;
+    ws.send(JSON.stringify({type:"ask",text:q}));askLine("you","You: "+q);recEl("ask-q").value="";recEl("ask-go").disabled=true;});
   stOn.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"station",on:true}));log("On Air: the station comes up within a few seconds");}});
   stOff.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"station",on:false}));log("Off Air: held off until On Air");}});
   stRoom.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"room",on:!roomOn}));log(roomOn?"room: Spotify silent on the Mac":"room: Spotify plays on the Mac too");}});
