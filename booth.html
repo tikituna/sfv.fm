@@ -39,6 +39,9 @@ body.is-owner div.owner{display:block}
 .sp-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.sp-row button.say{padding:6px 12px;font-size:14px}
 #sp-q,#ask-q{font:inherit;font-size:16px;border:1px solid #000080;padding:7px;width:64%;box-sizing:border-box}
 #ask-log div{margin:4px 0;font-size:14px}#ask-log .you{color:#800080}
+#pick{position:fixed;top:0;right:0;bottom:0;left:0;z-index:30;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.78);padding:16px;box-sizing:border-box}#pick[hidden]{display:none}
+#pick .box{background:#fff;border:1px solid #000080;box-shadow:4px 4px 0 #000080;padding:14px 16px;width:min(360px,100%);box-sizing:border-box}
+#pick .box p{margin:12px 0 8px;display:flex;gap:8px;flex-wrap:wrap}#rec-upnext{color:#800080}
 </style>
 </head>
 <body link="#800080" bgcolor="#ffffff" text="#000080" vlink="#ff0000">
@@ -55,7 +58,7 @@ body.is-owner div.owner{display:block}
 <p style="margin:14px 0 4px"><font size="2"><b>Records</b> <span id="rec-state"></span></font></p>
 <table border="0" cellspacing="0" cellpadding="6" width="100%" style="border:1px solid #000080;margin:0 0 8px"><tr>
 <td valign="top" width="74"><img id="rec-art" alt=""></td>
-<td valign="top"><font size="2"><b id="rec-title">&mdash;</b><br><span id="rec-artist"></span><br><font size="1"><span id="rec-album"></span><br><span id="rec-time"></span></font></font></td>
+<td valign="top"><font size="2"><b id="rec-title">&mdash;</b><br><span id="rec-artist"></span><br><font size="1"><span id="rec-album"></span><br><span id="rec-time"></span></font><br><font size="1" id="rec-upnext" hidden></font></font></td>
 </tr><tr><td colspan="2"><button type="button" class="say rec" id="rec-prev" aria-label="Back" disabled>&laquo; Back</button><button type="button" class="say rec" id="rec-pp" disabled>Play</button><button type="button" class="say rec" id="rec-next" aria-label="Next" disabled>Next &raquo;</button><button type="button" class="say rec" id="rec-shuf" aria-pressed="false" disabled>Shuffle: off</button></td></tr></table>
 <form id="rec-form" novalidate style="margin:0 0 6px"><font size="2"><b>Put on a record.</b> Paste a Spotify link to a song, an album, a playlist or an artist (in the Spotify app: Share, then Copy Link). It plays right away, and goes out whenever the station is on the air.</font><br>
 <input type="url" id="rec-link" inputmode="url" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="https://open.spotify.com/&hellip;" style="margin-top:6px"> <button type="submit" class="say" id="rec-play" disabled>Play it</button><br><font size="2" color="#ff0000" id="rec-msg" aria-live="polite"></font></form>
@@ -66,6 +69,9 @@ body.is-owner div.owner{display:block}
 <div class="owner"><form id="ask-form" novalidate style="margin:10px 0 4px"><font size="2"><b>Ask for music.</b> In plain words: <i>play Aja</i>, <i>something mellow from the 70s</i>, <i>my Sunday playlist</i>, <i>skip this</i>.</font><br>
 <input type="text" id="ask-q" autocomplete="off" placeholder="What should go on?" style="margin-top:6px"> <button type="submit" class="say" id="ask-go">Ask</button></form>
 <div id="ask-log" aria-live="polite"></div></div>
+<div id="pick" hidden role="dialog" aria-modal="true" aria-labelledby="pick-name"><div class="box"><b id="pick-name"></b><br><font size="1" id="pick-by"></font>
+<p><button type="button" class="say" id="pick-now">Play now</button><button type="button" class="say" id="pick-next">Play next</button></p>
+<font size="1">Now cuts what is on. Next waits for the end of this song.</font><br><a href="#" target="_self" id="pick-x"><font size="2">Cancel</font></a></div></div>
 <p style="margin:12px 0 4px" class="owner"><font size="2"><b>Announcer</b> <span id="ann-note"></span></font></p>
 <p style="margin:0 0 10px" class="owner"><font size="2">
 <label><input type="radio" name="ann" value="mix" id="ann-mix"> Phil, Carol and Bob (Phil most breaks, Carol about one in four, Bob about one in four when he has his key)</label><br>
@@ -135,6 +141,7 @@ Bob's voice: <select id="bob-voice" style="font:inherit;font-size:15px"><option>
       if(m.type==="myplaylists")spShow(spMineList,m);
       if(m.type==="ask")askShow(m);
       if(m.type==="status"&&m.spotify!==undefined)spState(m.spotify);
+      if(m.type==="status"&&m.upnext!==undefined)showUpNext(m.upnext);
       if(m.type==="records"){clearTimeout(recTimer);recBusy=false;applyRec();
         if(!m.ok){recMsg.textContent=m.msg;log("records: "+m.msg);}
         else{recMsg.textContent="";if(m.do==="play")recLink.value="";if(/^(play|next|previous|resume)$/.test(m.do))setTimeout(function(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:"status"}));},1500);}}
@@ -371,7 +378,7 @@ function stopAudio(){clearInterval(pump);pump=null;clearTimeout(micWatch);try{if
   recEl("rec-next").addEventListener("click",function(){if(recSend({do:"next"}))log("records: next");});
   recEl("rec-prev").addEventListener("click",function(){if(recSend({do:"previous"}))log("records: back");});
   recShuf.addEventListener("click",function(){if(recSend({do:"shuffle",on:!recShuffle}))log("records: shuffle "+(recShuffle?"off":"on"));});
-  recEl("rec-form").addEventListener("submit",function(e){e.preventDefault();var v=recLink.value.trim();if(!v)return;if(recSend({do:"play",link:v})){log("records: putting on "+v.slice(0,80));recLink.blur();}});
+  recEl("rec-form").addEventListener("submit",function(e){e.preventDefault();var v=recLink.value.trim();if(!v)return;recLink.blur();choosePlay({uri:v,name:"The record you pasted",by:v.slice(0,60)});});
   // finding music: Spotify's catalog, Sam's own playlists, and asking in words (tools/spotify_api.py, tools/booth_ask.py)
   var spBox=recEl("sp"),spResults=recEl("sp-results"),spMineList=recEl("sp-mine-list"),spMineNote=recEl("sp-mine-note"),askLog=recEl("ask-log"),spReady="none";
   var KIND={track:"Song",album:"Album",artist:"Artist",playlist:"Playlist"};
@@ -381,7 +388,7 @@ function stopAudio(){clearInterval(pump);pump=null;clearTimeout(micWatch);try{if
     var t=document.createElement("span"),b=document.createElement("b"),f=document.createElement("font");f.size="1";b.textContent=x.name||"";
     f.textContent=(KIND[x.kind]||"")+(x.by?" \u00b7 "+x.by:"")+(x.tracks?" \u00b7 "+x.tracks+" songs":"");t.appendChild(b);t.appendChild(document.createElement("br"));t.appendChild(f);d.appendChild(t);
     var p=document.createElement("button");p.type="button";p.className="say";p.textContent="Play";
-    p.addEventListener("click",function(){if(recSend({do:"play",link:x.uri}))log("records: putting on "+(x.name||x.uri));});d.appendChild(p);return d;}
+    p.addEventListener("click",function(){choosePlay(x);});d.appendChild(p);return d;}
   function spShow(box,m){box.textContent="";if(!m.ok){var e=document.createElement("font");e.color="#ff0000";e.size="2";e.textContent=m.msg||"Spotify did not answer.";box.appendChild(e);return;}
     if(!m.items||!m.items.length){box.textContent="Nothing found.";return;}m.items.forEach(function(x){box.appendChild(spRow(x));});}
   recEl("sp-form").addEventListener("submit",function(e){e.preventDefault();var q=recEl("sp-q").value.trim();if(!q||!ws||ws.readyState!==1)return;
@@ -391,6 +398,20 @@ function stopAudio(){clearInterval(pump);pump=null;clearTimeout(micWatch);try{if
   function askShow(m){recEl("ask-go").disabled=false;askLine("",m.reply||"");}
   recEl("ask-form").addEventListener("submit",function(e){e.preventDefault();var q=recEl("ask-q").value.trim();if(!q||!ws||ws.readyState!==1)return;
     ws.send(JSON.stringify({type:"ask",text:q}));askLine("you","You: "+q);recEl("ask-q").value="";recEl("ask-go").disabled=true;});
+  // Play: now, cutting what is on, or next, at the end of this song (Sam, 2026-10-24: "a popup that sides, que next or override
+  // whats on air now?"); the DJ keeps the up-next (dj.UPNEXT) and the records box shows it with a way to take it back
+  var pickEl=recEl("pick"),pickItem=null,pickBack=null;
+  function choosePlay(x){pickItem=x;pickBack=document.activeElement;recEl("pick-name").textContent=x.name||"";recEl("pick-by").textContent=(KIND[x.kind]?KIND[x.kind]+(x.by?" \u00b7 ":""):"")+(x.by||"");
+    pickEl.hidden=false;recEl("pick-now").focus();}
+  function pickClose(){pickEl.hidden=true;pickItem=null;try{if(pickBack)pickBack.focus();}catch(e){}}
+  recEl("pick-now").addEventListener("click",function(){var x=pickItem;pickClose();if(x&&recSend({do:"play",link:x.uri}))log("records: putting on "+(x.name||x.uri));});
+  recEl("pick-next").addEventListener("click",function(){var x=pickItem;pickClose();if(x&&recSend({do:"queue",link:x.uri,name:x.name||"",by:x.by||""}))log("records: up next, "+(x.name||x.uri));});
+  recEl("pick-x").addEventListener("click",function(e){e.preventDefault();pickClose();});
+  pickEl.addEventListener("click",function(e){if(e.target===pickEl)pickClose();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!pickEl.hidden)pickClose();});
+  var upEl=recEl("rec-upnext");
+  function showUpNext(u){if(!u){upEl.hidden=true;upEl.textContent="";return;}upEl.hidden=false;upEl.textContent="Up next: "+(u.name||"a record")+(u.by?" \u00b7 "+u.by:"")+" ";
+    var a=document.createElement("a");a.href="#";a.target="_self";a.textContent="take it back";a.addEventListener("click",function(e){e.preventDefault();if(recSend({do:"unqueue"}))log("records: up next cleared");});upEl.appendChild(a);}
   stOn.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"station",on:true}));log("On Air: the station comes up within a few seconds");}});
   stOff.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"station",on:false}));log("Off Air: held off until On Air");}});
   stRoom.addEventListener("click",function(){if(ws&&ws.readyState===1){ws.send(JSON.stringify({type:"room",on:!roomOn}));log(roomOn?"room: Spotify silent on the Mac":"room: Spotify plays on the Mac too");}});
