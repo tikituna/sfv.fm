@@ -1,0 +1,23 @@
+{
+ "updated": "2026-10-25",
+ "note": "The SFV News crawl on sfv.fm. Items drop off after their 'until' (Pacific, 24-hour). kind: news, opening, event, tidbit. Checked against each src.",
+ "items": [
+  {"text": "Metro broke ground Oct. 19 on the East San Fernando Valley light rail line linking Van Nuys and Pacoima.", "until": "2026-11-02 00:00", "src": "https://www.metro.net/about/metro-breaks-ground-on-east-san-fernando-valley-light-rail-transit-project-improving-mobility-throughout-san-fernando-valley/", "kind": "news"},
+  {"text": "Hollywood Burbank Airport's new $1.3 billion, 14-gate terminal opened to passengers Oct. 13.", "until": "2026-11-08 00:00", "src": "https://www.nbclosangeles.com/news/local/hollywood-burbank-airport-terminal-ribbon-cutting/3951763/", "kind": "news"},
+  {"text": "L.A. County vote centers are open 10 a.m.-7 p.m. daily, with 523 more opening Oct. 31; Election Day is Nov. 3.", "until": "2026-11-03 20:00", "src": "https://mynewsla.com/government/2026/10/24/early-in-person-voting-begins-saturday-at-123-la-county-vote-centers-2/", "kind": "news"},
+  {"text": "Burbank voters will decide Measure C, a hotel tax increase, and Measures CC and CD on district council elections.", "until": "2026-11-03 20:00", "src": "https://burbankvotes.com/elections/burbank-2026-general/", "kind": "news"},
+  {"text": "Tim Gaspar and Barri Worth Girvan meet in the Nov. 3 runoff for the West Valley's open Council District 3 seat.", "until": "2026-11-03 20:00", "src": "https://abc7.com/post/everything-need-know-los-angeles-city-council-district-3-race/19969732/", "kind": "news"},
+  {"text": "Glendale City Council approved $2.8 million for Beeline bus service changes set to begin in summer 2027.", "until": "2026-11-01 00:00", "src": "https://outlooknewspapers.com/glendalenewspress/news/city-council-approves-2-8m-for-beeline-service-changes/article_675ffe43-aa19-4887-8aa9-2aa2d4ce1902.html", "kind": "news"},
+  {"text": "Charles Maclay Middle School in Pacoima has officially been renamed Glenoaks Academy.", "until": "2026-11-04 00:00", "src": "https://sanfernandosun.com/2026/10/21/local-middle-school-renamed-as-glenoaks-academy-moving-away-from-maclay-name/", "kind": "news"},
+  {"text": "Glendale Community College opened a virtual reality learning center in its Camino Real building.", "until": "2026-11-01 00:00", "src": "https://outlooknewspapers.com/glendalenewspress/news/glendale-community-college-opens-virtual-reality-center/article_54af2381-42b6-43ac-aabd-ac5f7ae31031.html", "kind": "news"},
+  {"text": "Toluca Lake: Bar Harry, a Blondie-inspired cocktail bar on Riverside Drive.", "until": "2026-11-22 00:00", "src": "https://beverlypress.com/2026/10/restaurant-news-713/", "kind": "opening"},
+  {"text": "Downtown Glendale: Bratnbier, a sausage and beer spot on West California Avenue.", "until": "2026-11-22 00:00", "src": "https://www.theinfatuation.com/los-angeles/guides/new-la-restaurants-openings", "kind": "opening"},
+  {"text": "Opening Nov. 7: 'Wonder Lanes,' mid-century bowling signs at Glendale's Museum of Neon Art.", "until": "2026-11-07 00:00", "src": "https://outlooknewspapers.com/glendalenewspress/news/museum-of-neon-art-highlights-mid-century-bowling/article_6d046445-31e5-43a9-a38f-d09f14460734.html", "kind": "event"},
+  {"text": "Fright Fest runs Oct. 29-31 at Six Flags Magic Mountain in Valencia, nightly from 6:30 p.m.", "until": "2026-10-31 23:00", "src": "https://www.sixflags.com/magicmountain/events/fright-fest", "kind": "event"},
+  {"text": "Majo Aguilar plays The Soraya in Northridge on Thursday, Oct. 29, at 8 p.m.; the show is sold out.", "until": "2026-10-29 20:00", "src": "https://thesoraya.org/whats-on/en/majo-aguilar-con-mariachi-y-banda/", "kind": "event"},
+  {"text": "Burbank Town Center hosts Halloween trick-or-treating on Saturday, Oct. 31, from 11 a.m. to 3 p.m.", "until": "2026-10-31 15:00", "src": "https://www.burbanktowncenter.com/events", "kind": "event"},
+  {"text": "Australian troupe Circa brings 'Duck Pond' to The Soraya in Northridge on Sunday, Nov. 1, at 3 p.m.", "until": "2026-11-01 15:00", "src": "https://thesoraya.org/whats-on/en/circa-duck-pond/", "kind": "event"},
+  {"text": "The San Fernando Valley will have its first-ever themed float in the 2027 Rose Parade on New Year's Day.", "src": "https://sanfernandosun.com/2026/10/21/first-ever-valley-themed-float-to-appear-in-2027-rose-parade/", "kind": "tidbit"},
+  {"text": "The Valley Relics Museum at Van Nuys Airport now opens Tuesdays too, 10 to 2.", "src": "https://valleyrelicsmuseum.org/museum/", "kind": "tidbit"}
+ ]
+}

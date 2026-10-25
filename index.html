@@ -133,6 +133,31 @@ a.artist{color:#800080}
 @media (max-height:500px) and (min-width:601px){#chat{right:auto;width:360px;height:calc(100vh - 16px)}}
 
 @media (prefers-reduced-motion:reduce){#chat .bar .dot{animation:none}}
+/* The news crawl (Sam, 2026-10-25: "a cool banner ... like cnn or tbpn have that show some news of the day, weather, grand
+   openings"): items from ticker.json, the weather from the page's own report, this day in the Valley, what's on the air.
+   Where it sits is set by TICKER_AT (?ticker=fold|under|screen|top|bottom to try the others). */
+#ticker{display:flex;align-items:stretch;height:30px;overflow:hidden;background:#000080;color:#fff;font:15px/30px "Times New Roman",Times,serif;
+  border-top:2px solid #ff0000;box-sizing:border-box;text-align:left;user-select:none;-webkit-user-select:none}
+#ticker .tag{flex:none;background:#ff0000;color:#fff;font-weight:bold;letter-spacing:.08em;padding:0 10px;font-size:13px}
+#ticker .tag .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#fff;margin-right:6px;vertical-align:1px;animation:blink 2s ease-in-out infinite}
+#ticker .clock{flex:none;background:#fff;color:#000080;font-weight:bold;padding:0 9px;font-size:13px;border-right:1px solid #000080}
+#ticker .track{position:relative;flex:1;overflow:hidden}
+#ticker .tape{position:absolute;left:0;top:0;white-space:nowrap;will-change:transform}
+#ticker .k{color:#ffe03a;font-weight:bold;font-size:12px;letter-spacing:.1em;margin-right:6px}
+#ticker .sep{color:#ff4a4a;margin:0 14px}
+#ticker a{color:#fff;text-decoration:none}
+#ticker.under{width:640px;max-width:100%;margin:0 auto;border:1px solid #000080;border-top:2px solid #ff0000}
+#ticker.top{width:100%}
+#ticker.screen{position:absolute;left:0;right:0;bottom:0;z-index:4;background:rgba(0,0,128,.9)}
+#ticker.bottom{position:fixed;left:0;right:0;bottom:0;z-index:9;box-shadow:0 -2px 0 rgba(0,0,128,.25)}
+/* fold: full width along the bottom of the first screen, scrolling away with the page (Sam: "at the very bottom before u
+   start scrolling running full width") */
+#ticker.fold{position:relative;margin-left:-8px;margin-right:-8px;z-index:3}
+body.tick-fold #chattab,body.tick-fold #card{bottom:46px}
+body.tick-bottom{padding-bottom:34px}
+body.tick-bottom #chattab,body.tick-bottom #chat,body.tick-bottom #card{bottom:46px}
+@media (max-width:600px){#ticker{font-size:14px}#ticker .clock{display:none}}
+@media (prefers-reduced-motion:reduce){#ticker .tag .dot{animation:none}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.6.16/hls.min.js" defer></script>
 <base target="_blank">
@@ -252,9 +277,16 @@ a.artist{color:#800080}
     }}
     o.putImageData(out,0,0);return off;
   }
-  function draw(img,cam){   // a camera's still, dithered; false when it is the card
+  // A still opens as the plain photo and takes on the two-colour look over STILL_FADE (Sam, 2026-10-25: some cameras
+  // "start way too blue ... id like for it to gradually go into that effect").
+  var STILL_FADE=3000,stillFade=null;
+  function draw(img,cam){   // a camera's still, easing into the dither; false when it is the card
     if(isCard(pixels(img))) return false;
-    canvas.width=640;canvas.height=520;ctx.drawImage(dither(img,320,260),0,0);
+    clearTimeout(stillFade);canvas.width=640;canvas.height=520;
+    var d=dither(img,320,260),t0=Date.now();
+    (function frame(){var t=Math.min(1,(Date.now()-t0)/STILL_FADE);
+      ctx.globalAlpha=1;ctx.drawImage(img,0,0,640,520);ctx.globalAlpha=t*t;ctx.drawImage(d,0,0);ctx.globalAlpha=1;
+      if(t<1)stillFade=setTimeout(frame,80);})();
     cap.textContent=cam.name+", "+new Date().toLocaleTimeString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit"})+" PT";
     return true;
   }
@@ -877,7 +909,7 @@ a.artist{color:#800080}
   // shot runs CAM_SECS (Sam, 2026-10-20: "15 - 30 seconds max") and fades into the look before the next cut. A
   // camera with no video holds its still only STILL_HOLD and is passed over for NOVID_MS; stills are the opener and the
   // fallback, not a shot of their own, while any camera has video.
-  var STILL_HOLD=7000,NOVID_MS=600000,cutTimer=null;
+  var STILL_HOLD=4500,NOVID_MS=600000,cutTimer=null;   // 4.5 s (Sam, 2026-10-25: "if they are stills they shouldnt be on for very long")
   function hasVideo(c){return !!(c&&c.hls)&&!(c.noVid>Date.now())&&!isDark(c);}
   function nextCam(){   // the next camera that is not dark; one with live video, mostly
     var n=cams.length,v=[],st=[];
@@ -897,7 +929,7 @@ a.artist{color:#800080}
     doCut();
   }
   function crossCut(){
-    var to=nextCam(),cam=cams[to],warm=pageLoaded&&hasVideo(cam);
+    clearTimeout(stillFade);var to=nextCam(),cam=cams[to],warm=pageLoaded&&hasVideo(cam);
     if(warm)next.start(cam,function(){},function(){videoFailed(cam);});
     var t0=Date.now();canvas.width=640;canvas.height=360;canvas.style.display="";live.el.style.display="none";
     function frame(){
@@ -1328,6 +1360,55 @@ a.artist{color:#800080}
   window.addEventListener("resize",chatPlace);
   // nothing shows until the chat server has answered: with it down, the page looks as it did before the chat
   function chatStart(url){if(chatUrl)return;chatUrl=url;chatForm();chatConnect();setInterval(chatPlace,1500);}
+})();
+</script>
+<script>
+// ---- the news crawl ----
+(function(){
+  var TICKER_AT="fold", SPEED=70;   // px a second
+  var at=(location.search.match(/[?&]ticker=(fold|under|screen|top|bottom)/)||[])[1]||TICKER_AT;
+  var el=document.createElement("div");el.id="ticker";el.className=at;el.setAttribute("role","marquee");el.setAttribute("aria-label","Valley news");
+  el.innerHTML='<span class="tag"><span class="dot"></span>SFV NEWS</span><span class="clock" id="tick-clock"></span><div class="track"><div class="tape" id="tick-tape"></div></div>';
+  var screen=document.getElementById("screen");
+  if(at==="screen")screen.appendChild(el);
+  else if(at==="top")document.body.insertBefore(el,document.getElementById("listeners-wrap"));
+  else if(at==="bottom"||at==="fold"){document.body.appendChild(el);document.body.classList.add("tick-"+at);}
+  else screen.parentNode.insertAdjacentElement("afterend",el);
+  // fold: in the page at a section break (the page's sections are divided by rules), the last break above the bottom of the
+  // first screen, padded down to sit on that edge; whole sections below it, none cut in half (2026-10-25)
+  var hidHr=null;
+  function placeFold(){if(at!=="fold")return;el.style.marginTop="0";if(hidHr)hidHr.style.display="";
+    var H=window.innerHeight,y=window.scrollY,hrs=[].slice.call(document.querySelectorAll("body>hr")),pick=null;
+    hrs.forEach(function(h){h.style.display="";var t=h.getBoundingClientRect().top+y;if(t<H-30&&t>H*0.35)pick=h;});
+    if(!pick)pick=hrs.filter(function(h){return h.getBoundingClientRect().top+y>=H-30;})[0]||hrs[hrs.length-1];
+    if(pick&&pick!==el.nextSibling)document.body.insertBefore(el,pick);
+    if(pick){pick.style.display="none";hidHr=pick;}   // the crawl is the divider there
+    var top=el.getBoundingClientRect().top+y;el.style.marginTop=Math.max(0,H-30-top)+"px";}
+  placeFold();window.addEventListener("load",placeFold);window.addEventListener("resize",placeFold);setTimeout(placeFold,1500);setTimeout(placeFold,4000);
+  var tape=document.getElementById("tick-tape"),clock=document.getElementById("tick-clock"),items=[],thisday={},x=0,last=0;
+  function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;");}
+  function pacific(){var d=new Date(new Date().toLocaleString("en-US",{timeZone:"America/Los_Angeles"}));
+    function p(n){return String(n).padStart(2,"0");}return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes());}
+  function tick(){clock.textContent=new Date().toLocaleTimeString("en-US",{timeZone:"America/Los_Angeles",hour:"numeric",minute:"2-digit"})+" PT";}
+  var KIND={news:"NEWS",opening:"NOW OPEN",event:"THIS WEEK",tidbit:"VALLEY"};
+  function fill(){   // one pass of the tape, built fresh each time around so the weather and the air stay current
+    var now=pacific(),parts=[];
+    var wx=(document.getElementById("wx")||{}).textContent||"";if(wx&&wx!=="—"&&wx!=="no report")parts.push(["WEATHER",wx]);
+    items.filter(function(i){return !i.until||i.until>now;}).forEach(function(i){parts.push([KIND[i.kind]||"NEWS",i.text,i.src]);});
+    (thisday[now.slice(5,10)]||[]).slice(0,2).forEach(function(i){parts.push(["THIS DAY",i.text]);});
+    var np=((document.getElementById("now")||{}).textContent||"").replace(/^Now playing:\s*/,"").replace(/^LIVE from [^.]*\.\s*/,"").replace(/\s*·\s*The record\s*$/,"");
+    if(np&&/ – /.test(np))parts.push(["ON SFV",np]);   // a record playing, not the "turn the sound on" line
+    parts.push(["LISTEN","sfv.fm, live from Berry Drive in Studio City"]);
+    tape.innerHTML=parts.map(function(p){var t=esc(p[1]);return '<span class="k">'+p[0]+'</span>'+(p[2]?'<a href="'+esc(p[2])+'" target="_blank" rel="noopener">'+t+'</a>':t);}).join('<span class="sep">●</span>')+'<span class="sep">●</span>';
+    x=tape.parentNode.offsetWidth;
+  }
+  function roll(ts){if(last){x-=(ts-last)/1000*SPEED;if(x<-tape.offsetWidth)fill();tape.style.transform="translateX("+x+"px)";}last=ts;requestAnimationFrame(roll);}
+  var still=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function load(){Promise.all([fetch("ticker.json?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).catch(function(){return {items:[]};}),
+      fetch("thisday.json",{cache:"no-store"}).then(function(r){return r.json();}).catch(function(){return {};})])
+    .then(function(r){items=r[0].items||[];thisday=r[1]||{};if(!tape.innerHTML)fill();});}
+  tick();setInterval(tick,10000);load();setInterval(load,600000);
+  if(still){el.querySelector(".track").style.overflowX="auto";}else requestAnimationFrame(roll);
 })();
 </script>
 </body>
