@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="dark">
+  <title>The Library — San Fernando Valley Radio</title>
+  <link rel="stylesheet" href="./library.css">
+  <script defer src="./library.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#library-main">Skip to library</a>
+  <div class="page">
+    <header class="masthead">
+      <a class="station-name" href="https://sfv.fm/"><span class="brand-mark">SFV</span><span class="brand-label">Studio</span></a>
+      <nav class="tabs" aria-label="Booth pages">
+        <button type="button" id="library-tab" class="tab active" aria-current="page">Library</button>
+        <button type="button" id="studio-tab" class="tab">Live controls</button>
+      </nav>
+      <a href="https://sfv.fm/booth.html" class="booth-link">Radio booth <span aria-hidden="true">↗</span></a>
+    </header>
+    <div class="connection-bar">
+      <p><span class="connection-dot" id="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">Finding the library…</span></p>
+      <div class="connection-actions"><button type="button" class="text-button" id="connection-toggle" aria-expanded="false" aria-controls="connection-panel">Library connection</button><button type="button" class="text-button" id="signout" hidden>Sign out</button></div>
+    </div>
+    <section id="connection-panel" class="connection-panel" hidden aria-labelledby="connection-title">
+      <div><h2 id="connection-title">Library connection</h2><p>The files stay on the station computer. Connect to browse and preview them here.</p></div>
+      <form id="connection-form">
+        <label for="server-url">Library address</label><input type="url" id="server-url" placeholder="https://station-computer/library" autocomplete="url" spellcheck="false" required>
+        <label for="password">Booth password</label><input type="password" id="password" autocomplete="current-password" required>
+        <label class="check-label"><input type="checkbox" id="remember-password"> Remember on this browser</label>
+        <button type="submit" id="connect-button" class="primary-button">Connect</button>
+        <p id="connection-message" class="form-message" role="status"></p>
+      </form>
+    </section>
+    <main id="library-main">
+      <section id="library-view" aria-labelledby="page-title">
+        <div class="title-row"><div><h1 id="page-title">Library</h1><p class="intro">Audio, films and images from the station archive.</p></div><button type="button" id="refresh" class="outline-button" disabled>↻ Refresh library</button></div>
+        <div class="stats" aria-label="Library totals">
+          <div><strong id="count-all">—</strong><span>Total files</span></div>
+          <div><strong id="count-audio">—</strong><span>Audio</span></div>
+          <div><strong id="count-video">—</strong><span>Video</span></div>
+          <div><strong id="count-images">—</strong><span>Images &amp; other</span></div>
+        </div>
+        <div class="library-workspace">
+          <aside class="categories" aria-labelledby="collections-title">
+            <h2 id="collections-title" class="eyebrow">Collections</h2>
+            <div id="category-list"><button type="button" class="category active" data-category="" aria-pressed="true"><span>All files</span><span>—</span></button></div>
+            <div class="saved-section"><button type="button" class="category" id="favorites-only" aria-pressed="false"><span>☆ Saved files</span><span id="favorite-count">0</span></button><p>Your saved files stay in this browser.</p></div>
+          </aside>
+          <div class="catalog">
+            <div class="catalog-toolbar">
+            <form class="search-form" role="search"><label class="visually-hidden" for="search">Search the library</label><svg class="search-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input type="search" id="search" placeholder="Search titles, filenames or credits" autocomplete="off"><kbd aria-hidden="true">/</kbd></form>
+            <div class="filters">
+              <label>Type<select id="kind"><option value="">All types</option><option value="audio">Audio</option><option value="video">Video</option><option value="image">Images</option><option value="other">Other files</option></select></label>
+              <label>Rotation<select id="rotation"><option value="">Any rotation</option><option value="yes">In rotation</option><option value="no">Not in rotation</option></select></label>
+              <label>Files<select id="available"><option value="">All files</option><option value="yes">Available here</option><option value="no">Missing here</option></select></label>
+              <label class="sort-label">Sort<select id="sort"><option value="title">Title A–Z</option><option value="newest">Newest files</option><option value="oldest">Oldest files</option><option value="longest">Longest first</option><option value="shortest">Shortest first</option></select></label>
+            </div>
+            </div>
+            <div class="results-header"><h2 id="collection-title">All files</h2><span id="result-count" role="status">Connect to load the archive</span></div>
+            <div id="catalog-message" class="catalog-message"><span class="message-symbol" aria-hidden="true">↳</span><h3>Your station’s collection.</h3><p>Connect to the library to see the audio, videos and images already on the station computer.</p><button type="button" class="outline-button" id="empty-connect">Open library connection</button></div>
+            <div id="table-wrap" class="table-wrap" hidden><table><thead><tr><th scope="col">Name</th><th scope="col" class="type-column">Type</th><th scope="col" class="duration-column">Duration</th><th scope="col" class="rotation-column">Rotation</th><th scope="col" class="save-column"><span class="visually-hidden">Saved</span></th></tr></thead><tbody id="file-list"></tbody></table></div>
+            <div class="pagination" id="pagination" hidden><button type="button" class="outline-button" id="previous-page">← Previous</button><span id="page-count"></span><button type="button" class="outline-button" id="next-page">Next →</button></div>
+          </div>
+        </div>
+        <p id="catalog-note" class="catalog-note"></p>
+      </section>
+      <section id="studio-view" hidden aria-labelledby="studio-title">
+        <div class="title-row"><div><h1 id="studio-title">Live controls</h1><p class="intro">Radio, live streams and the current picture.</p></div><button type="button" class="outline-button" id="studio-refresh" disabled>↻ Check status</button></div>
+        <p id="studio-status" class="studio-status" role="status">Connect to the library to check the studio.</p>
+        <div id="studio-content" class="studio-grid">
+          <section class="studio-card"><span class="eyebrow">Main canvas</span><h2>YouTube Live</h2><p id="youtube-status" class="stream-status">Status unavailable</p><p id="youtube-detail" class="stream-detail">Waiting for the studio connection.</p><div class="detail-actions"><button type="button" class="primary-button" id="start-youtube" disabled>Start YouTube</button><button type="button" class="outline-button" id="stop-youtube" disabled>Stop stream</button></div></section>
+          <section class="studio-card"><span class="eyebrow">Vertical canvas</span><h2>Vertical Live</h2><p id="vertical-status" class="stream-status">Status unavailable</p><p id="vertical-detail" class="stream-detail">Waiting for the studio connection.</p><div class="detail-actions"><button type="button" class="primary-button" id="start-vertical" disabled>Start vertical</button><button type="button" class="outline-button" id="stop-vertical" disabled>Stop stream</button></div></section>
+          <section class="studio-card scene-card"><span class="eyebrow">OBS</span><h2>Current scene</h2><p id="scene-status" class="stream-status">Status unavailable</p><form id="scene-form"><label class="visually-hidden" for="scene-select">Scene to switch to</label><select id="scene-select" disabled><option value="">No scenes available</option></select><button type="submit" class="outline-button" id="set-scene" disabled>Switch scene</button></form><p class="stream-detail">Switching scenes changes the main live picture.</p></section>
+          <section class="studio-card"><span class="eyebrow">Radio &amp; microphone</span><h2>On the air</h2><p class="stream-detail">Open the radio booth for records, the announcer and station controls. Use the RE20 bar below to go on air. The original local panel is also available.</p><div class="studio-links"><a href="https://sfv.fm/booth.html" class="outline-button">Open radio booth ↗</a><a href="http://127.0.0.1:4410/onair.html" class="outline-button" target="_blank" rel="noopener noreferrer">Original RE20 panel ↗</a></div></section>
+        </div>
+      </section>
+    </main>
+    <footer><span>San Fernando Valley Radio</span><span>The booth / Media &amp; broadcast</span><a href="https://sfv.fm/">sfv.fm ↗</a></footer>
+  </div>
+  <section id="mic-strip" class="mic-strip" aria-labelledby="mic-strip-title">
+    <div class="mic-strip-inner">
+      <div class="mic-identity"><span class="mic-status-light" id="mic-status-light" aria-hidden="true"></span><div><h2 id="mic-strip-title">RE20 <span>Studio microphone</span></h2><p id="mic-status" role="status">Sign in to control the mic.</p></div></div>
+      <p class="mic-hint">Run <strong>SFV On Air</strong> on your Mac to send Apollo / RE20 audio.<span><kbd>Space</kbd> toggle · <kbd>Esc</kbd> off</span></p>
+      <label class="mic-dip-label" for="mic-dip">Music dip<select id="mic-dip" disabled><option value="-6">−6 dB</option><option value="-10" selected>−10 dB</option><option value="-14">−14 dB</option><option value="-20">−20 dB</option></select></label>
+      <button type="button" id="mic-toggle" class="mic-toggle" aria-pressed="false" disabled><span class="mic-button-light" aria-hidden="true"></span><span id="mic-button-text">Go on air</span></button>
+    </div>
+  </section>
+  <dialog id="file-dialog" aria-labelledby="detail-title">
+    <div class="detail-head"><span class="eyebrow" id="detail-category">File details</span><button type="button" id="close-detail" class="text-button" aria-label="Close file details">Close ×</button></div>
+    <div class="detail-body"><p class="detail-kind" id="detail-kind"></p><h2 id="detail-title"></h2><div id="preview" class="preview"></div><p id="preview-status" class="preview-status" role="status"></p><div class="detail-actions"><a id="download" class="primary-button" hidden target="_blank" rel="noopener noreferrer">Open file ↗</a><button type="button" class="outline-button" id="detail-save">☆ Save file</button><button type="button" class="outline-button" id="copy-reference">Copy reference</button></div><p class="copy-status" id="copy-status" role="status"></p><dl id="metadata" class="metadata"></dl><p class="preview-note">Previews play on this device. Nothing here changes what is on the air.</p></div>
+  </dialog>
+</body>
+</html>
