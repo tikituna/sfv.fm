@@ -1377,7 +1377,11 @@ body.tick-bottom #chattab,body.tick-bottom #chat,body.tick-bottom #card{bottom:4
   // fold: in the page at a section break (the page's sections are divided by rules), the last break above the bottom of the
   // first screen, padded down to sit on that edge; whole sections below it, none cut in half (2026-10-25)
   var hidHr=null;
-  function placeFold(){if(at!=="fold")return;el.style.marginTop="0";if(hidHr)hidHr.style.display="";
+  // On a phone the section break above the fold is the one before the sponsors, which would push them out of the first
+  // screen (Sam, 2026-10-25), so there the crawl is pinned to the bottom edge instead, over the page.
+  var phone=window.matchMedia?matchMedia("(max-width:600px)"):{matches:false};
+  function placeFold(){if(at!=="fold")return;el.style.marginTop="0";if(hidHr){hidHr.style.display="";hidHr=null;}
+    el.className=phone.matches?"bottom":"fold";document.body.classList.toggle("tick-bottom",phone.matches);if(phone.matches)return;
     var H=window.innerHeight,y=window.scrollY,hrs=[].slice.call(document.querySelectorAll("body>hr")),pick=null;
     hrs.forEach(function(h){h.style.display="";var t=h.getBoundingClientRect().top+y;if(t<H-30&&t>H*0.35)pick=h;});
     if(!pick)pick=hrs.filter(function(h){return h.getBoundingClientRect().top+y>=H-30;})[0]||hrs[hrs.length-1];
