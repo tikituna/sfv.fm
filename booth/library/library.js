@@ -55,7 +55,7 @@
     renderStats(false); renderCategories(); render(); notifyConnection();
     $('connect-button').disabled = true;
     $('connection-message').textContent = 'Connecting…';
-    connected(false, 'Connecting to the library…');
+    connected(false, 'Connecting to the station…');
     try {
       var response = await fetch(nextBase + '/api/session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: password }), cache: 'no-store', signal: AbortSignal.timeout(20000) });
       if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'That password was not accepted.' : 'The library could not sign you in (' + response.status + ').');
@@ -71,7 +71,7 @@
       $('connection-message').textContent = '';
       $('connection-panel').hidden = true;
       $('connection-toggle').setAttribute('aria-expanded', 'false');
-      connected(true, 'Connected to the station library');
+      connected(true, 'Connected to the station');
       notifyConnection();
       await loadCatalog(false);
     } catch (e) {
@@ -109,7 +109,7 @@
       $('catalog-note').textContent = (data.location ? 'Files on ' + data.location + '. ' : '') + 'Catalog checked ' + new Date().toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) + '. ' + (missing ? count(missing) + ' listed ' + (missing === 1 ? 'file is' : 'files are') + ' not available on this computer.' : 'All listed files are available on this computer.');
       if (data.scanning) $('catalog-note').textContent += ' A folder scan is still running; refresh again shortly for new files.';
       if (Array.isArray(data.warnings) && data.warnings.length) $('catalog-note').textContent += ' ' + data.warnings.map(function (warning) { return typeof warning === 'string' ? warning : warning.message || ''; }).filter(Boolean).join(' ');
-      connected(true, 'Connected to the station library');
+      connected(true, 'Connected to the station');
     } catch (e) {
       if (serial !== state.requestSerial) return;
       if (!state.items.length) showMessage('The library could not load.', e.message, 'Try again', function () { loadCatalog(false); });
@@ -185,6 +185,14 @@
       var lengthCell = el('td', 'duration-column', duration(item.seconds));
       var rotationCell = el('td', 'rotation-column'); var rotation = rotationOf(item); rotationCell.append(el('span', 'rotation-label' + (rotation ? ' in-rotation' : ''), rotation ? 'In rotation' : '—')); if (rotation) rotationCell.title = rotation;
       var saveCell = el('td'); var save = el('button', 'save-button', favorites.has(item.id) ? '★' : '☆'); save.type = 'button'; save.setAttribute('aria-label', (favorites.has(item.id) ? 'Unsave ' : 'Save ') + item.title); save.setAttribute('aria-pressed', String(favorites.has(item.id))); save.addEventListener('click', function () { toggleFavorite(item); }); saveCell.append(save);
+      if (item.available && ['audio', 'video'].includes(item.kind)) {
+        var playbackActions = el('span', 'file-play-actions');
+        ['play_now', 'play_next'].forEach(function (action) {
+          var play = el('button', 'file-play-button', action === 'play_now' ? 'Play now' : 'Play next'); play.type = 'button'; play.dataset.controlAction = action; play.dataset.itemId = item.id; play.disabled = !window.sfvControl || !window.sfvControl.can(action); play.setAttribute('aria-label', (action === 'play_now' ? 'Play now: ' : 'Play next: ') + item.title); play.title = 'Changes the station program';
+          play.addEventListener('click', function () { if (window.sfvControl) window.sfvControl.play(action, item); }); playbackActions.append(play);
+        });
+        labels.append(playbackActions);
+      }
       row.append(titleCell, kindCell, lengthCell, rotationCell, saveCell); fragment.append(row);
     });
     $('file-list').replaceChildren(fragment);
@@ -205,7 +213,7 @@
     $('detail-title').textContent = item.title;
     $('preview-status').textContent = item.available ? 'Loading preview…' : 'This file is listed in the archive but is not on this computer.';
     $('copy-status').textContent = '';
-    updateDetailSave(); $('metadata').replaceChildren();
+    updateDetailSave(); $('metadata').replaceChildren(); document.dispatchEvent(new CustomEvent('sfv-library-selection', { detail: { item: item } }));
     metadata('File', item.file || 'Not recorded'); metadata('Collection', humanize(item.category)); metadata('Availability', item.available ? 'Available on this computer' : 'Missing on this computer'); metadata('Size', bytes(item.bytes)); if (item.seconds) metadata('Length', duration(item.seconds)); if (item.year) metadata('Year', String(item.year)); metadata('Modified', formatDate(item.modified)); metadata('Credit', String(item.credit || 'Not recorded')); metadata('Source rights note', String(item.rights || 'Not recorded')); var source = safeURL(item.source_url); if (item.source_url) metadata('Source', String(item.source_url), source); metadata('Rotation', rotationOf(item) || 'Not in rotation'); if (item.schedule) metadata('Schedule', String(item.schedule)); if (item.business) metadata('Business', String(item.business));
     if (!$('file-dialog').open) $('file-dialog').showModal();
     $('close-detail').focus();
@@ -225,8 +233,12 @@
     } catch (e) { if (serial === state.previewSerial) $('preview-status').textContent = e.message; }
   }
 
-  function selectTab(name) { var library = name !== 'studio'; $('library-view').hidden = !library; $('studio-view').hidden = library; $('library-tab').classList.toggle('active', library); $('studio-tab').classList.toggle('active', !library); (library ? $('library-tab') : $('studio-tab')).setAttribute('aria-current', 'page'); (library ? $('studio-tab') : $('library-tab')).removeAttribute('aria-current'); document.title = (library ? 'The Library' : 'The Studio') + ' — San Fernando Valley Radio'; updateStudioPolling(); }
-  $('library-tab').addEventListener('click', function () { selectTab('library'); }); $('studio-tab').addEventListener('click', function () { selectTab('studio'); });
+  function selectTab(name) {
+    if (!['onair', 'library', 'studio', 'spotify', 'radio'].includes(name)) name = 'onair';
+    ['onair', 'library', 'studio', 'spotify', 'radio'].forEach(function (tab) { var active = tab === name; $(tab + '-view').hidden = !active; $(tab + '-tab').classList.toggle('active', active); if (active) $(tab + '-tab').setAttribute('aria-current', 'page'); else $(tab + '-tab').removeAttribute('aria-current'); });
+    document.title = ({ onair: 'Control room', library: 'Library', studio: 'Live controls', spotify: 'Spotify preview', radio: 'Radio booth' }[name]) + ' — San Fernando Valley Radio'; updateStudioPolling(); document.dispatchEvent(new CustomEvent('sfv-booth-tab', { detail: { tab: name } }));
+  }
+  ['onair', 'library', 'studio', 'spotify', 'radio'].forEach(function (name) { $(name + '-tab').addEventListener('click', function () { selectTab(name); }); });
   $('connection-toggle').addEventListener('click', function () { var hidden = !$('connection-panel').hidden; $('connection-panel').hidden = hidden; $('connection-toggle').setAttribute('aria-expanded', String(!hidden)); });
   $('empty-connect').addEventListener('click', function () { openConnection(true); });
   $('connection-form').addEventListener('submit', function (event) { event.preventDefault(); login($('password').value, $('remember-password').checked); });
@@ -316,7 +328,7 @@
     $('mic-dip').disabled = !state.token || !available || micCommandBusy || !!(data && data.transitioning);
     $('mic-button-text').textContent = canStop ? 'Take off air' : micCommandBusy || data && data.transitioning ? 'Changing…' : 'Go on air';
     $('mic-status').textContent = message || (!state.token ? 'Sign in to control the mic.' : !data ? 'Connecting to the mic…' : data.transitioning ? (live ? 'Fading onto the air…' : 'Fading off the air…') : live ? 'ON AIR · mic route open' : data.sender_ready === false ? 'Open SFV On Air on your Mac' : !available ? data.error || 'Mic unavailable' : data.sender_ready !== true ? 'Off air · sender status unknown' : data.on === false ? 'Ready · off air' : 'Mic status unavailable');
-    if (live && !micCommandBusy && data && [-6, -10, -14, -20].includes(Number(data.dip_db)) && document.activeElement !== $('mic-dip')) $('mic-dip').value = String(data.dip_db);
+    if (live && !micCommandBusy && data && [0, -6, -10, -14, -20].includes(Number(data.dip_db)) && document.activeElement !== $('mic-dip')) $('mic-dip').value = String(data.dip_db);
   }
   function scheduleMicPoll() { clearTimeout(micPollTimer); if (state.token && !document.hidden) micPollTimer = setTimeout(loadMic, micData && (micData.on || micData.transitioning) ? 2000 : 5000); }
   async function loadMic() {
@@ -388,20 +400,20 @@
   });
 
   // Studio controls can share the authenticated library connection without persisting the session token.
-  window.sfvLibrary = { request: request, getBase: function () { return state.base; }, isConnected: function () { return !!state.token; }, selectTab: selectTab };
+  window.sfvLibrary = { request: request, getBase: function () { return state.base; }, getGeneration: function () { return state.requestSerial; }, isConnected: function () { return !!state.token; }, getSelected: function () { return state.selected; }, selectTab: selectTab };
 
   async function initialize() {
     var storedBase = readStored('sfv-library-url');
     try {
       if (storedBase) state.base = normalizedBase(storedBase);
-      else if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) || location.pathname.startsWith('/library/booth/library')) { var marker = location.pathname.indexOf('/booth/library'); state.base = location.origin + (marker >= 0 ? location.pathname.slice(0, marker) : ''); }
+      else if (['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) || location.origin === 'https://otto-macmini.tail26a86d.ts.net:9443' || location.pathname.startsWith('/library/booth/library')) { var marker = location.pathname.indexOf('/booth/library'); state.base = location.origin + (marker >= 0 ? location.pathname.slice(0, marker) : ''); }
       else { var response = await fetch('/live.json', { cache: 'no-store', signal: AbortSignal.timeout(10000) }); if (!response.ok) throw new Error('No station connection found.'); var config = await response.json(); if (config.library) state.base = normalizedBase(config.library); else if (config.booth) { var booth = new URL(config.booth); booth.protocol = booth.protocol === 'wss:' ? 'https:' : booth.protocol === 'ws:' ? 'http:' : booth.protocol; state.base = normalizedBase(booth.origin + '/library'); } }
       $('server-url').value = state.base;
       var password = readStored('sfv-booth-key');
       $('remember-password').checked = !!password;
       if (state.base && password) await login(password, true);
-      else { connected(false, state.base ? 'Sign in to browse the library' : 'Library address needed'); openConnection(false); }
-    } catch (e) { connected(false, 'Library address needed'); $('connection-message').textContent = 'Enter the library address to connect to the station computer.'; openConnection(false); }
+      else { connected(false, state.base ? 'Sign in to control the station' : 'Station address needed'); openConnection(false); }
+    } catch (e) { connected(false, 'Station address needed'); $('connection-message').textContent = 'Enter the library address to connect to the station computer.'; openConnection(false); }
   }
   initialize();
 }());

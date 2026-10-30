@@ -5,29 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="color-scheme" content="dark">
-  <title>The Library — San Fernando Valley Radio</title>
+  <title>Control room — San Fernando Valley Radio</title>
   <link rel="stylesheet" href="./library.css">
+  <link rel="stylesheet" href="./control-room.css">
   <script defer src="./library.js"></script>
+  <script defer src="./control-room.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#library-main">Skip to library</a>
+  <a class="skip-link" href="#library-main">Skip to control room</a>
   <div class="page">
     <header class="masthead">
-      <a class="station-name" href="https://sfv.fm/"><span class="brand-mark">SFV</span><span class="brand-label">Studio</span></a>
+      <a class="station-name" href="https://sfv.fm/"><span class="brand-mark">SFV</span><span class="brand-label">Control room</span></a>
       <nav class="tabs" aria-label="Booth pages">
-        <button type="button" id="library-tab" class="tab active" aria-current="page">Library</button>
+        <button type="button" id="onair-tab" class="tab active" aria-current="page">On air</button>
+        <button type="button" id="library-tab" class="tab">Library</button>
         <button type="button" id="studio-tab" class="tab">Live controls</button>
+        <button type="button" id="spotify-tab" class="tab">Spotify</button>
+        <button type="button" id="radio-tab" class="tab">Radio</button>
       </nav>
-      <a href="https://sfv.fm/booth.html" class="booth-link">Radio booth <span aria-hidden="true">↗</span></a>
+      <a href="https://sfv.fm/booth.html" class="booth-link">Radio <span class="separate-output">(separate output)</span> <span aria-hidden="true">↗</span></a>
     </header>
     <div class="connection-bar">
-      <p><span class="connection-dot" id="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">Finding the library…</span></p>
-      <div class="connection-actions"><button type="button" class="text-button" id="connection-toggle" aria-expanded="false" aria-controls="connection-panel">Library connection</button><button type="button" class="text-button" id="signout" hidden>Sign out</button></div>
+      <p><span class="connection-dot" id="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">Finding the station…</span></p>
+      <div class="connection-actions"><button type="button" class="text-button" id="connection-toggle" aria-expanded="false" aria-controls="connection-panel">Station connection</button><button type="button" class="text-button" id="signout" hidden>Sign out</button></div>
     </div>
     <section id="connection-panel" class="connection-panel" hidden aria-labelledby="connection-title">
-      <div><h2 id="connection-title">Library connection</h2><p>The files stay on the station computer. Connect to browse and preview them here.</p></div>
+      <div><h2 id="connection-title">Station connection</h2><p>Connect to the station computer to mix the program, choose what plays next and go live.</p></div>
       <form id="connection-form">
-        <label for="server-url">Library address</label><input type="url" id="server-url" placeholder="https://station-computer/library" autocomplete="url" spellcheck="false" required>
+        <label for="server-url">Station address</label><input type="url" id="server-url" placeholder="https://station-computer/library" autocomplete="url" spellcheck="false" required>
         <label for="password">Booth password</label><input type="password" id="password" autocomplete="current-password" required>
         <label class="check-label"><input type="checkbox" id="remember-password"> Remember on this browser</label>
         <button type="submit" id="connect-button" class="primary-button">Connect</button>
@@ -35,7 +40,34 @@
       </form>
     </section>
     <main id="library-main">
-      <section id="library-view" aria-labelledby="page-title">
+      <section id="onair-view" aria-labelledby="onair-title">
+        <div class="title-row control-title"><div><p class="eyebrow">San Fernando Valley Radio / Booth</p><h1 id="onair-title">On air.</h1><p class="intro">Your live program, mixer and scheduled playback.</p></div><span class="console-tag">SFV.FM</span></div>
+        <div class="program-grid">
+          <section class="program-card" aria-labelledby="program-heading">
+            <div class="panel-heading"><h2 id="program-heading" class="eyebrow">Station program · OBS</h2><span id="control-mode" class="mode-badge" data-mode="unknown">State unknown</span></div>
+            <label class="output-label" for="control-target">Playback output<select id="control-target"><option value="wide">YouTube · wide</option><option value="tall">Vertical · tall</option><option value="all">Both outputs</option></select></label><div class="program-title"><span class="program-symbol" aria-hidden="true">↗</span><div><p class="eyebrow" id="program-label">Waiting for the station</p><h3 id="program-now">Connect to your station.</h3><p id="program-detail">Current program information appears after sign-in.</p></div></div>
+            <div class="program-bottom"><span id="control-observed">No observation yet</span><a class="text-link" href="https://sfv.fm/" target="_blank" rel="noopener noreferrer">Open station ↗</a></div>
+          </section>
+          <section class="takeover-card" aria-labelledby="takeover-heading">
+            <div class="panel-heading"><h2 id="takeover-heading" class="eyebrow">Manual override</h2><span class="step-label">01 / SELECT</span></div>
+            <h3>Take over the schedule.</h3><p>Choose a file in the library and hit <strong>Play now</strong> to take over, or <strong>Play next</strong> to queue it.</p>
+            <div class="takeover-actions"><button type="button" id="choose-track" class="primary-button">Choose a file <span aria-hidden="true">↗</span></button><button type="button" id="return-schedule" class="outline-button" disabled>Return to schedule</button></div>
+            <p class="control-caption" id="override-note">Sign in to check playback controls.</p>
+          </section>
+        </div>
+        <div class="control-notice" id="control-notice" role="status">Sign in to see the station’s observed state.</div>
+        <section class="mixer-panel" aria-labelledby="mixer-title">
+          <div class="mixer-heading"><div><p class="eyebrow">02 / MIX</p><h2 id="mixer-title">The desk</h2></div><label class="fade-label" for="fade-duration">Fade time<select id="fade-duration"><option value="0">Cut · 0 sec</option><option value="1">1 second</option><option value="2" selected>2 seconds</option><option value="4">4 seconds</option></select></label></div>
+          <div class="mixer-channels" id="mixer-channels">
+            <section class="mixer-channel" data-channel="program_wide" aria-labelledby="program-wide-name"><div class="channel-heading"><span class="channel-number">01</span><h3 id="program-wide-name">Main program</h3><span class="channel-state">Unknown</span></div><p class="channel-description">Wide canvas / music &amp; films</p><div class="fader-value"><output for="level-program_wide" id="value-program_wide">—</output><span>dB</span></div><label class="visually-hidden" for="level-program_wide">Main program level in decibels</label><input type="range" id="level-program_wide" min="-60" max="0" step="1" value="-60" disabled><div class="fader-scale" aria-hidden="true"><span>−60</span><span>−30</span><span>0 dB</span></div><button type="button" class="mute-button" id="mute-program_wide" aria-pressed="false" disabled>Mute</button></section>
+            <section class="mixer-channel" data-channel="program_tall" aria-labelledby="program-tall-name"><div class="channel-heading"><span class="channel-number">02</span><h3 id="program-tall-name">Vertical program</h3><span class="channel-state">Unknown</span></div><p class="channel-description">Vertical canvas / music &amp; films</p><div class="fader-value"><output for="level-program_tall" id="value-program_tall">—</output><span>dB</span></div><label class="visually-hidden" for="level-program_tall">Vertical program level in decibels</label><input type="range" id="level-program_tall" min="-60" max="0" step="1" value="-60" disabled><div class="fader-scale" aria-hidden="true"><span>−60</span><span>−30</span><span>0 dB</span></div><button type="button" class="mute-button" id="mute-program_tall" aria-pressed="false" disabled>Mute</button></section>
+            <section class="mixer-channel mic-channel" data-channel="mic" aria-labelledby="mic-channel-name"><div class="channel-heading"><span class="channel-number">03</span><h3 id="mic-channel-name">Microphone</h3><span class="channel-state">Unknown</span></div><p class="channel-description">RE20 / live input</p><div class="fader-value"><output for="level-mic" id="value-mic">—</output><span>dB</span></div><label class="visually-hidden" for="level-mic">Microphone level in decibels</label><input type="range" id="level-mic" min="-60" max="0" step="1" value="-60" disabled><div class="fader-scale" aria-hidden="true"><span>−60</span><span>−30</span><span>0 dB</span></div><button type="button" class="mute-button" id="mute-mic" aria-pressed="false" disabled>Mute</button></section>
+          </div>
+          <p class="mixer-footnote">Faders change the station’s OBS mix. The RE20 bar opens and closes your live mic route. Values are observed settings, not audio meters.</p>
+        </section>
+        <section class="queue-panel" aria-labelledby="queue-title"><div class="panel-heading"><h2 id="queue-title">Up next</h2><span id="queue-count" class="eyebrow">Manual queue</span></div><ol id="control-queue" class="control-queue"><li class="queue-empty">Connect to see the queue.</li></ol><p class="control-caption">The queue belongs to the selected output. Return to schedule resumes its programmed rotation.</p></section>
+      </section>
+      <section id="library-view" hidden aria-labelledby="page-title">
         <div class="title-row"><div><h1 id="page-title">Library</h1><p class="intro">Audio, films and images from the station archive.</p></div><button type="button" id="refresh" class="outline-button" disabled>↻ Refresh library</button></div>
         <div class="stats" aria-label="Library totals">
           <div><strong id="count-all">—</strong><span>Total files</span></div>
@@ -74,8 +106,17 @@
           <section class="studio-card"><span class="eyebrow">Main canvas</span><h2>YouTube Live</h2><p id="youtube-status" class="stream-status">Status unavailable</p><p id="youtube-detail" class="stream-detail">Waiting for the studio connection.</p><div class="detail-actions"><button type="button" class="primary-button" id="start-youtube" disabled>Start YouTube</button><button type="button" class="outline-button" id="stop-youtube" disabled>Stop stream</button></div></section>
           <section class="studio-card"><span class="eyebrow">Vertical canvas</span><h2>Vertical Live</h2><p id="vertical-status" class="stream-status">Status unavailable</p><p id="vertical-detail" class="stream-detail">Waiting for the studio connection.</p><div class="detail-actions"><button type="button" class="primary-button" id="start-vertical" disabled>Start vertical</button><button type="button" class="outline-button" id="stop-vertical" disabled>Stop stream</button></div></section>
           <section class="studio-card scene-card"><span class="eyebrow">OBS</span><h2>Current scene</h2><p id="scene-status" class="stream-status">Status unavailable</p><form id="scene-form"><label class="visually-hidden" for="scene-select">Scene to switch to</label><select id="scene-select" disabled><option value="">No scenes available</option></select><button type="submit" class="outline-button" id="set-scene" disabled>Switch scene</button></form><p class="stream-detail">Switching scenes changes the main live picture.</p></section>
-          <section class="studio-card"><span class="eyebrow">Radio &amp; microphone</span><h2>On the air</h2><p class="stream-detail">Open the radio booth for records, the announcer and station controls. Use the RE20 bar below to go on air. The original local panel is also available.</p><div class="studio-links"><a href="https://sfv.fm/booth.html" class="outline-button">Open radio booth ↗</a><a href="http://127.0.0.1:4410/onair.html" class="outline-button" target="_blank" rel="noopener noreferrer">Original RE20 panel ↗</a></div></section>
+          <section class="studio-card"><span class="eyebrow">Radio &amp; microphone</span><h2>On the air</h2><p class="stream-detail">Open the radio booth for records, the announcer and station controls. Use the RE20 bar below to go on air. The original RE20 panel is available on the station computer.</p><div class="studio-links"><a href="https://sfv.fm/booth.html" class="outline-button">Radio (separate output) ↗</a><a href="http://127.0.0.1:4410/onair.html" class="outline-button" target="_blank" rel="noopener noreferrer">Local RE20 panel ↗</a></div></section>
         </div>
+      </section>
+      <section id="spotify-view" hidden aria-labelledby="spotify-title">
+        <div class="title-row"><div><p class="eyebrow">Reference &amp; discovery</p><h1 id="spotify-title">Spotify, at the booth.</h1><p class="intro">Preview on this device. Find the next thing you want to hear.</p></div><a href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer" class="outline-button">Open Spotify ↗</a></div>
+        <div class="spotify-layout"><section class="spotify-input-panel"><span class="spotify-mark" aria-hidden="true">◉</span><h2>Bring a record along.</h2><p>Paste a Spotify track, album, artist or playlist link to open its official player here.</p><form id="spotify-form"><label for="spotify-url">Spotify link or URI</label><input id="spotify-url" type="text" inputmode="url" placeholder="https://open.spotify.com/track/…" autocomplete="off" spellcheck="false" required><button type="submit" class="primary-button">Load preview <span aria-hidden="true">↗</span></button></form><p id="spotify-message" class="form-message" role="status">The player loads only when you choose a link.</p><p class="spotify-note">This player is for listening on this device. To choose a broadcast file, use <button type="button" id="spotify-library" class="text-button">the station library</button>.</p></section><section class="spotify-player-panel" aria-labelledby="spotify-player-title"><div class="panel-heading"><h2 id="spotify-player-title" class="eyebrow">Preview on this device</h2><button type="button" id="spotify-clear" class="text-button" hidden>Close player ×</button></div><div id="spotify-player" class="spotify-player"><div class="spotify-empty"><span aria-hidden="true">♫</span><h3>Your listening corner.</h3><p>Add a Spotify link to load the player.<br>Playback starts when you press play.</p></div></div><a id="spotify-open" href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer" class="text-link">Browse in Spotify ↗</a></section></div>
+      </section>
+      <section id="radio-view" hidden aria-labelledby="radio-title">
+        <div class="title-row"><div><p class="eyebrow">SFV.FM radio · separate from YouTube / vertical</p><h1 id="radio-title">The radio booth.</h1><p class="intro">Records, announcers and the live radio output.</p></div><a href="https://sfv.fm/booth.html" target="_blank" rel="noopener noreferrer" class="outline-button">Open radio separately ↗</a></div>
+        <div class="radio-note"><p>These are the existing SFV.FM radio controls. They operate a separate output from the program mixer. The radio booth may ask you to sign in.</p><button type="button" class="primary-button" id="load-radio">Load radio controls</button><button type="button" class="outline-button" id="close-radio" hidden>Close radio controls</button></div>
+        <div id="radio-player" class="radio-player"><div class="radio-placeholder"><span aria-hidden="true">↗</span><h2>Another side of the station.</h2><p>Load the radio booth here, or open it in its own tab.</p></div></div><p class="control-caption">If this browser blocks the embedded booth, use Open radio separately. Microphone and screen sharing still require your action in the radio booth.</p>
       </section>
     </main>
     <footer><span>San Fernando Valley Radio</span><span>The booth / Media &amp; broadcast</span><a href="https://sfv.fm/">sfv.fm ↗</a></footer>
@@ -84,13 +125,13 @@
     <div class="mic-strip-inner">
       <div class="mic-identity"><span class="mic-status-light" id="mic-status-light" aria-hidden="true"></span><div><h2 id="mic-strip-title">RE20 <span>Studio microphone</span></h2><p id="mic-status" role="status">Sign in to control the mic.</p></div></div>
       <p class="mic-hint">Run <strong>SFV On Air</strong> on your Mac to send Apollo / RE20 audio.<span><kbd>Space</kbd> toggle · <kbd>Esc</kbd> off</span></p>
-      <label class="mic-dip-label" for="mic-dip">Music dip<select id="mic-dip" disabled><option value="-6">−6 dB</option><option value="-10" selected>−10 dB</option><option value="-14">−14 dB</option><option value="-20">−20 dB</option></select></label>
+      <label class="mic-dip-label" for="mic-dip">Music dip<select id="mic-dip" disabled><option value="0">No dip</option><option value="-6">−6 dB</option><option value="-10" selected>−10 dB</option><option value="-14">−14 dB</option><option value="-20">−20 dB</option></select></label>
       <button type="button" id="mic-toggle" class="mic-toggle" aria-pressed="false" disabled><span class="mic-button-light" aria-hidden="true"></span><span id="mic-button-text">Go on air</span></button>
     </div>
   </section>
   <dialog id="file-dialog" aria-labelledby="detail-title">
     <div class="detail-head"><span class="eyebrow" id="detail-category">File details</span><button type="button" id="close-detail" class="text-button" aria-label="Close file details">Close ×</button></div>
-    <div class="detail-body"><p class="detail-kind" id="detail-kind"></p><h2 id="detail-title"></h2><div id="preview" class="preview"></div><p id="preview-status" class="preview-status" role="status"></p><div class="detail-actions"><a id="download" class="primary-button" hidden target="_blank" rel="noopener noreferrer">Open file ↗</a><button type="button" class="outline-button" id="detail-save">☆ Save file</button><button type="button" class="outline-button" id="copy-reference">Copy reference</button></div><p class="copy-status" id="copy-status" role="status"></p><dl id="metadata" class="metadata"></dl><p class="preview-note">Previews play on this device. Nothing here changes what is on the air.</p></div>
+    <div class="detail-body"><p class="detail-kind" id="detail-kind"></p><h2 id="detail-title"></h2><div id="detail-broadcast" class="detail-broadcast" hidden><span class="eyebrow">Station program</span><div class="detail-actions"><button type="button" id="detail-play-now" class="primary-button" disabled>Play now</button><button type="button" id="detail-play-next" class="outline-button" disabled>Play next</button></div><p id="detail-broadcast-note" class="control-caption">These controls change the station program.</p></div><div id="preview" class="preview"></div><p id="preview-status" class="preview-status" role="status"></p><div class="detail-actions"><a id="download" class="primary-button" hidden target="_blank" rel="noopener noreferrer">Open file ↗</a><button type="button" class="outline-button" id="detail-save">☆ Save file</button><button type="button" class="outline-button" id="copy-reference">Copy reference</button></div><p class="copy-status" id="copy-status" role="status"></p><dl id="metadata" class="metadata"></dl><p class="preview-note">Media previews play on this device. Play now and Play next above change the station program.</p></div>
   </dialog>
 </body>
 </html>
