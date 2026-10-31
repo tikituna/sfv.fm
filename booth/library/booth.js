@@ -22,7 +22,7 @@
     } else if (window.sfvRecords) window.sfvRecords.find(q);   // anywhere else: a record, from Spotify, through the radio booth
     $('composer-input').value = '';
   });
-  document.querySelectorAll('.quick-link[data-go]').forEach(function (b) { b.addEventListener('click', function () { var t = $(b.dataset.go + '-tab'); if (t) t.click(); }); });
+  document.querySelectorAll('[data-go]').forEach(function (b) { b.addEventListener('click', function () { var t = $(b.dataset.go + '-tab'); if (t) t.click(); }); });
   var select = $('control-target');
   document.querySelectorAll('#output-pills .pill').forEach(function (p) {
     p.addEventListener('click', function () {
@@ -118,7 +118,12 @@
   var ws = null, url = null, key = null, busy = false, timer = null, statusTimer = null, retry = null, rec = null, takeover = null;
   var msg = $('rec-msg'), title = $('rec-title'), artist = $('rec-artist'), art = $('rec-art'), pp = $('rec-pp');
   var buttons = ['rec-prev', 'rec-pp', 'rec-next'].map($);
-  function say(text, error) { msg.textContent = text || ''; msg.classList.toggle('is-error', !!error); }
+  var fmsg = $('finds-msg'), sayTimer = null;
+  function say(text, error) {   // on the strip, and beside the list: the strip's line is hidden outside the On air view
+    clearTimeout(sayTimer); msg.textContent = text || ''; msg.classList.toggle('is-error', !!error);
+    fmsg.textContent = text || ''; fmsg.hidden = !text; fmsg.classList.toggle('is-error', !!error);
+  }
+  function sayBriefly(text) { say(text); sayTimer = setTimeout(function () { say(''); }, 8000); }
   function readKey() { try { return localStorage.getItem('sfv-booth-key') || ''; } catch (e) { return ''; } }
   function boothURL(cb) {
     if (url) return cb(url);
@@ -171,14 +176,20 @@
       ws.onopen = function () { say(''); enable(); ask(); clearInterval(statusTimer); statusTimer = setInterval(ask, 2000); };
       ws.onmessage = function (ev) {
         var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
-        if (m.type === 'status') { takeover = m.takeover || null; show(m.rec); if (m.upnext !== undefined) showUpNext(m.upnext); if (takeover) say(takeover.who + ' has the station; end the takeover first.'); enable(); }
-        if (m.type === 'records') { clearTimeout(timer); busy = false; enable(); if (!m.ok) say(m.msg || 'The booth said no.', true); else say(''); ask(); }
-        if (m.type === 'spsearch' || m.type === 'myplaylists') renderFinds(m);
+        if (m.type === 'status') { accepted(); takeover = m.takeover || null; show(m.rec); if (m.upnext !== undefined) showUpNext(m.upnext); if (takeover) say(takeover.who + ' has the station; end the takeover first.'); enable(); }
+        if (m.type === 'records') {
+          clearTimeout(timer); busy = false; enable();
+          if (!m.ok) say(m.msg || 'The booth said no.', true);
+          else if (pending) sayBriefly(m.do === 'queue' && /^on now/.test(m.msg || '') ? 'Nothing was playing, so it went straight on: ' + pending : (m.do === 'queue' ? 'Up next: ' : 'On the air: ') + pending);
+          else say('');
+          pending = ''; ask();
+        }
+        if (m.type === 'spsearch' || m.type === 'myplaylists' || m.type === 'spinside') renderFinds(m);
         if (m.type === 'refused') say(m.msg || 'Not allowed from here.', true);
       };
       ws.onclose = function (ev) {
         clearInterval(statusTimer); enable();
-        if (ev.code === 4001) { say('The booth password was not accepted.', true); key = null; try { localStorage.removeItem('sfv-booth-key'); } catch (e) {} return; }
+        if (ev.code === 4001) { key = null; keep = false; try { localStorage.removeItem('sfv-booth-key'); } catch (e) {} if (after) signIn(after); say('The booth password was not accepted.', true); return; }
         if (ev.code === 4003) { say('Too many wrong passwords from this address; try again in ten minutes.', true); return; }
         say('The booth is away; trying again.'); clearTimeout(retry); retry = setTimeout(connect, 5000);
       };
@@ -187,7 +198,7 @@
   function ask() { if (ws && ws.readyState === 1) ws.send(JSON.stringify({ type: 'status' })); }
   function send(o) {
     if (!ws || ws.readyState !== 1) { say('Not connected to the booth.', true); return false; }
-    if (busy) return false;
+    if (busy) { say('One moment: the last change is still going through.'); return false; }
     if (['play', 'next', 'previous'].indexOf(o.do) >= 0) o.fade_seconds = Number($('rec-fade').value);
     o.type = 'records'; ws.send(JSON.stringify(o)); busy = true; enable();
     timer = setTimeout(function () { busy = false; enable(); say('The booth did not answer in time.', true); }, 15000);
@@ -197,35 +208,79 @@
   $('rec-next').addEventListener('click', function () { send({ do: 'next' }); });
   pp.addEventListener('click', function () { send({ do: rec && rec.state === 'playing' ? 'pause' : 'resume' }); });
   $('rec-unqueue').addEventListener('click', function () { send({ do: 'unqueue' }); });
-  // the finds
-  var finds = $('finds'), list = $('finds-list'), lastQ = '';
+  // the finds: search results, or My playlists. A playlist, album or artist opens to what is inside it, and a song picked
+  // in there carries on through that playlist or album afterwards. The trail is the way Back.
+  var finds = $('finds'), list = $('finds-list'), filter = $('finds-filter'), backBtn = $('finds-back'), lastQ = '', trail = [], here = null, pending = '', after = null, keep = false;
+  function secs(x) { return x ? mmss(x) : ''; }
+  function looking(words) { finds.hidden = false; $('finds-title').textContent = words || 'Looking…'; backBtn.hidden = !here; filter.hidden = true; list.replaceChildren(); }
+  function note(text) { var e = document.createElement('li'); e.className = 'fnote'; e.textContent = text; list.append(e); }
+  function picked(x, verb, o) { o.link = x.uri; if (here && here.context && x.kind === 'track') o.context = here.context; o.name = x.name || ''; o.by = x.by || ''; if (send(o)) { pending = x.name || x.uri; say(verb + ' ' + pending + '…'); } }
+  function rowFor(x) {
+    var li = document.createElement('li'), song = x.kind === 'track', art = x.art || (here && here.art) || '';
+    var pic = art ? document.createElement('img') : document.createElement('span'); if (art) { pic.src = art; pic.alt = ''; pic.loading = 'lazy'; } else pic.className = 'noart'; li.append(pic);
+    var t = document.createElement(song ? 'div' : 'button'); t.className = 'ftext'; if (!song) { t.type = 'button'; t.addEventListener('click', function () { open(x); }); }
+    var nm = document.createElement('div'); nm.className = 'fname'; nm.textContent = x.name || x.uri; t.append(nm);
+    var by = document.createElement('div'); by.className = 'fby'; by.textContent = [song ? '' : x.kind, x.by, x.album && !(here && here.kind === 'album') ? x.album : '', x.tracks ? x.tracks + (x.tracks === 1 ? ' song' : ' songs') : '', secs(x.secs)].filter(Boolean).join(' · '); t.append(by); li.append(t);
+    li.dataset.words = (x.name + ' ' + (x.by || '') + ' ' + (x.album || '')).toLowerCase();
+    var act = document.createElement('div'); act.className = 'fact';
+    var now = document.createElement('button'); now.type = 'button'; now.className = 'now'; now.textContent = song ? 'Play now' : 'Play all'; now.addEventListener('click', function () { picked(x, 'Putting on', { do: 'play' }); });
+    var next = document.createElement('button'); next.type = 'button'; next.textContent = 'Up next'; next.addEventListener('click', function () { picked(x, 'Setting up', { do: 'queue' }); });
+    act.append(now, next); li.append(act); return li;
+  }
+  function paint() {   // here: { title, items, context, art, kind }
+    finds.hidden = false; $('finds-title').textContent = here.title; backBtn.hidden = !trail.length;
+    filter.value = ''; filter.hidden = here.items.length < 9;
+    list.replaceChildren(); list.scrollTop = 0;
+    if (!here.items.length) { note('Nothing here.'); return; }
+    here.items.forEach(function (x) { list.append(rowFor(x)); });
+  }
   function renderFinds(m) {
-    list.replaceChildren(); finds.hidden = false;
-    $('finds-title').textContent = m.type === 'myplaylists' ? 'My playlists' : 'Records for \u201c' + (m.q || lastQ) + '\u201d';
-    if (!m.ok) { var e = document.createElement('li'); e.className = 'fnote'; e.textContent = m.msg || 'Spotify did not answer.'; list.append(e); return; }
-    if (!m.items || !m.items.length) { var n = document.createElement('li'); n.className = 'fnote'; n.textContent = 'Nothing found.'; list.append(n); return; }
-    m.items.forEach(function (x) {
-      var li = document.createElement('li');
-      var pic = x.art ? document.createElement('img') : document.createElement('span'); if (x.art) { pic.src = x.art; pic.alt = ''; } else pic.className = 'noart'; li.append(pic);
-      var t = document.createElement('div'); t.className = 'ftext';
-      var nm = document.createElement('div'); nm.className = 'fname'; nm.textContent = x.name || x.uri; t.append(nm);
-      var by = document.createElement('div'); by.className = 'fby'; by.textContent = [x.kind, x.by, x.tracks ? x.tracks + ' tracks' : ''].filter(Boolean).join(' \u00b7 '); t.append(by); li.append(t);
-      var act = document.createElement('div'); act.className = 'fact';
-      var now = document.createElement('button'); now.type = 'button'; now.className = 'now'; now.textContent = 'Play now'; now.addEventListener('click', function () { if (send({ do: 'play', link: x.uri })) say('Putting on ' + (x.name || x.uri) + '\u2026'); });
-      var next = document.createElement('button'); next.type = 'button'; next.textContent = 'Up next'; next.addEventListener('click', function () { if (send({ do: 'queue', link: x.uri, name: x.name || '', by: x.by || '' })) say('Up next: ' + (x.name || x.uri)); });
-      act.append(now, next); li.append(act); list.append(li);
-    });
+    if (m.type === 'spinside' && (!here || !here.waitingFor || (m.ok && m.uri !== here.waitingFor))) return;   // answered after Back or Close
+    if (!m.ok) { looking(m.type === 'myplaylists' ? 'My playlists' : 'Records'); note(m.msg || 'Spotify did not answer.'); return; }
+    if (m.type === 'spinside') { here.items = m.items || []; here.waitingFor = null; paint(); return; }
+    trail = []; here = { title: m.type === 'myplaylists' ? 'My playlists · ' + (m.items || []).length : 'Records for “' + (m.q || lastQ) + '”', items: m.items || [] }; paint();
   }
-  $('finds-close').addEventListener('click', function () { finds.hidden = true; list.replaceChildren(); });
+  function open(x) {
+    if (!live()) return signIn(function () { open(x); });
+    trail.push(here);
+    here = { title: x.name, kind: x.kind, art: x.art, context: x.kind === 'artist' ? null : x.uri, items: [], waitingFor: x.uri };
+    looking(); $('finds-title').textContent = x.name + '…';
+    ws.send(JSON.stringify({ type: 'spinside', uri: x.uri }));
+  }
+  function live() { return !!(ws && ws.readyState === 1); }
+  function signIn(then) {   // no booth yet: wait for it if a password is known, else ask for one right here
+    after = then; trail = []; here = null;
+    if (key || readKey()) { looking('Connecting to the booth…'); if (ws && ws.readyState > 1) { clearTimeout(retry); connect(); } return; }
+    looking('Sign in to the booth'); var li = document.createElement('li'); li.className = 'fsign';
+    var f = document.createElement('form'), p = document.createElement('input'), b = document.createElement('button');
+    p.type = 'password'; p.placeholder = 'Booth password'; p.autocomplete = 'current-password'; p.setAttribute('aria-label', 'Booth password'); b.type = 'submit'; b.textContent = 'Sign in';
+    f.append(p, b); f.addEventListener('submit', function (e) { e.preventDefault(); if (!p.value) return; key = p.value; keep = true; say('Signing in…'); clearTimeout(retry); connect(); });
+    li.append(f); list.append(li); p.focus();
+  }
+  function accepted() {   // the first word from the booth: the password was good
+    if (keep) { keep = false; try { localStorage.setItem('sfv-booth-key', key); } catch (e) {} }
+    if (after) { var then = after; after = null; say(''); then(); }
+  }
   function find(q) {
-    if (!ws || ws.readyState !== 1) { say('Sign in to the booth to find records.', true); finds.hidden = false; $('finds-title').textContent = 'Records'; list.replaceChildren(); var e = document.createElement('li'); e.className = 'fnote'; e.textContent = 'Not connected to the booth.'; list.append(e); return; }
-    lastQ = q; ws.send(JSON.stringify({ type: 'spsearch', q: q })); finds.hidden = false; $('finds-title').textContent = 'Looking\u2026'; list.replaceChildren();
+    if (!live()) return signIn(function () { find(q); });
+    lastQ = q; trail = []; here = null; ws.send(JSON.stringify({ type: 'spsearch', q: q })); looking();
   }
-  var mine = $('quick-mine'); if (mine) mine.addEventListener('click', function () { if (ws && ws.readyState === 1) { ws.send(JSON.stringify({ type: 'myplaylists' })); finds.hidden = false; $('finds-title').textContent = 'Looking\u2026'; list.replaceChildren(); } else find(''); });
+  function mine() {
+    if (!live()) return signIn(mine);
+    trail = []; here = null; ws.send(JSON.stringify({ type: 'myplaylists' })); looking();
+  }
+  backBtn.addEventListener('click', function () { if (trail.length) { here = trail.pop(); paint(); } });
+  filter.addEventListener('input', function () { var w = filter.value.trim().toLowerCase(); list.querySelectorAll('li').forEach(function (li) { li.hidden = !!w && (li.dataset.words || '').indexOf(w) < 0; }); });
+  $('finds-close').addEventListener('click', function () { finds.hidden = true; trail = []; here = null; after = null; say(''); list.replaceChildren(); });
+  var mineBtn = $('quick-mine'); if (mineBtn) mineBtn.addEventListener('click', mine);
+  // the Spotify tab opens on the playlists: that is what it is for
+  var spTab = $('spotify-tab');
+  if (spTab) spTab.addEventListener('click', function () { if (finds.hidden) mine(); });
   // the password typed into the connection form, before the library clears it; kept only in memory
   var form = $('connection-form'); if (form) form.addEventListener('submit', function () { var p = $('password'); if (p && p.value) { key = p.value; if (ws) { try { ws.close(); } catch (e) {} } clearTimeout(retry); setTimeout(connect, 1200); } }, true);
-  window.sfvRecords = { find: find, connect: function (u, k) { if (u) url = u; if (k) key = k; if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} } connect(); }, state: function () { return { connected: !!(ws && ws.readyState === 1), rec: rec }; } };
+  window.sfvRecords = { find: find, mine: mine, connect: function (u, k) { if (u) url = u; if (k) key = k; if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} } connect(); }, state: function () { return { connected: !!(ws && ws.readyState === 1), rec: rec }; } };
   connect();
+  if (spTab && spTab.classList.contains('active')) mine();   // the page came back on the Spotify tab
 })();
 // The hour before and the hours ahead: schedule.json (the DJ writes it: the slots, the next due, and the rolling log of
 // what went out), every minute. Past: records, spots and programs with their start times. Ahead: each slot that falls in
