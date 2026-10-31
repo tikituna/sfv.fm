@@ -18,7 +18,13 @@
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <style>
-.sw{-webkit-appearance:none;appearance:none;position:relative;width:44px;height:24px;border:1px solid #000080;border-radius:12px;background:#fff;padding:0;margin:0 7px 0 0;cursor:pointer;vertical-align:middle;transition:background .25s ease,box-shadow .25s ease;-webkit-tap-highlight-color:transparent}
+#listen-row{display:inline-flex;align-items:center;gap:10px;margin-top:6px;vertical-align:middle}
+.listen{display:inline-flex;align-items:center;gap:9px;height:34px;padding:0 16px 0 12px;border:2px solid #000080;border-radius:17px;background:#fff;color:#000080;font:bold 15px/1 "Times New Roman",Times,serif;cursor:pointer;transition:background .2s ease,color .2s ease;-webkit-tap-highlight-color:transparent}
+.listen .knob{width:0;height:0;border-style:solid;border-width:7px 0 7px 12px;border-color:transparent transparent transparent currentColor;transition:border-width .2s ease,border-radius .2s ease}
+.listen[aria-pressed=true]{background:#000080;color:#fff;box-shadow:0 0 0 3px rgba(0,0,128,.12)}
+.listen[aria-pressed=true] .knob{width:11px;height:11px;border:0;border-radius:2px;background:currentColor}
+.listen:active{transform:scale(.97)}
+.listen:focus-visible{outline:2px solid #800080;outline-offset:2px}
 .sw .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#000080;transition:transform .36s cubic-bezier(.34,1.6,.64,1),background .25s ease}
 .sw[aria-pressed=true]{background:#000080;box-shadow:0 0 0 3px rgba(0,0,128,.12)}
 .sw[aria-pressed=true] .knob{transform:translateX(20px);background:#fff}
@@ -27,7 +33,7 @@
 .sw:focus-visible{outline:2px solid #800080;outline-offset:2px}
 #radiolabel{vertical-align:middle}
 #radiolabel.on{color:#ff0000}
-#vol{-webkit-appearance:none;appearance:none;--v:100%;width:64px;height:24px;margin:0 0 0 9px;padding:0;background:none;vertical-align:middle;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#vol{-webkit-appearance:none;appearance:none;--v:100%;width:96px;height:24px;margin:0;padding:0;background:none;vertical-align:middle;cursor:pointer;-webkit-tap-highlight-color:transparent}
 #vol::-webkit-slider-runnable-track{height:4px;border:1px solid #000080;border-radius:3px;background:linear-gradient(to right,#000080 var(--v),#fff var(--v))}
 #vol::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:12px;height:12px;margin-top:-4px;border:0;border-radius:50%;background:#000080;transition:transform .25s cubic-bezier(.34,1.6,.64,1)}
 #vol:active::-webkit-slider-thumb{transform:scale(1.25)}
@@ -180,11 +186,11 @@ body.tick-bottom #chattab,body.tick-bottom #chat,body.tick-bottom #card{bottom:4
 </div>
 <button type="button" id="chattab" hidden>SFV CHAT<span class="new" id="chat-new"></span></button>
 <div id="listeners-wrap"><div id="listeners" class="off" aria-live="polite"><span class="dot"></span>OFF AIR</div></div>
-<p align="center"><b><font size="6">S</font><font size="4">AN </font><font size="6">F</font><font size="4">ERNANDO </font><font size="6">V</font><font size="4">ALLEY </font><font size="6">R</font><font size="4">ADIO</font><font size="2"><br>sfv.fm<br>Berry Drive, Studio City, California</font><br>On the Air</b><font size="1">&nbsp;</font></p>
+<p align="center"><b><font size="6">S</font><font size="4">AN </font><font size="6">F</font><font size="4">ERNANDO </font><font size="6">V</font><font size="4">ALLEY </font><font size="6">R</font><font size="4">ADIO</font><font size="2"><br>sfv.fm<br>Berry Drive, Studio City, California</font><br>On the Air</b><br><span id="listen-row"><button type="button" class="listen" id="radio" aria-pressed="false" aria-label="Listen"><span class="knob" aria-hidden="true"></span><span id="radiolabel">Listen</span></button><input type="range" id="vol" min="0" max="100" step="1" value="100" aria-label="Volume" title="Volume"><span class="meter" id="meter" title="Signal"><canvas id="vu" width="40" height="11"></canvas></span></span><font size="1">&nbsp;</font></p>
 <hr>
 <p align="center"><span id="screen"><span id="camwrap"><canvas id="cam" width="640" height="520" aria-label="Live picture from a Valley freeway camera"></canvas><video id="camv" muted playsinline crossorigin="anonymous"></video><video id="camv2" muted playsinline crossorigin="anonymous"></video><span class="dots"></span><span id="bug" aria-hidden="true">SFV</span><span id="banner" hidden><img alt=""><span></span></span></span><iframe id="tv" width="640" height="360" frameborder="0" title="Television" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe><video id="ad" muted playsinline preload="none" aria-label="A commercial from the archive"></video><img id="adimg" alt="" hidden><span id="wxcard" role="img" aria-label="Valley weather" hidden></span><span id="slate" role="img" aria-label="San Fernando Valley Radio" hidden></span><span id="dip" aria-hidden="true"></span></span><br><font size="1"><span id="cam-caption">Tuning the picture&hellip;</span><span id="ad-caption" hidden></span></font><br><font size="2"><span id="channels">Channel: <b>2 Freeways</b> &middot; <a href="#" target="_self" data-ch="4">4 Huell Howser</a> &middot; <a href="#" target="_self" data-ch="7">7 Aquarium</a></span></font></p>
 <table border="0" cellspacing="0" cellpadding="4" align="center" width="90%">
-  <tr><td valign="top" width="50%"><font size="2"><button type="button" class="sw" id="radio" aria-pressed="false" aria-label="Sound"><span class="knob"></span></button><span id="radiolabel">Sound off</span><input type="range" id="vol" min="0" max="100" step="1" value="100" aria-label="Volume" title="Volume"><span class="meter" id="meter" title="Signal"><canvas id="vu" width="40" height="11"></canvas></span><span id="signal"></span><br><span id="now">The station is on the air. Turn the sound on to join the program in progress.</span></font></td>
+  <tr><td valign="top" width="50%"><font size="2"><span id="signal"></span><span id="now">The station is on the air. Press Listen to join the program in progress.</span></font></td>
       <td valign="top" width="50%"><font size="2"><b>Host:</b> <span id="host">Phil Landers and Carol Reyes</span><br><b>Next break:</b> <span id="next-break">&mdash;</span><br><b>Conditions:</b> <span id="wx">&mdash;</span></font></td></tr>
 </table>
 <audio id="music" preload="none" loop><source src="music/2007-compilation.m4a" type="audio/mp4"></audio>
@@ -963,7 +969,7 @@ body.tick-bottom #chattab,body.tick-bottom #chat,body.tick-bottom #card{bottom:4
   function valleyNow(){var p=new Intl.DateTimeFormat("en-US",{timeZone:"America/Los_Angeles",hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit",weekday:"long",month:"long",day:"numeric",year:"numeric"}).formatToParts(new Date()),o={};p.forEach(function(x){o[x.type]=x.value;});return {h:+o.hour%24,m:+o.minute,s:+o.second,weekday:o.weekday,month:o.month,day:o.day,year:o.year};}
   function secondsToday(){var v=valleyNow();return v.h*3600+v.m*60+v.s;}
   function fmt(s){var h=Math.floor(s/3600),m=Math.floor(s%3600/60),x=Math.floor(s%60);return (h?h+":":"")+(h?String(m).padStart(2,"0"):m)+":"+String(x).padStart(2,"0");}
-  function label(on){btn.setAttribute("aria-pressed",on?"true":"false");var l=document.getElementById("radiolabel");l.textContent=on?"Sound on":"Sound off";l.className=on?"on":"";meterOn();}
+  function label(on){btn.setAttribute("aria-pressed",on?"true":"false");var l=document.getElementById("radiolabel");l.textContent=on?"Listening":"Listen";l.className=on?"on":"";meterOn();}
   function showNow(){var pos=secondsToday()%program.duration;now.innerHTML="Now playing: <a href=\"https://samsugarman.com/credits.html\" style=\"color:#800080\">"+program.artist+"</a>"+" – "+program.title+", "+fmt(pos)+" in";}
   function showNext(){var v=valleyNow(),hm=v.h*60+v.m,nb=null;for(var i=0;i<breaks.length;i++){var p=breaks[i].at.split(":"),m=+p[0]*60+ +p[1];if(m>hm&&(nb===null||m<nb.m))nb={m:m,b:breaks[i]};}
     document.getElementById("next-break").textContent=nb?(Math.floor(nb.m/60)%12||12)+":"+String(nb.m%60).padStart(2,"0")+(nb.m>=720?" PM":" AM"):"tomorrow";}
@@ -977,7 +983,7 @@ body.tick-bottom #chattab,body.tick-bottom #chat,body.tick-bottom #card{bottom:4
   var soundPref="on";try{soundPref=localStorage.getItem("sfv-sound")||"on";}catch(e){}
   function remember(v){soundPref=v;try{localStorage.setItem("sfv-sound",v);}catch(e){}}
   function on(){if(isLive){var q=tune();if(q&&q.then){q.then(function(){playing=true;label(true);pendingLine="";hideTune();showLiveTrack();}).catch(function(err){label(false);now.textContent="Tap anywhere on the page for the sound.";if(err&&err.name==="NotAllowedError")showTune();});}return;}if(!SCHEDULE){now.textContent="Checking the transmitter\u2026";checkLive(function(){if(isLive)on();else now.textContent="The station is off the air right now. Come back when Sam is on.";});return;}music.currentTime=secondsToday()%program.duration;var p=music.play();if(p&&p.then){p.then(function(){playing=true;label(true);showNow();ticker=setInterval(tick,1000);}).catch(function(){label(false);now.textContent="The browser would not start the sound. Try the link again.";});}}
-  function off(){music.pause();voice.pause();liveEl.pause();music.volume=1;playing=false;label(false);clearInterval(ticker);pendingLine="";now.textContent="The station is on the air. Turn the sound on to join the program in progress.";}
+  function off(){music.pause();voice.pause();liveEl.pause();music.volume=1;playing=false;label(false);clearInterval(ticker);pendingLine="";now.textContent="The station is on the air. Press Listen to join the program in progress.";}
   // iOS lets a page start sound only from a tap; unlock the host and live elements during that tap so the
   // timer can start them later.
   var SILENCE="data:audio/wav;base64,UklGRuQDAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YcADAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",unlocked=false;
@@ -1003,7 +1009,7 @@ body.tick-bottom #chattab,body.tick-bottom #chat,body.tick-bottom #card{bottom:4
   var tuneEl=document.getElementById("tune");
   function showTune(){if(!isLive||playing||studio||soundPref==="off"||!tuneEl.hidden)return;tuneEl.hidden=false;requestAnimationFrame(function(){tuneEl.className="show";});try{document.getElementById("tune-play").focus({preventScroll:true});}catch(e){}}
   function hideTune(){if(tuneEl.hidden)return;tuneEl.className="";tuneEl.hidden=true;}
-  function justLooking(){hideTune();document.removeEventListener("click",firstGesture,true);document.removeEventListener("keydown",firstGesture,true);now.textContent="The station is on the air. Turn the sound on to join the program in progress.";}
+  function justLooking(){hideTune();document.removeEventListener("click",firstGesture,true);document.removeEventListener("keydown",firstGesture,true);now.textContent="The station is on the air. Press Listen to join the program in progress.";}
   document.getElementById("tune-no").addEventListener("click",function(e){e.stopPropagation();justLooking();});
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!tuneEl.hidden)justLooking();});
   document.addEventListener("click",firstGesture,true);document.addEventListener("keydown",firstGesture,true);
@@ -1180,7 +1186,7 @@ body.tick-bottom #chattab,body.tick-bottom #chat,body.tick-bottom #card{bottom:4
   setInterval(function(){if(isLive&&playing&&!liveEl.paused&&behind())retune("watchdog");},5000);
   liveEl.addEventListener("play",function(){if(!isLive)return;playing=true;label(true);pendingLine="";showLiveTrack();if(behind())retune("resume");});
   document.addEventListener("visibilitychange",function(){if(!document.hidden&&isLive&&playing&&!liveEl.paused&&behind())retune("visible");});
-  liveEl.addEventListener("pause",function(){if(isLive&&playing&&!liveEl.ended&&!liveEl.error&&Date.now()-tunedAt>1500){playing=false;label(false);pendingLine="";now.textContent="The station is on the air. Turn the sound on to join the program in progress.";}});
+  liveEl.addEventListener("pause",function(){if(isLive&&playing&&!liveEl.ended&&!liveEl.error&&Date.now()-tunedAt>1500){playing=false;label(false);pendingLine="";now.textContent="The station is on the air. Press Listen to join the program in progress.";}});
   ["error","ended","stalled"].forEach(function(ev){liveEl.addEventListener(ev,function(){setTimeout(function(){retune("after "+ev);},3000);});});
   var cfgTries=0;
   function checkLive(cb){if(!liveCfg||!liveCfg.status){if(cb&&cfgTries++<10)setTimeout(function(){checkLive(cb);},500);else if(cb)cb();return;}if(isLive&&playing&&(liveEl.paused||liveEl.error))retune("checkLive "+(liveEl.error?"error":"paused"));fetch(liveCfg.status+"?t="+Date.now(),{cache:"no-store"}).then(function(r){return r.json();}).then(function(j){liveStats=j&&j.icestats;var src=liveStats&&liveStats.source;var up=false;if(src){var list=Array.isArray(src)?src:[src];up=list.some(function(m){return /\/live$/.test(m.listenurl||"");});}up?goLive():endLive();showListeners();if(cb)cb();}).catch(function(){endLive();showListeners();if(cb)cb();});}
