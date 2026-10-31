@@ -301,5 +301,9 @@
   el.addEventListener('pause', function () { if (btn.getAttribute('aria-pressed') === 'true') set(false, 'Stopped'); });
   el.addEventListener('error', function () { if (btn.getAttribute('aria-pressed') === 'true') set(false, 'The stream dropped'); });
   // the studio guard: a browser that can reach the local Icecast is on the transmitter
-  fetch('http://127.0.0.1:8000/status-json.xsl', { mode: 'no-cors', cache: 'no-store' }).then(function () { btn.disabled = true; label.textContent = 'This is the transmitter'; }).catch(function () {});
+  // only where the local Icecast has the live mount up: the held-off backups run an Icecast too, and may listen
+  fetch('http://127.0.0.1:8000/status-json.xsl', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (st) {
+    var src = st && st.icestats && st.icestats.source; if (src && !Array.isArray(src)) src = [src];
+    if (src && src.some(function (x) { return /\/live(\.aac)?$/.test(x.listenurl || ''); })) { btn.disabled = true; label.textContent = 'This Mac is the transmitter'; }
+  }).catch(function () {});
 })();
