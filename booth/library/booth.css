@@ -200,3 +200,11 @@ footer { border: 0; color: var(--fg-muted); font-size: 13px; padding: 28px 0; }
 #onair-view .mixer-heading, #onair-view .queue-panel .panel-heading, #onair-view .queue-panel, #onair-view .control-queue { padding-left: 0; padding-right: 0; }
 #onair-view .mixer-heading { padding-top: 0; padding-bottom: 0; }
 #onair-view .control-queue { margin: 0; padding: 0; list-style: none; }
+
+/* the sidebar, quiet (Sam, 2026-10-31: "too colorful and loud"): one tone of tile, the glyph in soft white, and only the
+   current view's tile in the blue */
+.tile, .tile-cyan, .tile-amber, .tile-green, .tile-violet, .tile-red { background: var(--fill); color: var(--fg-soft); }
+.row:hover .tile { background: var(--fill-strong); }
+.row.active .tile, .row.active:hover .tile { background: var(--primary); color: var(--on-primary); }
+.row.active .name, .row.active, .tab.active { color: var(--fg); }
+.row.active .sub { color: var(--fg-muted); }
