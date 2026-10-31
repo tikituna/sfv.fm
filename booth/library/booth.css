@@ -338,3 +338,10 @@ footer { border: 0; color: var(--fg-muted); font-size: 13px; padding: 28px 0; }
 #listen-vol::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--primary); }
 #listen-vol::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
 @media (max-width: 1180px) { .rail .listen-box { display: none; } }
+
+/* the Listen box follows the rail: when the rail is hidden (narrow windows), it stands in the top bar beside the chip */
+.masthead .listen-box { width: auto; margin: 0 0 0 16px; }
+.masthead .listen-box .listen-btn { width: 40px; height: 40px; }
+.masthead .listen-box #listen-vol { width: 90px; }
+@media (max-width: 1180px) { .rail .listen-box { display: none; } .masthead .listen-box { display: flex; } }
+@media (max-width: 480px) { .masthead .listen-box #listen-vol { display: none; } }

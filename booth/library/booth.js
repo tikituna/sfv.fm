@@ -297,6 +297,10 @@
     });
   }
   btn.addEventListener('click', function () { if (btn.getAttribute('aria-pressed') === 'true') stop(); else start(); });
+  // where the box stands: the rail when there is one, the top bar when the rail is hidden
+  var box = $('listen-box'), rail = document.querySelector('.rail'), head = document.querySelector('.masthead'), railName = document.querySelector('.rail-name');
+  function place() { if (!box || !rail || !head) return; var narrow = window.innerWidth <= 1180; if (narrow && box.parentNode !== head) head.appendChild(box); else if (!narrow && box.parentNode !== rail) rail.insertBefore(box, railName); }
+  place(); window.addEventListener('resize', place);
   el.addEventListener('playing', function () { set(true); });
   el.addEventListener('pause', function () { if (btn.getAttribute('aria-pressed') === 'true') set(false, 'Stopped'); });
   el.addEventListener('error', function () { if (btn.getAttribute('aria-pressed') === 'true') set(false, 'The stream dropped'); });
