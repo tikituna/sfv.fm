@@ -6,41 +6,61 @@
   <meta name="robots" content="noindex, nofollow">
   <meta name="color-scheme" content="dark">
   <title>Control room — San Fernando Valley Radio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=Inter+Tight:wght@300;400;500;600&display=swap">
   <link rel="stylesheet" href="./library.css">
   <link rel="stylesheet" href="./control-room.css">
+  <link rel="stylesheet" href="./booth.css">
   <script defer src="./library.js"></script>
   <script defer src="./control-room.js"></script>
+  <script defer src="./booth.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#library-main">Skip to control room</a>
-  <div class="page">
-    <header class="masthead">
-      <a class="station-name" href="https://sfv.fm/"><span class="brand-mark">SFV</span><span class="brand-label">Control room</span></a>
-      <nav class="tabs" aria-label="Booth pages">
-        <button type="button" id="onair-tab" class="tab active" aria-current="page">On air</button>
-        <button type="button" id="library-tab" class="tab">Library</button>
-        <button type="button" id="studio-tab" class="tab">Live controls</button>
-        <button type="button" id="spotify-tab" class="tab">Spotify</button>
-        <button type="button" id="radio-tab" class="tab">Radio</button>
+  <div class="shell">
+    <aside class="side" aria-label="Booth pages">
+      <a class="wordmark" href="https://sfv.fm/">SFV.fm</a>
+      <nav class="rows tabs">
+      <button type="button" id="onair-tab" class="row tab active" aria-current="page"><span class="tile tile-cyan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 6.3a8 8 0 0 0 0 11.4M17.7 6.3a8 8 0 0 1 0 11.4M3.5 3.5a12 12 0 0 0 0 17M20.5 3.5a12 12 0 0 1 0 17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span><span class="text"><span class="name">On air</span><span class="sub">Program and desk</span></span></button>
+      <button type="button" id="library-tab" class="row tab" ><span class="tile tile-amber"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h3v14H4zM9 5h3v14H9zM14.2 5.6l2.9-.8 3.6 13.5-2.9.8z" fill="currentColor"/></svg></span><span class="text"><span class="name">Library</span><span class="sub">Audio, films, images</span></span></button>
+      <button type="button" id="studio-tab" class="row tab" ><span class="tile tile-green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4v16M12 4v16M19 4v16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><rect x="2.5" y="9" width="5" height="4" rx="1.2" fill="currentColor"/><rect x="9.5" y="14" width="5" height="4" rx="1.2" fill="currentColor"/><rect x="16.5" y="6" width="5" height="4" rx="1.2" fill="currentColor"/></svg></span><span class="text"><span class="name">Live controls</span><span class="sub">Streams and scenes</span></span></button>
+      <button type="button" id="spotify-tab" class="row tab" ><span class="tile tile-violet"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M7.5 10.2c3-.9 6.3-.6 9 .9M8 13.1c2.4-.7 5-.4 7.2.8M8.6 15.8c1.8-.5 3.7-.3 5.4.6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="text"><span class="name">Spotify</span><span class="sub">Preview at the booth</span></span></button>
+      <button type="button" id="radio-tab" class="row tab" ><span class="tile tile-red"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="8" width="18" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M6 8l10-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="14" r="2.6" fill="currentColor"/><path d="M6 12.5h5M6 15.5h5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span><span class="text"><span class="name">Radio</span><span class="sub">Separate output</span></span></button>
       </nav>
-      <a href="https://sfv.fm/booth.html" class="booth-link">Radio <span class="separate-output">(separate output)</span> <span aria-hidden="true">↗</span></a>
-    </header>
-    <div class="connection-bar">
-      <p><span class="connection-dot" id="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">Finding the station…</span></p>
-      <div class="connection-actions"><button type="button" class="text-button" id="connection-toggle" aria-expanded="false" aria-controls="connection-panel">Station connection</button><button type="button" class="text-button" id="signout" hidden>Sign out</button></div>
-    </div>
-    <section id="connection-panel" class="connection-panel" hidden aria-labelledby="connection-title">
-      <div><h2 id="connection-title">Station connection</h2><p>Connect to the station computer to mix the program, choose what plays next and go live.</p></div>
-      <form id="connection-form">
-        <label for="server-url">Station address</label><input type="url" id="server-url" placeholder="https://station-computer/library" autocomplete="url" spellcheck="false" required>
-        <label for="password">Booth password</label><input type="password" id="password" autocomplete="current-password" required>
-        <label class="check-label"><input type="checkbox" id="remember-password"> Remember on this browser</label>
-        <button type="submit" id="connect-button" class="primary-button">Connect</button>
-        <p id="connection-message" class="form-message" role="status"></p>
-      </form>
-    </section>
-    <main id="library-main">
-      <section id="onair-view" aria-labelledby="onair-title">
+      <div class="side-foot">
+        <a class="row small" href="https://sfv.fm/" target="_blank" rel="noopener noreferrer"><span class="glyph" aria-hidden="true">&#x25CE;</span><span class="name">The station</span></a>
+        <a class="row small" href="https://sfv.fm/booth.html" target="_blank" rel="noopener noreferrer"><span class="glyph" aria-hidden="true">&#x25D0;</span><span class="name">Radio booth</span></a>
+        <a class="row small booth-link" href="https://sfv.fm/booth.html" hidden>Radio <span class="separate-output">(separate output)</span></a>
+      </div>
+    </aside>
+
+    <div class="page">
+      <header class="masthead"><a class="station-name" href="https://sfv.fm/"><span class="brand-mark">SFV</span><span class="brand-label">Control room</span></a><span class="chip" id="view-chip"><span class="dot" aria-hidden="true"></span>On air</span></header>
+      <div class="hero">
+        <h1 class="hero-title" id="hero-title">The Booth</h1>
+        <form class="composer" id="composer" role="search" autocomplete="off">
+          <span class="plus" aria-hidden="true">+</span>
+          <input id="composer-input" type="text" placeholder="Find a record or a film" aria-label="Find a record or a film in the library" spellcheck="false">
+          <button type="submit" class="send" aria-label="Search the library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h12M12 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </form>
+        <div class="quick"><button type="button" class="quick-link" data-go="library">Choose a file</button><button type="button" class="quick-link" data-go="studio">Live controls</button><button type="button" class="quick-link" data-go="radio">Open the radio booth</button></div>
+      </div>
+      <div class="connection-bar">
+        <p><span class="connection-dot" id="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">Finding the station…</span></p>
+        <div class="connection-actions"><button type="button" class="text-button" id="connection-toggle" aria-expanded="false" aria-controls="connection-panel">Station connection</button><button type="button" class="text-button" id="signout" hidden>Sign out</button></div>
+      </div>
+<section id="connection-panel" class="connection-panel" hidden aria-labelledby="connection-title">
+        <div><h2 id="connection-title">Station connection</h2><p>Connect to the station computer to mix the program, choose what plays next and go live.</p></div>
+        <form id="connection-form">
+          <label for="server-url">Station address</label><input type="url" id="server-url" placeholder="https://station-computer/library" autocomplete="url" spellcheck="false" required>
+          <label for="password">Booth password</label><input type="password" id="password" autocomplete="current-password" required>
+          <label class="check-label"><input type="checkbox" id="remember-password"> Remember on this browser</label>
+          <button type="submit" id="connect-button" class="primary-button">Connect</button>
+          <p id="connection-message" class="form-message" role="status"></p>
+        </form>
+      </section>
+      <main id="library-main">
+<section id="onair-view" aria-labelledby="onair-title">
         <div class="title-row control-title"><div><p class="eyebrow">San Fernando Valley Radio / Booth</p><h1 id="onair-title">On air.</h1><p class="intro">Your live program, mixer and scheduled playback.</p></div><span class="console-tag">SFV.FM</span></div>
         <div class="program-grid">
           <section class="program-card" aria-labelledby="program-heading">
@@ -67,7 +87,7 @@
         </section>
         <section class="queue-panel" aria-labelledby="queue-title"><div class="panel-heading"><h2 id="queue-title">Up next</h2><span id="queue-count" class="eyebrow">Manual queue</span></div><ol id="control-queue" class="control-queue"><li class="queue-empty">Connect to see the queue.</li></ol><p class="control-caption">The queue belongs to the selected output. Return to schedule resumes its programmed rotation.</p></section>
       </section>
-      <section id="library-view" hidden aria-labelledby="page-title">
+<section id="library-view" hidden aria-labelledby="page-title">
         <div class="title-row"><div><h1 id="page-title">Library</h1><p class="intro">Audio, films and images from the station archive.</p></div><button type="button" id="refresh" class="outline-button" disabled>↻ Refresh library</button></div>
         <div class="stats" aria-label="Library totals">
           <div><strong id="count-all">—</strong><span>Total files</span></div>
@@ -99,7 +119,7 @@
         </div>
         <p id="catalog-note" class="catalog-note"></p>
       </section>
-      <section id="studio-view" hidden aria-labelledby="studio-title">
+<section id="studio-view" hidden aria-labelledby="studio-title">
         <div class="title-row"><div><h1 id="studio-title">Live controls</h1><p class="intro">Radio, live streams and the current picture.</p></div><button type="button" class="outline-button" id="studio-refresh" disabled>↻ Check status</button></div>
         <p id="studio-status" class="studio-status" role="status">Connect to the library to check the studio.</p>
         <div id="studio-content" class="studio-grid">
@@ -109,19 +129,37 @@
           <section class="studio-card"><span class="eyebrow">Radio &amp; microphone</span><h2>On the air</h2><p class="stream-detail">Open the radio booth for records, the announcer and station controls. Use the RE20 bar below to go on air. The original RE20 panel is available on the station computer.</p><div class="studio-links"><a href="https://sfv.fm/booth.html" class="outline-button">Radio (separate output) ↗</a><a href="http://127.0.0.1:4410/onair.html" class="outline-button" target="_blank" rel="noopener noreferrer">Local RE20 panel ↗</a></div></section>
         </div>
       </section>
-      <section id="spotify-view" hidden aria-labelledby="spotify-title">
+<section id="spotify-view" hidden aria-labelledby="spotify-title">
         <div class="title-row"><div><p class="eyebrow">Reference &amp; discovery</p><h1 id="spotify-title">Spotify, at the booth.</h1><p class="intro">Preview on this device. Find the next thing you want to hear.</p></div><a href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer" class="outline-button">Open Spotify ↗</a></div>
         <div class="spotify-layout"><section class="spotify-input-panel"><span class="spotify-mark" aria-hidden="true">◉</span><h2>Bring a record along.</h2><p>Paste a Spotify track, album, artist or playlist link to open its official player here.</p><form id="spotify-form"><label for="spotify-url">Spotify link or URI</label><input id="spotify-url" type="text" inputmode="url" placeholder="https://open.spotify.com/track/…" autocomplete="off" spellcheck="false" required><button type="submit" class="primary-button">Load preview <span aria-hidden="true">↗</span></button></form><p id="spotify-message" class="form-message" role="status">The player loads only when you choose a link.</p><p class="spotify-note">This player is for listening on this device. To choose a broadcast file, use <button type="button" id="spotify-library" class="text-button">the station library</button>.</p></section><section class="spotify-player-panel" aria-labelledby="spotify-player-title"><div class="panel-heading"><h2 id="spotify-player-title" class="eyebrow">Preview on this device</h2><button type="button" id="spotify-clear" class="text-button" hidden>Close player ×</button></div><div id="spotify-player" class="spotify-player"><div class="spotify-empty"><span aria-hidden="true">♫</span><h3>Your listening corner.</h3><p>Add a Spotify link to load the player.<br>Playback starts when you press play.</p></div></div><a id="spotify-open" href="https://open.spotify.com/" target="_blank" rel="noopener noreferrer" class="text-link">Browse in Spotify ↗</a></section></div>
       </section>
-      <section id="radio-view" hidden aria-labelledby="radio-title">
+<section id="radio-view" hidden aria-labelledby="radio-title">
         <div class="title-row"><div><p class="eyebrow">SFV.FM radio · separate from YouTube / vertical</p><h1 id="radio-title">The radio booth.</h1><p class="intro">Records, announcers and the live radio output.</p></div><a href="https://sfv.fm/booth.html" target="_blank" rel="noopener noreferrer" class="outline-button">Open radio separately ↗</a></div>
         <div class="radio-note"><p>These are the existing SFV.FM radio controls. They operate a separate output from the program mixer. The radio booth may ask you to sign in.</p><button type="button" class="primary-button" id="load-radio">Load radio controls</button><button type="button" class="outline-button" id="close-radio" hidden>Close radio controls</button></div>
         <div id="radio-player" class="radio-player"><div class="radio-placeholder"><span aria-hidden="true">↗</span><h2>Another side of the station.</h2><p>Load the radio booth here, or open it in its own tab.</p></div></div><p class="control-caption">If this browser blocks the embedded booth, use Open radio separately. Microphone and screen sharing still require your action in the radio booth.</p>
       </section>
-    </main>
-    <footer><span>San Fernando Valley Radio</span><span>The booth / Media &amp; broadcast</span><a href="https://sfv.fm/">sfv.fm ↗</a></footer>
+      </main>
+      <footer><span>San Fernando Valley Radio</span><span>The booth / Media &amp; broadcast</span><a href="https://sfv.fm/">sfv.fm ↗</a></footer>
+    </div>
+
+    <aside class="rail" aria-label="Station">
+      <div class="mark" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 10v44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 54h20M27 54l5-30 5 30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 22a17 17 0 0 1 24 0M15 16a24 24 0 0 1 34 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="10" r="3" fill="currentColor"/></svg></div>
+      <h2 class="rail-name">San Fernando Valley Radio</h2>
+      <p class="rail-kind">Control room</p>
+      <h3 class="rail-head">Outputs <span class="help" title="Which program player Play now and Play next speak to">?</span></h3>
+      <div class="list" id="output-pills">
+        <button type="button" class="pill on" data-output="wide"><span class="glyph" aria-hidden="true">&#x25A3;</span>YouTube, wide</button>
+        <button type="button" class="pill" data-output="tall"><span class="glyph" aria-hidden="true">&#x25AF;</span>Vertical, tall</button>
+        <button type="button" class="pill" data-output="all"><span class="glyph" aria-hidden="true">&#x2630;</span>Everything</button>
+      </div>
+      <h3 class="rail-head">Station</h3>
+      <div class="list">
+        <button type="button" class="pill" id="rail-connection"><span class="glyph connection-dot-rail" id="rail-dot" aria-hidden="true"></span><span id="rail-status">Finding the station…</span></button>
+        <a class="pill" href="https://sfv.fm/" target="_blank" rel="noopener noreferrer"><span class="glyph" aria-hidden="true">&#x2197;</span>sfv.fm</a>
+      </div>
+    </aside>
   </div>
-  <section id="mic-strip" class="mic-strip" aria-labelledby="mic-strip-title">
+<section id="mic-strip" class="mic-strip" aria-labelledby="mic-strip-title">
     <div class="mic-strip-inner">
       <div class="mic-identity"><span class="mic-status-light" id="mic-status-light" aria-hidden="true"></span><div><h2 id="mic-strip-title">RE20 <span>Studio microphone</span></h2><p id="mic-status" role="status">Sign in to control the mic.</p></div></div>
       <p class="mic-hint">Run <strong>SFV On Air</strong> on your Mac to send Apollo / RE20 audio.<span><kbd>Space</kbd> toggle · <kbd>Esc</kbd> off</span></p>
@@ -129,7 +167,7 @@
       <button type="button" id="mic-toggle" class="mic-toggle" aria-pressed="false" disabled><span class="mic-button-light" aria-hidden="true"></span><span id="mic-button-text">Go on air</span></button>
     </div>
   </section>
-  <dialog id="file-dialog" aria-labelledby="detail-title">
+<dialog id="file-dialog" aria-labelledby="detail-title">
     <div class="detail-head"><span class="eyebrow" id="detail-category">File details</span><button type="button" id="close-detail" class="text-button" aria-label="Close file details">Close ×</button></div>
     <div class="detail-body"><p class="detail-kind" id="detail-kind"></p><h2 id="detail-title"></h2><div id="detail-broadcast" class="detail-broadcast" hidden><span class="eyebrow">Station program</span><div class="detail-actions"><button type="button" id="detail-play-now" class="primary-button" disabled>Play now</button><button type="button" id="detail-play-next" class="outline-button" disabled>Play next</button></div><p id="detail-broadcast-note" class="control-caption">These controls change the station program.</p></div><div id="preview" class="preview"></div><p id="preview-status" class="preview-status" role="status"></p><div class="detail-actions"><a id="download" class="primary-button" hidden target="_blank" rel="noopener noreferrer">Open file ↗</a><button type="button" class="outline-button" id="detail-save">☆ Save file</button><button type="button" class="outline-button" id="copy-reference">Copy reference</button></div><p class="copy-status" id="copy-status" role="status"></p><dl id="metadata" class="metadata"></dl><p class="preview-note">Media previews play on this device. Play now and Play next above change the station program.</p></div>
   </dialog>
