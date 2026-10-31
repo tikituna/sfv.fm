@@ -126,20 +126,49 @@
       .catch(function () { url = 'wss://otto-macmini.tail26a86d.ts.net:10000/booth'; cb(url); });
   }
   function enable() { var up = !!(ws && ws.readyState === 1); buttons.forEach(function (b) { b.disabled = !up || busy || !!takeover; }); }
-  function show(r) {
-    rec = r || null;
-    if (!r || !r.title) { title.textContent = r && r.state === 'not running' ? 'Spotify is not running on the station' : 'Nothing on the records'; artist.textContent = ''; art.hidden = true; pp.classList.remove('playing'); return; }
-    title.textContent = r.title; artist.textContent = r.artist + (r.album ? ' \u00b7 ' + r.album : '');
-    if (r.art) { art.src = r.art; art.hidden = false; } else art.hidden = true;
-    pp.classList.toggle('playing', r.state === 'playing');
+  // the air: nowplaying.json, the DJ's word on what the encoder carries (a record, a spot or a program), every 3 s from the
+  // moment the page opens; Spotify's own state (rec, from the booth) gives a record's position, and a second line when the
+  // air is something else and Spotify is waiting
+  var air = null, airURL = null, wait = $('rec-wait'), timeBox = $('rec-time'), pos = $('rec-pos'), dur = $('rec-dur'), fill = $('rec-fill');
+  function mmss(x) { x = Math.max(0, Math.round(x || 0)); var h = Math.floor(x / 3600), m = Math.floor(x % 3600 / 60), s = x % 60; return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0'); }
+  function paintAir() {
+    var a = air, r = rec, now = Date.now() / 1000;
+    strip.classList.remove('program', 'spot', 'record', 'off');
+    if (!a) { title.textContent = 'Reading the air\u2026'; artist.textContent = ''; art.hidden = true; timeBox.hidden = true; wait.hidden = true; return; }
+    if (a.program) {
+      strip.classList.add('program'); title.textContent = a.program; artist.textContent = 'A program' + (a.program_credit ? ' \u00b7 ' + a.program_credit : ''); art.hidden = true;
+      var e = a.program_at ? now - a.program_at : 0; timeBox.hidden = false; pos.textContent = mmss(e); dur.textContent = mmss(a.program_secs); fill.style.width = a.program_secs ? Math.min(100, 100 * e / a.program_secs) + '%' : '0%';
+    } else if (a.spot) {
+      strip.classList.add('spot'); title.textContent = a.spot; artist.textContent = 'A word from the Valley: a spot between records'; art.hidden = true;
+      var es = a.spot_at ? now - a.spot_at : 0; timeBox.hidden = false; pos.textContent = mmss(es); dur.textContent = ''; fill.style.width = '100%';
+    } else if (a.title) {
+      strip.classList.add('record'); title.textContent = a.title; artist.textContent = (a.artist || '') + (a.album ? ' \u00b7 ' + a.album : '');
+      if (a.art) { art.src = a.art; art.hidden = false; } else art.hidden = true;
+      if (r && r.dur && r.title === a.title) { timeBox.hidden = false; pos.textContent = mmss(r.pos); dur.textContent = mmss(r.dur); fill.style.width = Math.min(100, 100 * r.pos / r.dur) + '%'; }
+      else timeBox.hidden = true;
+    } else { strip.classList.add('off'); title.textContent = a.live === false ? 'Off the air' : 'Nothing on the air'; artist.textContent = ''; art.hidden = true; timeBox.hidden = true; }
+    // Spotify's own state, when it is not what the air carries
+    if (r && r.title && !(a.title && r.title === a.title)) { wait.textContent = 'Spotify: ' + r.title + ', ' + r.artist + ', ' + (r.state === 'playing' ? 'playing' : 'paused') + (r.dur ? ' at ' + mmss(r.pos) : '') + (a.program || a.spot ? ' \u00b7 the records come back after' : ''); wait.hidden = false; }
+    else if (r && !r.title && r.state === 'not running') { wait.textContent = 'Spotify is not running on the station.'; wait.hidden = false; }
+    else wait.hidden = true;
+    pp.classList.toggle('playing', !!(r && r.state === 'playing'));
   }
+  function pollAir() {
+    var go = function (u) { fetch(u + '?t=' + Date.now(), { cache: 'no-store' }).then(function (x) { return x.json(); }).then(function (n) { air = n; paintAir(); }).catch(function () {}); };
+    if (airURL) return go(airURL);
+    fetch('../../live.json?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' }).then(function (x) { return x.json(); }).then(function (c) { airURL = c.nowplaying; go(airURL); })
+      .catch(function () { airURL = 'https://otto-macmini.tail26a86d.ts.net:8443/nowplaying.json'; go(airURL); });
+  }
+  pollAir(); setInterval(pollAir, 3000);
+  setInterval(function () { if (rec && rec.state === 'playing' && air && air.title === rec.title) { rec.pos = (rec.pos || 0) + 1; paintAir(); } }, 1000);   // the second hand between answers
+  function show(r) { rec = r || null; paintAir(); }
   function showUpNext(u) { var box = $('rec-upnext'); if (!u || !u.uri) { box.hidden = true; return; } $('rec-upnext-name').textContent = (u.name || u.uri) + (u.by ? ', ' + u.by : ''); box.hidden = false; }
   function connect() {
     key = key || readKey();
-    if (!key) { say('Sign in with the booth password to work the records.'); title.textContent = 'The records, from the booth'; var b = document.createElement('button'); b.type = 'button'; b.className = 'text-button'; b.textContent = 'Sign in'; b.addEventListener('click', function () { var t = $('connection-toggle'); if (t) t.click(); var p = $('password'); if (p) p.focus(); }); msg.append(' ', b); return; }
+    if (!key) { say('Sign in with the booth password to work the records.'); var b = document.createElement('button'); b.type = 'button'; b.className = 'text-button'; b.textContent = 'Sign in'; b.addEventListener('click', function () { var t = $('connection-toggle'); if (t) t.click(); var p = $('password'); if (p) p.focus(); }); msg.append(' ', b); return; }
     boothURL(function (u) {
       try { ws = new WebSocket(u + '?k=' + encodeURIComponent(key)); } catch (e) { say('Could not reach the booth.', true); return; }
-      ws.onopen = function () { say(''); enable(); ask(); clearInterval(statusTimer); statusTimer = setInterval(ask, 5000); };
+      ws.onopen = function () { say(''); enable(); ask(); clearInterval(statusTimer); statusTimer = setInterval(ask, 2000); };
       ws.onmessage = function (ev) {
         var m; try { m = JSON.parse(ev.data); } catch (e) { return; }
         if (m.type === 'status') { takeover = m.takeover || null; show(m.rec); if (m.upnext !== undefined) showUpNext(m.upnext); if (takeover) say(takeover.who + ' has the station; end the takeover first.'); enable(); }
@@ -197,4 +226,49 @@
   var form = $('connection-form'); if (form) form.addEventListener('submit', function () { var p = $('password'); if (p && p.value) { key = p.value; if (ws) { try { ws.close(); } catch (e) {} } clearTimeout(retry); setTimeout(connect, 1200); } }, true);
   window.sfvRecords = { find: find, connect: function (u, k) { if (u) url = u; if (k) key = k; if (ws) { try { ws.onclose = null; ws.close(); } catch (e) {} } connect(); }, state: function () { return { connected: !!(ws && ws.readyState === 1), rec: rec }; } };
   connect();
+})();
+// The hour before and the hours ahead: schedule.json (the DJ writes it: the slots, the next due, and the rolling log of
+// what went out), every minute. Past: records, spots and programs with their start times. Ahead: each slot that falls in
+// the next five hours, with its pool; which one of a pool goes on is the DJ's pick, the one not heard longest.
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var past = $('hours-past'), next = $('hours-next'); if (!past || !next) return;
+  var url = null, DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  function hhmm(d) { return d.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit' }).replace(' ', ' ').toLowerCase(); }
+  function wall(d) { return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }).replace(' ', '\u202f').toLowerCase(); }   // a date built on Valley wall-clock fields
+  function row(when, html, cls) { var li = document.createElement('li'); if (cls) li.className = cls; var t = document.createElement('time'); t.textContent = when; var w = document.createElement('div'); w.className = 'what'; w.innerHTML = html; li.append(t, w); return li; }
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function render(s) {
+    var now = Date.now() / 1000;
+    var recent = (s.recent || []).filter(function (x) { return now - x.t < 3600 * 1.25; }).slice(-14).reverse();
+    past.replaceChildren();
+    if (!recent.length) past.append(row('', '<span class="kind">Nothing in the log yet.</span>', 'hour-empty'));
+    recent.forEach(function (x, i) { past.append(row(hhmm(new Date(x.t * 1000)), '<b>' + esc(x.title) + '</b>' + (x.kind !== 'record' ? ' <span class="kind">· ' + (x.kind === 'spot' ? 'spot' : 'program') + '</span>' : ''), i === 0 ? 'now' : '')); });
+    // ahead: the slots in the next five hours, in Valley time
+    var la = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })); var items = [];
+    (s.slots || []).forEach(function (sl) {
+      var p = sl.at.split(':'), h = +p[0], m = +p[1];
+      for (var d = 0; d < 2; d++) {
+        var t = new Date(la); t.setDate(la.getDate() + d); t.setHours(h, m, 0, 0);
+        var diff = (t - la) / 1000; if (diff < -600 || diff > 5 * 3600) continue;
+        var day = DAYS[(t.getDay() + 6) % 7]; if (sl.days.indexOf('daily') < 0 && sl.days.indexOf(day) < 0) continue;
+        items.push({ t: t, slot: sl });
+      }
+    });
+    items.sort(function (a, b) { return a.t - b.t; }); next.replaceChildren();
+    if (!items.length) next.append(row('', '<span class="kind">Records all the way for the next five hours.</span>', 'hour-empty'));
+    items.forEach(function (x) {
+      var titles = x.slot.programs.map(function (p) { return p.title; }); var n = titles.length;
+      var html = n === 1 ? '<b>' + esc(titles[0]) + '</b>' : '<b>One of ' + n + ', the one heard longest ago</b><br><span class="kind">' + esc(titles.slice(0, 3).join(' · ')) + (n > 3 ? ' · and ' + (n - 3) + ' more' : '') + '</span>';
+      if (s.next && s.next.id && x.slot.programs.some(function (p) { return p.id === s.next.id; }) && Math.abs(new Date(s.next.when) - x.t) < 60000) html = '<b>' + esc(s.next.title) + '</b>' + (n > 1 ? ' <span class="kind">· next of ' + n + '</span>' : '');
+      next.append(row(wall(x.t), html));
+    });
+  }
+  function load() {
+    var go = function (u) { fetch(u + '?t=' + Math.floor(Date.now() / 60000), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(render).catch(function () {}); };
+    if (url) return go(url);
+    fetch('../../live.json?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) { url = c.schedule; go(url); })
+      .catch(function () { url = 'https://otto-macmini.tail26a86d.ts.net:8443/schedule.json'; go(url); });
+  }
+  load(); setInterval(load, 60000);
 })();

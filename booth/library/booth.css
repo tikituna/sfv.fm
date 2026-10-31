@@ -290,3 +290,31 @@ footer { border: 0; color: var(--fg-muted); font-size: 13px; padding: 28px 0; }
 #finds-list .fact button.now { background: var(--primary); color: var(--on-primary); }
 #finds-list .fact button.now:hover { background: var(--primary-hover); }
 #finds-list .fnote { padding: 12px 10px; font-size: 14px; color: var(--fg-muted); }
+
+/* what the air carries, first and plainly (Sam, 2026-10-31: "i need to know immediately when i go whats playing and where in
+   the track"): the kicker with a live dot, the title, a second line for what Spotify is doing when the air is a program or a
+   spot, and a time bar */
+.records { grid-template-areas: "now transport" "time time" "upnext upnext" "msg msg"; }
+.rec-kicker { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--fg-muted); text-transform: uppercase; letter-spacing: .08em; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #e5221c; box-shadow: 0 0 0 3px #e5221c33; animation: livedot 1.6s ease-in-out infinite; }
+@keyframes livedot { 50% { opacity: .35; } }
+.records.off .live-dot { background: #6e6e73; box-shadow: none; animation: none; }
+.rec-wait { margin: 6px 0 0; font-size: 14px; color: var(--fg-muted); }
+.rec-time { grid-area: time; display: flex; align-items: center; gap: 12px; font: 500 14px/1 var(--font-mono); font-variant-numeric: tabular-nums; color: var(--fg-soft); }
+.rec-time .bar { flex: 1; height: 4px; border-radius: 2px; background: var(--fill); overflow: hidden; }
+.rec-time .fill { height: 100%; width: 0; background: var(--primary); transition: width 1s linear; }
+.records.program .rec-time .fill, .records.spot .rec-time .fill { background: #e5221c; }
+
+/* the hour before and the hours ahead (Sam, 2026-10-31: "and the schedule for the next 3-5 hours or the hour before") */
+.hours { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding: 22px 0; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.hours h3 { margin: 0 0 8px; font: 500 20px/1.15 var(--font-serif); }
+.hour-list { list-style: none; margin: 0; padding: 0; }
+.hour-list li { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 12px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.35; }
+.hour-list li:first-child { border-top: 0; }
+.hour-list time { font: 500 13px/1.45 var(--font-mono); color: var(--fg-muted); font-variant-numeric: tabular-nums; }
+.hour-list .what { min-width: 0; color: var(--fg-soft); }
+.hour-list .what b { font-weight: 500; color: var(--fg); }
+.hour-list .kind { color: var(--fg-muted); }
+.hour-list .hour-empty { display: block; color: var(--fg-muted); border: 0; }
+.hour-list li.now .what b { color: var(--primary); }
+@media (max-width: 640px) { .hours { grid-template-columns: 1fr; } }

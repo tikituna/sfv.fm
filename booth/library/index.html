@@ -64,7 +64,8 @@
 <section id="onair-view" aria-labelledby="onair-title">
         <div class="title-row control-title"><div><p class="eyebrow">San Fernando Valley Radio / Booth</p><h1 id="onair-title">On air.</h1><p class="intro">Your live program, mixer and scheduled playback.</p></div><span class="console-tag">SFV.FM</span></div>
         <section class="records" id="records" aria-labelledby="rec-kicker">
-          <div class="rec-now"><img id="rec-art" alt="" hidden><div class="rec-text"><p class="rec-kicker" id="rec-kicker">The record on the air</p><h3 id="rec-title">Connecting to the booth…</h3><p id="rec-artist"></p></div></div>
+          <div class="rec-now"><img id="rec-art" alt="" hidden><div class="rec-text"><p class="rec-kicker" id="rec-kicker"><span class="live-dot" aria-hidden="true"></span>On the air now</p><h3 id="rec-title">Reading the air…</h3><p id="rec-artist"></p><p class="rec-wait" id="rec-wait" hidden></p></div></div>
+          <div class="rec-time" id="rec-time" hidden><span id="rec-pos">0:00</span><div class="bar" aria-hidden="true"><div class="fill" id="rec-fill"></div></div><span id="rec-dur">0:00</span></div>
           <div class="transport">
             <button type="button" id="rec-prev" class="tbtn" aria-label="Previous record" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14M19 5l-10 7 10 7z" fill="currentColor"/></svg></button>
             <button type="button" id="rec-pp" class="tbtn big" aria-label="Play or pause" disabled><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/></svg></button>
@@ -73,6 +74,10 @@
           </div>
           <p class="upnext" id="rec-upnext" hidden><span>Up next: <b id="rec-upnext-name"></b></span><button type="button" id="rec-unqueue" class="text-button">take it back</button></p>
           <p class="rec-msg" id="rec-msg" role="status"></p>
+        </section>
+        <section class="hours" id="hours" aria-label="The hour before and the hours ahead">
+          <div class="hour-col"><h3>The last hour</h3><ol id="hours-past" class="hour-list"><li class="hour-empty">Reading the log…</li></ol></div>
+          <div class="hour-col"><h3>Coming up</h3><ol id="hours-next" class="hour-list"><li class="hour-empty">Reading the schedule…</li></ol></div>
         </section>
         <div class="program-grid">
           <section class="program-card" aria-labelledby="program-heading">
