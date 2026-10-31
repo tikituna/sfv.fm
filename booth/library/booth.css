@@ -228,3 +228,65 @@ footer { border: 0; color: var(--fg-muted); font-size: 13px; padding: 28px 0; }
 #spotify-view .title-row h1, #spotify-view .title-row .intro { display: none; }   /* the hero carries the title */
 #spotify-view .title-row { justify-content: flex-end; margin: 0 0 8px; }
 .spotify-player-panel .on-air-now { order: -1; }
+
+/* ---- the ON AIR sign (Sam, 2026-10-31: "on air should be red and flashing red somewhere... maybe a real sign like that"):
+   a studio light box at the top of the rail. Dark red glass in a metal bezel when the station is off the air; lit and
+   breathing while it is on; flashing while the microphone is open. */
+.sign { width: 196px; padding: 7px; border-radius: 10px; background: linear-gradient(#3a3e48, #1c1f26); box-shadow: 0 1px 0 #ffffff14 inset, 0 10px 24px -12px #000; }
+.sign .glass { display: grid; place-items: center; height: 58px; border-radius: 5px; background: radial-gradient(120% 90% at 50% 10%, #5a1216, #2a0608 70%); box-shadow: 0 0 0 1px #000 inset, 0 2px 6px #000a inset; transition: background var(--dur), box-shadow .6s; }
+.sign .letters { font: 700 24px/1 var(--font-sans); letter-spacing: .22em; padding-left: .22em; color: #7a2a2e; text-shadow: none; transition: color .4s, text-shadow .4s; }
+.sign[data-state=on] .glass, .sign[data-state=mic] .glass { background: radial-gradient(120% 90% at 50% 10%, #ff5a52, #d7161a 65%, #a80f14); box-shadow: 0 0 0 1px #000 inset, 0 0 18px #ff2d2d99, 0 0 44px #ff1f1f55; }
+.sign[data-state=on] .letters, .sign[data-state=mic] .letters { color: #fff4f2; text-shadow: 0 0 10px #fff8, 0 0 22px #ff6b6b; }
+.sign[data-state=on] .glass { animation: breathe 2.6s ease-in-out infinite; }
+.sign[data-state=mic] .glass { animation: flash .9s steps(1, end) infinite; }
+@keyframes breathe { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(.78); } }
+@keyframes flash { 0% { filter: brightness(1); } 50% { filter: brightness(.45); } }
+@media (prefers-reduced-motion: reduce) { .sign .glass { animation: none !important; } }
+.chip .dot { transition: background var(--dur); }
+.chip.on .dot { background: #e5221c; box-shadow: 0 0 0 3px #e5221c33; }
+
+/* ---- the records strip (Sam, 2026-10-31: "that way i can control from the booth and if we add a little mixer or dj
+   booth mixer something i can switch tracks more easily"): the record on the air, the transport with a fade, up next */
+.records { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "now transport" "upnext upnext" "msg msg"; align-items: center; gap: 10px 24px; padding: 6px 0 22px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.rec-now { grid-area: now; display: flex; align-items: center; gap: 16px; min-width: 0; }
+#rec-art { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; background: var(--surface-2); flex: none; }
+.rec-text { min-width: 0; }
+.rec-kicker { margin: 0 0 3px; font-size: 13px; color: var(--fg-muted); }
+#rec-title { margin: 0; font: 500 24px/1.15 var(--font-serif); letter-spacing: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#rec-artist { margin: 3px 0 0; font-size: 15px; color: var(--fg-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.transport { grid-area: transport; display: flex; align-items: center; gap: 8px; }
+.tbtn { display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: var(--fill); color: var(--fg); cursor: pointer; transition: background var(--dur), transform var(--dur) var(--ease); }
+.tbtn svg { width: 20px; height: 20px; }
+.tbtn:hover:not(:disabled) { background: var(--fill-strong); }
+.tbtn:active:not(:disabled) { transform: scale(.96); }
+.tbtn.big { width: 56px; height: 56px; background: var(--primary); color: var(--on-primary); }
+.tbtn.big:hover:not(:disabled) { background: var(--primary-hover); }
+.tbtn.big svg { width: 24px; height: 24px; }
+.tbtn.big .i-pause { display: none; } .tbtn.big.playing .i-play { display: none; } .tbtn.big.playing .i-pause { display: block; }
+.tbtn:disabled { opacity: .35; cursor: default; }
+.transport .fade { display: flex; align-items: center; gap: 8px; margin-left: 10px; font-size: 13px; color: var(--fg-muted); }
+.transport .fade select { padding: 7px 10px; border-radius: var(--radius-full); }
+.upnext { grid-area: upnext; display: flex; align-items: center; gap: 14px; margin: 0; font-size: 14px; color: var(--fg-soft); }
+.upnext b { font-weight: 500; color: var(--fg); }
+.rec-msg { grid-area: msg; margin: 0; font-size: 13px; color: var(--fg-muted); min-height: 0; }
+.rec-msg:empty { display: none; }
+.rec-msg.is-error { color: var(--danger); }
+.rec-msg button { color: var(--primary); }
+@media (max-width: 640px) { .records { grid-template-columns: 1fr; grid-template-areas: "now" "transport" "upnext" "msg"; } }
+
+/* the finds under the composer: records from Spotify, or files from the library */
+.finds { width: min(100%, 756px); text-align: left; }
+.finds-head { display: flex; justify-content: space-between; align-items: center; padding: 0 12px 6px; font-size: 13px; color: var(--fg-muted); }
+#finds-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+#finds-list li { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: var(--radius-sm); }
+#finds-list li:hover { background: var(--fill-faint); }
+#finds-list img, #finds-list .noart { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; background: var(--surface-2); flex: none; }
+#finds-list .ftext { flex: 1; min-width: 0; line-height: 1.25; }
+#finds-list .fname { font-size: 15px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#finds-list .fby { font-size: 13px; color: var(--fg-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#finds-list .fact { display: flex; gap: 6px; flex: none; }
+#finds-list .fact button { padding: 7px 12px; border: 0; border-radius: var(--radius-full); background: var(--fill); color: var(--fg); font-size: 13px; cursor: pointer; }
+#finds-list .fact button:hover { background: var(--fill-strong); }
+#finds-list .fact button.now { background: var(--primary); color: var(--on-primary); }
+#finds-list .fact button.now:hover { background: var(--primary-hover); }
+#finds-list .fnote { padding: 12px 10px; font-size: 14px; color: var(--fg-muted); }

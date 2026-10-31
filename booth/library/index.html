@@ -40,10 +40,11 @@
         <h1 class="hero-title" id="hero-title">The Booth</h1>
         <form class="composer" id="composer" role="search" autocomplete="off">
           <span class="plus" aria-hidden="true">+</span>
-          <input id="composer-input" type="text" placeholder="Find a record or a film" aria-label="Find a record or a film in the library" spellcheck="false">
+          <input id="composer-input" type="text" placeholder="Find a record to put on" aria-label="Find a record on Spotify, or a file in the library" spellcheck="false">
           <button type="submit" class="send" aria-label="Search the library"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h12M12 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </form>
-        <div class="quick"><button type="button" class="quick-link" data-go="library">Choose a file</button><button type="button" class="quick-link" data-go="studio">Live controls</button><button type="button" class="quick-link" data-go="radio">Open the radio booth</button></div>
+        <div class="finds" id="finds" hidden><div class="finds-head"><span id="finds-title">Records</span><button type="button" class="text-button" id="finds-close">Close ×</button></div><ol id="finds-list"></ol></div>
+        <div class="quick"><button type="button" class="quick-link" id="quick-mine">My playlists</button><button type="button" class="quick-link" data-go="library">Choose a file</button><button type="button" class="quick-link" data-go="studio">Live controls</button><button type="button" class="quick-link" data-go="radio">Open the radio booth</button></div>
       </div>
       <div class="connection-bar">
         <p><span class="connection-dot" id="connection-dot" aria-hidden="true"></span><span id="connection-status" role="status">Finding the station…</span></p>
@@ -62,6 +63,17 @@
       <main id="library-main">
 <section id="onair-view" aria-labelledby="onair-title">
         <div class="title-row control-title"><div><p class="eyebrow">San Fernando Valley Radio / Booth</p><h1 id="onair-title">On air.</h1><p class="intro">Your live program, mixer and scheduled playback.</p></div><span class="console-tag">SFV.FM</span></div>
+        <section class="records" id="records" aria-labelledby="rec-kicker">
+          <div class="rec-now"><img id="rec-art" alt="" hidden><div class="rec-text"><p class="rec-kicker" id="rec-kicker">The record on the air</p><h3 id="rec-title">Connecting to the booth…</h3><p id="rec-artist"></p></div></div>
+          <div class="transport">
+            <button type="button" id="rec-prev" class="tbtn" aria-label="Previous record" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5v14M19 5l-10 7 10 7z" fill="currentColor"/></svg></button>
+            <button type="button" id="rec-pp" class="tbtn big" aria-label="Play or pause" disabled><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z" fill="currentColor"/></svg></button>
+            <button type="button" id="rec-next" class="tbtn" aria-label="Next record" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 5v14M5 5l10 7-10 7z" fill="currentColor"/></svg></button>
+            <label class="fade"><span>Fade</span><select id="rec-fade"><option value="0">Cut</option><option value="1">1 s</option><option value="2" selected>2 s</option><option value="4">4 s</option></select></label>
+          </div>
+          <p class="upnext" id="rec-upnext" hidden><span>Up next: <b id="rec-upnext-name"></b></span><button type="button" id="rec-unqueue" class="text-button">take it back</button></p>
+          <p class="rec-msg" id="rec-msg" role="status"></p>
+        </section>
         <div class="program-grid">
           <section class="program-card" aria-labelledby="program-heading">
             <div class="panel-heading"><h2 id="program-heading" class="eyebrow">Station program · OBS</h2><span id="control-mode" class="mode-badge" data-mode="unknown">State unknown</span></div>
@@ -143,7 +155,7 @@
     </div>
 
     <aside class="rail" aria-label="Station">
-      <div class="mark" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 10v44" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M22 54h20M27 54l5-30 5 30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 22a17 17 0 0 1 24 0M15 16a24 24 0 0 1 34 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="32" cy="10" r="3" fill="currentColor"/></svg></div>
+      <div class="sign" id="onair-sign" data-state="unknown" role="status" aria-live="polite" aria-label="Off the air"><span class="glass"><span class="letters">ON AIR</span></span></div>
       <h2 class="rail-name">San Fernando Valley Radio</h2>
       <p class="rail-kind">Control room</p>
       <h3 class="rail-head">Outputs <span class="help" title="Which program player Play now and Play next speak to">?</span></h3>
