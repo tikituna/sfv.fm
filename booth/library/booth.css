@@ -208,3 +208,23 @@ footer { border: 0; color: var(--fg-muted); font-size: 13px; padding: 28px 0; }
 .row.active .tile, .row.active:hover .tile { background: var(--primary); color: var(--on-primary); }
 .row.active .name, .row.active, .tab.active { color: var(--fg); }
 .row.active .sub { color: var(--fg-muted); }
+
+/* the Spotify view: the record on the air first, the form for other records under it */
+#spotify-view .title-row .eyebrow, #spotify-view .spotify-mark, #spotify-view .spotify-input-panel h2 { display: none; }
+#spotify-view { max-width: 756px; margin: 0 auto; }
+#spotify-view .spotify-layout { display: flex; flex-direction: column-reverse; gap: 28px; }
+#spotify-view .spotify-input-panel, #spotify-view .spotify-player-panel { background: none; border: 0; padding: 0; box-shadow: none; }
+#spotify-view .spotify-player-panel .panel-heading { margin-bottom: 10px; }
+#spotify-view .spotify-player-panel .eyebrow { display: none; }
+#spotify-view .spotify-input-panel > p { color: var(--fg-muted); font-size: 14px; }
+#spotify-view #spotify-form { display: flex; gap: 10px; align-items: center; }
+#spotify-view #spotify-form label { display: none; }
+#spotify-view #spotify-form input { flex: 1; min-width: 0; padding: 12px 16px; border: 0; border-radius: var(--radius-full); background: var(--surface-2); color: var(--fg); font-size: 15px; }
+#spotify-view #spotify-form input:focus { outline: 2px solid var(--primary); outline-offset: 0; }
+#spotify-view .spotify-player { min-height: 0; border: 0; background: none; padding: 0; }
+#spotify-view .spotify-empty { padding: 28px 0; color: var(--fg-muted); text-align: left; }
+.on-air-now { display: flex; align-items: center; gap: 10px; margin: 0 0 12px; font-size: 15px; color: var(--fg-soft); }
+.on-air-now .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 3px #3fb6ec33; }
+#spotify-view .title-row h1, #spotify-view .title-row .intro { display: none; }   /* the hero carries the title */
+#spotify-view .title-row { justify-content: flex-end; margin: 0 0 8px; }
+.spotify-player-panel .on-air-now { order: -1; }
