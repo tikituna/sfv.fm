@@ -147,3 +147,56 @@ footer { border: 0; color: var(--fg-muted); font-size: 13px; padding: 28px 0; }
 /* the one live control in the brand colour, like the composer's send */
 .mic-toggle { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
 .mic-toggle:hover:not(:disabled) { background: var(--primary-hover); border-color: var(--primary-hover); }
+
+/* ---- the quiet desk (Sam, 2026-10-31: "the middle section is so busy and hard to read"): one column the width of the
+   composer, no boxes inside boxes, the labels that only said what a thing was taken away, the type a size up. The
+   markup and the scripts are the same; this is all display and spacing. */
+#onair-view { max-width: 756px; margin: 0 auto; }
+#onair-view .control-title, #onair-view .output-label, #onair-view .program-bottom .text-link, #onair-view .takeover-card .panel-heading,
+#onair-view .takeover-card h3, #onair-view .takeover-card > p:not(.control-caption), #onair-view .mixer-heading .eyebrow, #onair-view .mixer-footnote,
+#onair-view .queue-panel .eyebrow, #onair-view .channel-number, #onair-view .channel-description, #onair-view .fader-scale, #onair-view .program-heading,
+#onair-view #program-heading { display: none; }
+#onair-view .program-grid { display: block; }
+#onair-view .program-card, #onair-view .takeover-card, #onair-view .mixer-panel, #onair-view .queue-panel { background: none; border: 0; border-radius: 0; box-shadow: none; padding: 0; overflow: visible; }
+#onair-view .program-card > .panel-heading { padding: 0; justify-content: flex-end; }
+#onair-view .program-title { padding: 18px 0 14px; min-height: 0; gap: 18px; }
+#onair-view .program-symbol { width: 52px; height: 52px; font-size: 24px; border-color: var(--fill-strong); }
+#onair-view .program-title .eyebrow { display: block; font: 13px/1.4 var(--font-sans); letter-spacing: 0; color: var(--fg-muted); margin: 0 0 4px; text-transform: none; }
+#onair-view .program-title h3 { font: 500 28px/1.15 var(--font-serif); letter-spacing: 0; margin: 0 0 6px; }
+#onair-view .program-title p:last-child { font-size: 15px; line-height: 1.5; color: var(--fg-soft); }
+#onair-view .program-bottom { padding: 0 0 22px; border: 0; font-size: 13px; color: var(--fg-muted); }
+#onair-view .takeover-card { padding: 0 0 26px; border-bottom: 1px solid var(--line); }
+#onair-view .takeover-actions { gap: 10px; }
+#onair-view .takeover-actions .primary-button { gap: 10px; font-size: 15px; padding: 12px 20px; }
+#onair-view .outline-button { font-size: 15px; padding: 12px 20px; }
+#onair-view .control-caption { font-size: 14px; margin-top: 12px; }
+#onair-view .control-notice { padding: 18px 0 0; font-size: 14px; }
+#onair-view .control-notice:empty { display: none; }
+#onair-view .mixer-panel { margin-top: 14px; padding-top: 26px; }
+#onair-view .mixer-heading { align-items: center; margin-bottom: 6px; }
+#onair-view .mixer-heading h2, #onair-view .queue-panel h2 { font: 500 24px/1.15 var(--font-serif); letter-spacing: 0; margin: 0; }
+#onair-view .fade-label { font-size: 13px; color: var(--fg-muted); display: flex; align-items: center; gap: 10px; }
+#onair-view .mixer-channels { display: block; }
+#onair-view .mixer-channel { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head side" "fader side"; align-items: center; column-gap: 24px; row-gap: 4px; padding: 20px 0; border: 0; border-top: 1px solid var(--line); background: none; }
+#onair-view .channel-heading { grid-area: head; min-height: 0; gap: 12px; }
+#onair-view .channel-heading h3 { font-size: 16px; font-weight: 500; }
+#onair-view .channel-state { font-size: 13px; color: var(--fg-muted); margin-left: 0; }
+#onair-view .channel-state[data-state=open] { color: var(--primary); }
+#onair-view .channel-state[data-state=muted] { color: #f5a524; }
+#onair-view .mixer-channel input[type=range] { grid-area: fader; margin: 0; height: 24px; }
+#onair-view .fader-value { grid-area: side; justify-self: end; align-self: start; margin: 0; gap: 4px; }
+#onair-view .fader-value output { font-size: 20px; letter-spacing: 0; font-weight: 500; }
+#onair-view .fader-value > span { font-size: 13px; color: var(--fg-muted); }
+#onair-view .mute-button { grid-area: side; justify-self: end; align-self: end; width: auto; min-width: 0; padding: 7px 14px; font-size: 13px; letter-spacing: 0; text-transform: none; }
+#onair-view .mixer-channel.channel-muted .mute-button { background: #f5a524; color: var(--on-primary); }
+#onair-view .queue-panel { margin-top: 10px; padding: 26px 0 0; border-top: 1px solid var(--line); }
+#onair-view .queue-panel .panel-heading { margin-bottom: 10px; }
+#onair-view .control-queue { font-size: 15px; color: var(--fg-soft); }
+#onair-view .control-queue li { padding: 10px 0; border-top: 1px solid var(--line); }
+#onair-view .control-queue .queue-empty { border: 0; color: var(--fg-muted); }
+#onair-view .queue-panel > p { font-size: 13px; color: var(--fg-muted); }
+@media (min-width: 1181px) { .connection-bar { display: none; } }   /* the rail says it */
+@media (max-width: 560px) { #onair-view .mixer-channel { grid-template-columns: 1fr; grid-template-areas: "head" "fader" "side"; } #onair-view .fader-value, #onair-view .mute-button { justify-self: start; } }
+#onair-view .mixer-heading, #onair-view .queue-panel .panel-heading, #onair-view .queue-panel, #onair-view .control-queue { padding-left: 0; padding-right: 0; }
+#onair-view .mixer-heading { padding-top: 0; padding-bottom: 0; }
+#onair-view .control-queue { margin: 0; padding: 0; list-style: none; }
