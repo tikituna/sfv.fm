@@ -272,3 +272,34 @@
   }
   load(); setInterval(load, 60000);
 })();
+// Listen, in the booth: the station's own stream (live.json, the AAC on Apple), a volume remembered on this browser. Never on
+// the transmitter itself: a browser that can reach the local Icecast is the station, and its speakers would feed the air.
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var btn = $('listen'), el = $('listen-el'), vol = $('listen-vol'), label = $('listen-label'); if (!btn || !el) return;
+  var cfg = null, apple = /iPhone|iPad|Macintosh/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Edg/.test(navigator.userAgent);
+  var v = 0.8; try { var sv = localStorage.getItem('sfv-booth-volume'); if (sv !== null && isFinite(+sv)) v = Math.max(0, Math.min(1, +sv)); } catch (e) {}
+  function paintVol() { el.volume = v; vol.value = Math.round(v * 100); vol.style.setProperty('--v', Math.round(v * 100) + '%'); }
+  paintVol();
+  vol.addEventListener('input', function () { v = vol.value / 100; paintVol(); try { localStorage.setItem('sfv-booth-volume', String(v)); } catch (e) {} });
+  function config(cb) {
+    if (cfg) return cb(cfg);
+    fetch('../../live.json?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (c) { cfg = c; cb(cfg); })
+      .catch(function () { cfg = { stream: 'https://otto-macmini.tail26a86d.ts.net:8443/live', stream_aac: 'https://otto-macmini.tail26a86d.ts.net:8443/live.aac' }; cb(cfg); });
+  }
+  function set(on, text) { btn.setAttribute('aria-pressed', on ? 'true' : 'false'); label.textContent = text || (on ? 'Listening' : 'Listen'); }
+  function stop() { try { el.pause(); } catch (e) {} el.removeAttribute('src'); try { el.load(); } catch (e) {} set(false); }
+  function start() {
+    config(function (c) {
+      var u = (apple && c.stream_aac) || c.stream; if (!u) { set(false, 'No stream address'); return; }
+      el.src = u + '?t=' + Date.now(); el.volume = v; set(false, 'Tuning…');
+      var p = el.play(); if (p && p.then) p.then(function () { set(true); }).catch(function () { set(false, 'Could not play here'); });
+    });
+  }
+  btn.addEventListener('click', function () { if (btn.getAttribute('aria-pressed') === 'true') stop(); else start(); });
+  el.addEventListener('playing', function () { set(true); });
+  el.addEventListener('pause', function () { if (btn.getAttribute('aria-pressed') === 'true') set(false, 'Stopped'); });
+  el.addEventListener('error', function () { if (btn.getAttribute('aria-pressed') === 'true') set(false, 'The stream dropped'); });
+  // the studio guard: a browser that can reach the local Icecast is on the transmitter
+  fetch('http://127.0.0.1:8000/status-json.xsl', { mode: 'no-cors', cache: 'no-store' }).then(function () { btn.disabled = true; label.textContent = 'This is the transmitter'; }).catch(function () {});
+})();

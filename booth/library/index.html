@@ -161,6 +161,11 @@
 
     <aside class="rail" aria-label="Station">
       <div class="sign" id="onair-sign" data-state="unknown" role="status" aria-live="polite" aria-label="Off the air"><span class="glass"><span class="letters">ON AIR</span></span></div>
+      <div class="listen-box" id="listen-box">
+        <button type="button" class="listen-btn" id="listen" aria-pressed="false" aria-label="Listen to the station"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l12 7-12 7z" fill="currentColor"/></svg><svg class="i-stop" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></svg></button>
+        <div class="listen-text"><span id="listen-label">Listen</span><input type="range" id="listen-vol" min="0" max="100" step="1" value="80" aria-label="Volume"></div>
+      </div>
+      <audio id="listen-el" preload="none" hidden></audio>
       <h2 class="rail-name">San Fernando Valley Radio</h2>
       <p class="rail-kind">Control room</p>
       <h3 class="rail-head">Outputs <span class="help" title="Which program player Play now and Play next speak to">?</span></h3>

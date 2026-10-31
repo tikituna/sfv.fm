@@ -318,3 +318,23 @@ footer { border: 0; color: var(--fg-muted); font-size: 13px; padding: 28px 0; }
 .hour-list .hour-empty { display: block; color: var(--fg-muted); border: 0; }
 .hour-list li.now .what b { color: var(--primary); }
 @media (max-width: 640px) { .hours { grid-template-columns: 1fr; } }
+
+/* ---- listen, in the booth (Sam, 2026-10-31: "why cant i press a listen button with volume right on the homepage" ...
+   "for this app or view"): the station's stream in this browser, a play button under the sign and a volume */
+.listen-box { display: flex; align-items: center; gap: 12px; width: 196px; margin-top: 2px; }
+.listen-btn { display: grid; place-items: center; flex: none; width: 48px; height: 48px; border: 0; border-radius: 50%; background: var(--primary); color: var(--on-primary); cursor: pointer; transition: background var(--dur), transform var(--dur) var(--ease); }
+.listen-btn svg { width: 22px; height: 22px; }
+.listen-btn .i-stop { display: none; }
+.listen-btn[aria-pressed=true] { background: #e5221c; color: #fff; }
+.listen-btn[aria-pressed=true] .i-play { display: none; } .listen-btn[aria-pressed=true] .i-stop { display: block; }
+.listen-btn:hover { filter: brightness(1.08); } .listen-btn:active { transform: scale(.96); }
+.listen-btn:disabled { background: var(--fill); color: var(--fg-muted); cursor: default; }
+.listen-text { display: flex; flex: 1; flex-direction: column; gap: 6px; min-width: 0; font-size: 14px; }
+#listen-label { color: var(--fg-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#listen-vol { -webkit-appearance: none; appearance: none; width: 100%; height: 18px; margin: 0; background: none; cursor: pointer; }
+#listen-vol::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--primary) var(--v, 80%), var(--fill) var(--v, 80%)); }
+#listen-vol::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 14px; height: 14px; margin-top: -5px; border-radius: 50%; background: #fff; border: 0; }
+#listen-vol::-moz-range-track { height: 4px; border-radius: 2px; background: var(--fill); }
+#listen-vol::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--primary); }
+#listen-vol::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: #fff; border: 0; }
+@media (max-width: 1180px) { .rail .listen-box { display: none; } }
